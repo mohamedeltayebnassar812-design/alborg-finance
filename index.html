@@ -1957,6 +1957,10 @@ grant usage, select on all sequences in schema public to anon;</pre>
     }
 
     // Quick 1-Click Pay
+    // Undo state for quick pay
+    let _undoPayState = null;
+    let _undoToastTimer = null;
+
     function quickPay(mKey, row) {
       if (!requireAdmin('سداد اشتراك')) return;
       const m = APP_DATA.months[mKey];
@@ -1964,10 +1968,89 @@ grant usage, select on all sequences in schema public to anon;</pre>
       const c = m.collections.find(x => x.row === row);
       if (!c) return;
 
+      // Save previous state for undo
+      _undoPayState = { mKey, row, prevPaid: c.paid || 0 };
+
+      const apt = APP_DATA.apartments.find(a => a.row === row) || {};
+      const aptLabel = `شقة ${apt.apt_num} (${apt.position})`;
+
       c.paid = c.monthly_fee || 200;
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
+      saveData();
+
+      // Show undo toast
+      showUndoToast(aptLabel, c.monthly_fee || 200);
+    }
+
+    function showUndoToast(aptLabel, amount) {
+      // Clear any existing timer
+      if (_undoToastTimer) clearTimeout(_undoToastTimer);
+
+      let toast = document.getElementById('undoPayToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'undoPayToast';
+        document.body.appendChild(toast);
+      }
+      toast.className = 'fixed bottom-20 right-1/2 translate-x-1/2 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl bg-amber-500 text-white text-sm font-bold transition-all duration-300 opacity-100';
+      toast.innerHTML = `
+        <span>✅ تم تسجيل سداد ${amount} ج لـ ${aptLabel}</span>
+        <button onclick="undoLastQuickPay()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-amber-700 font-bold text-xs hover:bg-amber-50 active:scale-95 transition-all shadow-sm">
+          ↩ تراجع
+        </button>
+      `;
+
+      // Auto-hide after 7 seconds
+      _undoToastTimer = setTimeout(() => {
+        if (toast) {
+          toast.classList.replace('opacity-100', 'opacity-0');
+          setTimeout(() => toast.remove(), 400);
+        }
+        _undoPayState = null;
+      }, 7000);
+    }
+
+    function undoLastQuickPay() {
+      if (!_undoPayState) return;
+      const { mKey, row, prevPaid } = _undoPayState;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+      const c = m.collections.find(x => x.row === row);
+      if (!c) return;
+
+      c.paid = prevPaid;
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+      saveData();
+
+      // Hide toast
+      if (_undoToastTimer) clearTimeout(_undoToastTimer);
+      const toast = document.getElementById('undoPayToast');
+      if (toast) toast.remove();
+      _undoPayState = null;
+
+      // Show confirmation
+      showSuccessToast('↩ تم التراجع عن السداد بنجاح');
+    }
+
+    function showSuccessToast(msg) {
+      let toast = document.getElementById('successToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'successToast';
+        document.body.appendChild(toast);
+      }
+      toast.className = 'fixed bottom-20 right-1/2 translate-x-1/2 z-[9999] px-4 py-3 rounded-xl shadow-2xl bg-emerald-600 text-white text-sm font-bold transition-all duration-300 opacity-100';
+      toast.textContent = msg;
+      setTimeout(() => {
+        if (toast) {
+          toast.classList.replace('opacity-100', 'opacity-0');
+          setTimeout(() => toast.remove(), 400);
+        }
+      }, 3000);
     }
 
     // Edit Payment Modal
