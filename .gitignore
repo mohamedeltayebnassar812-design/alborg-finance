@@ -1,0 +1,11 @@
+# Excel temp files
+~$*
+*.tmp
+
+# Python
+__pycache__/
+*.pyc
+
+# Local system files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منظومة إدارة وحسابات برج العمارة - النسخة المحدثة الدقيقة</title>
+  <!-- Supabase Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+    }
+    :root {
+      --bg-main: #0b1120;
+      --bg-card: #1e293b;
+      --bg-subcard: #0f172a;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    html:not(.dark) {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subcard: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+    .bg-main { background-color: var(--bg-main); }
+    .bg-card { background-color: var(--bg-card); }
+    .bg-subcard { background-color: var(--bg-subcard); }
+    .border-main { border-color: var(--border-color); }
+    .text-main { color: var(--text-main); }
+    .text-muted { color: var(--text-muted); }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .bg-card, .bg-subcard { background: white !important; border: 1px solid #ccc !important; }
+      .text-main, .text-muted { color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-main text-main min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200">
+
+  <!-- TOP HEADER -->
+  <header class="bg-card border-b border-main sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Title & Branding -->
+      <div class="flex items-center space-x-3 space-x-reverse">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-main">منظومة إدارة وحسابات برج العمارة</h1>
+            <button onclick="openCloudModal()" id="supabaseStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer" title="إعدادات الربط السحابي ومزامنة Supabase">
+              <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-amber-400 ml-1.5"></span>
+              <span id="supabaseStatusText">حفظ محلي (اضغط للربط بـ Supabase)</span>
+            </button>
+          </div>
+          <p class="text-xs text-muted">إدارة الاشتراكات، تتبع الخزينة، تسجيل المصروفات، والتحصيل الفوري</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center gap-2 no-print">
+        <!-- Add New Month -->
+        <button onclick="openNewMonthModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all hover:scale-105 active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          إضافة شهر جديد
+        </button>
+
+        <!-- Edit Residents -->
+        <button onclick="openManageResidentsModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 border border-purple-500/30 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          تعديل السكان
+        </button>
+
+        <!-- Manage Catalog -->
+        <button onclick="openManageExpenseItemsModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 border border-amber-500/30 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          دليل بنود المصاريف
+        </button>
+
+        <!-- Online Sync -->
+        <button onclick="openCloudModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 border border-emerald-500/30 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+          ربط أونلاين
+        </button>
+
+        <!-- Print -->
+        <button onclick="window.print()" class="p-2 rounded-lg text-muted hover:text-main hover:bg-subcard transition-colors" title="طباعة">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        </button>
+
+        <!-- Dark/Light Toggle -->
+        <button onclick="toggleTheme()" class="p-2 rounded-lg text-muted hover:text-main hover:bg-subcard transition-colors" title="تبديل الوضع">
+          <svg id="themeIconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+
+        <!-- Reset Button -->
+        <button onclick="resetToInitialData()" class="p-2 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors" title="إعادة ضبط البيانات الأصلية من الإكسيل">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- 4 TOP KPI CARDS (100% AUDITED) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Card 1: Treasury Balance -->
+      <div class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-muted">رصيد الخزينة الحالي</span>
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span id="kpiBalance" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">3,685</span>
+          <span class="text-xs font-normal text-muted">ج.م (فائض متاح)</span>
+        </div>
+        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+          <span id="kpiBalanceSub">حتى نهاية أغسطس 2026 (شهر 8)</span>
+          <span class="text-emerald-400 text-[10px] font-semibold">● موجب</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Revenue -->
+      <div class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-blue-500/50 transition-all">
+        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-muted">إجمالي الإيرادات المحصلة</span>
+          <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span id="kpiRevenue" class="text-2xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">60,350</span>
+          <span class="text-xs font-normal text-muted">ج.م</span>
+        </div>
+        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+          <span id="kpiRevenueSub">46,200 اشتراكات + 14,150 ديون وصيانة</span>
+          <span class="text-blue-400 text-[10px]">كافة الشهور</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Total Expenses -->
+      <div class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-amber-500/50 transition-all">
+        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-muted">إجمالي المصروفات</span>
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/></svg>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span id="kpiExpenses" class="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">56,815</span>
+          <span class="text-xs font-normal text-muted">ج.م</span>
+        </div>
+        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+          <span>المنفق الفعلي على البرج</span>
+          <span class="text-amber-400 text-[10px]">10 شهور</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Cumulative Arrears (Only 9 Debtors, 15 Clean!) -->
+      <div class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-rose-500/50 transition-all">
+        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-rose-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-muted">إجمالي المتأخرات السابقة</span>
+          <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span id="kpiArrears" class="text-2xl sm:text-3xl font-extrabold text-rose-400 tracking-tight">1,700</span>
+          <span class="text-xs font-normal text-muted">ج.م</span>
+        </div>
+        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+          <span id="kpiArrearsSub">5 شقق فقط (19 شقة خالصة 100%)</span>
+          <span class="text-purple-400 text-[10px] font-semibold" title="تم إسقاط 3,350 ج ديون معدومة لـ 4 شقق">إسقاط المعدومة ✓</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="border-b border-main no-print">
+      <nav class="flex space-x-6 space-x-reverse overflow-x-auto text-sm font-semibold" aria-label="Tabs">
+        <button id="tabBtnMonth" onclick="switchTab('month')" class="py-3 px-1 border-b-2 border-emerald-500 text-emerald-400 flex items-center gap-2 whitespace-nowrap transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          دفتر الشهور والتحصيل السريع
+          <span id="badgeCurrentMonth" class="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-300">أغسطس 2026</span>
+        </button>
+
+        <button id="tabBtnArrears" onclick="switchTab('arrears')" class="py-3 px-1 border-b-2 border-transparent text-muted hover:text-main flex items-center gap-2 whitespace-nowrap transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          كشف المتأخرات التراكمي لكل الشقق
+          <span id="badgeArrearsCount" class="px-2 py-0.5 rounded-full text-xs bg-rose-500/20 text-rose-300">5 شقق عليها ديون</span>
+        </button>
+
+        <button id="tabBtnExpenses" onclick="switchTab('expenses')" class="py-3 px-1 border-b-2 border-transparent text-muted hover:text-main flex items-center gap-2 whitespace-nowrap transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          سجل بنود المصروفات التراكمية
+        </button>
+
+        <button id="tabBtnFlow" onclick="switchTab('flow')" class="py-3 px-1 border-b-2 border-transparent text-muted hover:text-main flex items-center gap-2 whitespace-nowrap transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          تحليل الخزينة والميزانية
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: MONTHLY & QUICK PAY -->
+    <div id="tabContentMonth" class="space-y-6">
+
+      <!-- Month Selector Bar -->
+      <div class="bg-card rounded-2xl p-4 border border-main flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <label for="monthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر المعروض:</label>
+          <select id="monthSelect" onchange="renderSelectedMonth()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+            <!-- Populated via JS -->
+          </select>
+          <button onclick="openAddExpenseModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 border border-amber-500/30 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            إضافة مصروف للشهر
+          </button>
+        </div>
+
+        <!-- Month Balances Strip -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-medium">
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
+            <span class="text-muted text-[11px]">رصيد أول الشهر (L2): </span>
+            <span id="mStripOpening" class="font-bold text-main">0 ج.م</span>
+          </div>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
+            <span class="text-muted text-[11px]">إيراد الشهر (L1): </span>
+            <span id="mStripRevenue" class="font-bold text-blue-400">0 ج.م</span>
+          </div>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
+            <span class="text-muted text-[11px]">إجمالي المتاح (L3): </span>
+            <span id="mStripAvailable" class="font-bold text-emerald-400">0 ج.م</span>
+          </div>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
+            <span class="text-muted text-[11px]">المصروفات (L4): </span>
+            <span id="mStripExpenses" class="font-bold text-amber-400">0 ج.م</span>
+          </div>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
+            <span class="text-muted text-[11px]">الباقي للشهر الجديد (L5): </span>
+            <span id="mStripClosing" class="font-bold text-emerald-400">0 ج.م</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Pay Table & Month Expenses Split Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left 2 Cols: Apartments Subscriptions & Quick Pay -->
+        <div class="lg:col-span-2 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-bold text-main flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                تحصيلات اشتراكات السكان لهذا الشهر
+              </h2>
+              <span id="mPaidRatioBadge" class="text-xs px-2 py-0.5 rounded-full bg-subcard text-muted border border-main">0 من 24 سددوا</span>
+            </div>
+
+            <!-- Table Filters -->
+            <div class="flex items-center gap-1.5 text-xs">
+              <button onclick="setMonthFilter('all')" id="mFilterAll" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium">الكل (24)</button>
+              <button onclick="setMonthFilter('unpaid')" id="mFilterUnpaid" class="px-2.5 py-1 rounded-lg bg-subcard text-muted hover:text-main font-medium">لم يسدد بعد</button>
+              <button onclick="setMonthFilter('paid')" id="mFilterPaid" class="px-2.5 py-1 rounded-lg bg-subcard text-muted hover:text-main font-medium">تم السداد</button>
+            </div>
+          </div>
+
+          <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
+            <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-subcard text-muted sticky top-0 z-10 border-b border-main">
+                  <tr>
+                    <th class="py-2.5 px-3">الشقة</th>
+                    <th class="py-2.5 px-3">الساكن / المالك</th>
+                    <th class="py-2.5 px-3 text-center">الاشتراك</th>
+                    <th class="py-2.5 px-3 text-center">متأخرات سابقة</th>
+                    <th class="py-2.5 px-3 text-center">إجمالي المطلوب</th>
+                    <th class="py-2.5 px-3 text-center">المدفوع</th>
+                    <th class="py-2.5 px-3 text-center">الحالة</th>
+                    <th class="py-2.5 px-3 text-center">إجراءات الدفع</th>
+                  </tr>
+                </thead>
+                <tbody id="monthCollectionsTableBody" class="divide-y divide-main">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="text-[11px] text-muted flex items-center justify-between px-1">
+            <span>💡 اضغط على "✏️" لتعديل اسم الساكن، أو "تعديل الدفعة" لتغيير أي مبلغ مسدد أو تسجيل سداد متأخرات.</span>
+            <button onclick="exportToCSV()" class="text-emerald-400 hover:underline">تصدير إكسيل / CSV</button>
+          </div>
+        </div>
+
+        <!-- Right 1 Col: Month Expenses -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-main flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              مصروفات هذا الشهر
+            </h2>
+            <span id="mTotalExpensesBadge" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20">0 ج.م</span>
+          </div>
+
+          <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm flex flex-col h-[600px]">
+            <div class="p-3 border-b border-main bg-subcard flex items-center justify-between">
+              <span class="text-xs font-semibold text-muted">البند</span>
+              <span class="text-xs font-semibold text-muted">التكلفة</span>
+            </div>
+            <div id="monthExpensesList" class="flex-1 overflow-y-auto divide-y divide-main p-1">
+              <!-- Injected via JS -->
+            </div>
+            <div class="p-3 border-t border-main bg-subcard/50 flex items-center justify-between">
+              <button onclick="openAddExpenseModal()" class="w-full py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition-all">
+                + إضافة مصروف جديد
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: CUMULATIVE ARREARS AUDIT (9 DEBTORS, 15 CLEAN) -->
+    <div id="tabContentArrears" class="space-y-6 hidden">
+      
+      <!-- Stats header -->
+      <div class="bg-card rounded-2xl p-5 border border-main flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-main flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            كشف حساب المديونيات والمتأخرات التراكمية الدقيقة
+          </h2>
+          <p class="text-xs text-muted mt-1">حصر الشهور السابقة المغلقة (11 حتى 8) والمديونيات التاريخية بدقة 100%</p>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="flex items-center gap-2 text-xs">
+          <button onclick="setArrearsFilter('all')" id="arrFilterAll" class="px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main">الكل (24)</button>
+          <button onclick="setArrearsFilter('debtors')" id="arrFilterDebtors" class="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold shadow-sm shadow-rose-600/30">عليهم ديون سابقة (5)</button>
+          <button onclick="setArrearsFilter('paid')" id="arrFilterPaid" class="px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main">خالصين تماماً (19)</button>
+        </div>
+      </div>
+
+      <!-- Arrears Table -->
+      <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
+        <div class="p-3 bg-subcard border-b border-main flex items-center justify-between gap-3">
+          <div class="relative w-full max-w-xs">
+            <input type="text" id="arrearsSearch" oninput="filterArrearsTable()" placeholder="بحث برقم الشقة أو اسم الساكن..." class="w-full bg-card border border-main rounded-xl pl-3 pr-8 py-1.5 text-xs text-main placeholder-muted focus:outline-none focus:border-emerald-500">
+            <svg class="w-4 h-4 text-muted absolute right-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <div class="text-xs font-semibold text-muted">
+            إجمالي الديون السابقة المعروضة: <span id="arrTotalDisplayed" class="text-rose-400 font-bold">5,050 ج.م</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-subcard text-muted border-b border-main">
+              <tr>
+                <th class="py-3 px-3">الشقة</th>
+                <th class="py-3 px-3">الدور والموقع</th>
+                <th class="py-3 px-3">اسم الساكن / المالك</th>
+                <th class="py-3 px-3">رقم الهاتف</th>
+                <th class="py-3 px-3 text-center">متأخرات اشتراكات سابقة</th>
+                <th class="py-3 px-3 text-center">مديونية خاصة (أسانسير/كهرباء)</th>
+                <th class="py-3 px-3 text-center">إجمالي المتأخرات السابقة</th>
+                <th class="py-3 px-3 text-center">اشتراك الشهر الجاري</th>
+                <th class="py-3 px-3 text-center">الحالة</th>
+                <th class="py-3 px-3 text-center">سداد سريع</th>
+              </tr>
+            </thead>
+            <tbody id="arrearsTableBody" class="divide-y divide-main">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 3: ALL EXPENSES LOG -->
+    <div id="tabContentExpenses" class="space-y-6 hidden">
+      <div class="bg-card rounded-2xl p-5 border border-main flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-main flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            سجل المصروفات الشامل لكافة الشهور
+          </h2>
+          <p class="text-xs text-muted mt-1">تتبع كافة بنود الإنفاق والصيانة والمرافق عبر تاريخ البرج</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <select id="expenseCategoryFilter" onchange="filterExpensesByCategory()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500">
+            <option value="all">كل الفئات</option>
+            <option value="كهرباء">كهرباء ومرافق</option>
+            <option value="صيانة أسانسير">صيانة أسانسير</option>
+            <option value="حراسة">حراسة وسلف</option>
+            <option value="نظافة">نظافة وخزانات</option>
+            <option value="مياه">مياه البرج</option>
+            <option value="أمن وكاميرات">أمن وكاميرات</option>
+            <option value="نقاشة ودهانات">نقاشة وبويات</option>
+            <option value="أخرى">بنود أخرى</option>
+          </select>
+          <button onclick="openManageExpenseItemsModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-subcard text-amber-300 border border-main hover:border-amber-500/50 transition-colors">
+            دليل البنود المعتادة
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-subcard text-muted border-b border-main">
+              <tr>
+                <th class="py-3 px-3">الشهر</th>
+                <th class="py-3 px-3">بند المصروف</th>
+                <th class="py-3 px-3">التصنيف</th>
+                <th class="py-3 px-3 text-center">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody id="allExpensesTableBody" class="divide-y divide-main">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: TREASURY FLOW (EXCEL EXACT RECONCILIATION) -->
+    <div id="tabContentFlow" class="space-y-6 hidden">
+      <div class="bg-card rounded-2xl p-5 border border-main">
+        <h2 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+          جدول التدفق المالي والمطابقة المحاسبية الرسمية (Excel Reconciliation)
+        </h2>
+        <p class="text-xs text-muted mt-1">مطابقة تامة وشاملة مع جداول الإكسيل الأصلية حتى شهر 8 (فائض نهائي +3,685 ج.م)</p>
+      </div>
+
+      <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-subcard text-muted border-b border-main">
+              <tr>
+                <th class="py-3 px-3">الشهر</th>
+                <th class="py-3 px-3 text-center">رصيد أول الشهر</th>
+                <th class="py-3 px-3 text-center">اشتراكات محصلة (G)</th>
+                <th class="py-3 px-3 text-center">ديون وصيانة سابقة (E)</th>
+                <th class="py-3 px-3 text-center">إجمالي الإيراد (L1)</th>
+                <th class="py-3 px-3 text-center">إجمالي المتاح (L3)</th>
+                <th class="py-3 px-3 text-center">المصروفات (L4)</th>
+                <th class="py-3 px-3 text-center">رصيد الإغلاق (L5)</th>
+                <th class="py-3 px-3 text-center">الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="treasuryFlowTableBody" class="divide-y divide-main">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- MODAL 1: ADD NEW MONTH -->
+  <div id="newMonthModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          إضافة شهر جديد للسجل
+        </h3>
+        <button onclick="closeNewMonthModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-muted leading-relaxed">
+        سيتم إنشاء الشهر الجديد تلقائياً وترحيل رصيد الخزينة الحالي كرصيد افتتاحي، مع تجهيز كشف اشتراكات الشقق الـ 24 وترحيل المتأخرات السابقة.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">اختر الشهر:</label>
+          <select id="newMonthNum" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-blue-500">
+            <option value="9">سبتمبر (شهر 9)</option>
+            <option value="10">أكتوبر (شهر 10)</option>
+            <option value="11">نوفمبر (شهر 11)</option>
+            <option value="12">ديسمبر (شهر 12)</option>
+            <option value="1">يناير (شهر 1)</option>
+            <option value="2">فبراير (شهر 2)</option>
+            <option value="3">مارس (شهر 3)</option>
+            <option value="4">أبريل (شهر 4)</option>
+            <option value="5">مايو (شهر 5)</option>
+            <option value="6">يونيو (شهر 6)</option>
+            <option value="7">يوليو (شهر 7)</option>
+            <option value="8">أغسطس (شهر 8)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">السنة:</label>
+          <input type="number" id="newMonthYear" value="2026" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="bg-subcard p-3 rounded-xl border border-main text-xs space-y-1">
+          <div class="flex justify-between text-muted">
+            <span>رصيد الخزينة الافتتاحي للشهر الجديد:</span>
+            <span id="newMonthCarriedCash" class="font-bold text-emerald-400">+3,685 ج.م</span>
+          </div>
+          <p class="text-[11px] text-muted">يبدأ الشهر الجديد برصيد الخزينة المرحل دون أي عجز، وتُسجل التحصيلات أولاً بأول.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeNewMonthModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="confirmAddNewMonth()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30">تأكيد وإنشاء الشهر</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: EDIT PAYMENT / CUSTOM PAY -->
+  <div id="editPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          تسجيل / تعديل دفعة اشتراك
+        </h3>
+        <button onclick="closeEditPaymentModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="bg-subcard p-3 rounded-xl border border-main text-xs space-y-1">
+          <div class="flex justify-between font-bold text-main">
+            <span id="payModalAptTitle">شقة 1 - أ.احمد وقاد</span>
+            <span id="payModalFee">الاشتراك: 200 ج.م</span>
+          </div>
+          <div class="flex justify-between text-muted">
+            <span>متأخرات سابقة على هذه الشقة:</span>
+            <span id="payModalArrears" class="font-semibold text-rose-400">0 ج.م</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">المبلغ المسدد الآن (ج.م):</label>
+          <input type="number" id="payModalAmount" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm font-bold text-main focus:outline-none focus:border-emerald-500" placeholder="أدخل المبلغ...">
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button type="button" onclick="setPresetPayment('full_month')" class="px-2.5 py-1 rounded-lg text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/30">سداد اشتراك الشهر فقط</button>
+          <button type="button" onclick="setPresetPayment('full_total')" id="btnPayFullTotal" class="px-2.5 py-1 rounded-lg text-xs bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/30">سداد الإجمالي مع المتأخرات</button>
+          <button type="button" onclick="setPresetPayment('zero')" class="px-2.5 py-1 rounded-lg text-xs bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600/30">إلغاء السداد (0 ج)</button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-main">
+        <button onclick="closeEditPaymentModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="confirmEditPayment()" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/30">حفظ الدفعة وتحديث الخزينة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: EDIT RESIDENT DATA -->
+  <div id="editResidentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+          تعديل بيانات الساكن / الشقة
+        </h3>
+        <button onclick="closeEditResidentModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">اسم الساكن / المالك:</label>
+          <input type="text" id="resModalName" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">رقم الهاتف:</label>
+          <input type="text" id="resModalPhone" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">قيمة الاشتراك الشهري المعتاد (ج.م):</label>
+          <input type="number" id="resModalDefaultFee" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-purple-500">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-main">
+        <button onclick="closeEditResidentModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="confirmEditResident()" class="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30">حفظ التعديلات</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: MANAGE RESIDENTS DIRECTORY -->
+  <div id="manageResidentsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+          دليل سكان وشقق البرج (24 شقة)
+        </h3>
+        <button onclick="closeManageResidentsModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-muted">يمكنك تعديل بيانات أي ساكن أو رقم هاتفه أو قيمة اشتراكه بسهولة بالضغط على زر التعديل أمام الشقة.</p>
+
+      <div class="overflow-y-auto flex-1 border border-main rounded-xl">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-subcard text-muted sticky top-0 border-b border-main">
+            <tr>
+              <th class="py-2.5 px-3">الشقة</th>
+              <th class="py-2.5 px-3">الدور والموقع</th>
+              <th class="py-2.5 px-3">الاسم الحالي</th>
+              <th class="py-2.5 px-3">الهاتف</th>
+              <th class="py-2.5 px-3 text-center">الاشتراك</th>
+              <th class="py-2.5 px-3 text-center">تعديل</th>
+            </tr>
+          </thead>
+          <tbody id="manageResidentsTableBody" class="divide-y divide-main">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-end pt-2">
+        <button onclick="closeManageResidentsModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: MANAGE EXPENSE ITEMS CATALOG (ADD BY NAME ONLY) -->
+  <div id="manageExpenseItemsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          دليل بنود المصاريف المعتادة للبرج
+        </h3>
+        <button onclick="closeManageExpenseItemsModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <!-- Add New Item By Name Only -->
+      <div class="bg-subcard p-4 rounded-xl border border-main space-y-2">
+        <label class="block text-xs font-bold text-main">إضافة بند مصروف جديد بالاسم فقط:</label>
+        <div class="flex gap-2">
+          <input type="text" id="newCatalogItemName" placeholder="مثال: صيانة إنتركم، عزل أسطح..." class="flex-1 bg-card border border-main rounded-xl px-3 py-2 text-xs text-main placeholder-muted focus:outline-none focus:border-amber-500">
+          <button onclick="addNewCatalogItemByName()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white whitespace-nowrap">
+            + إضافة البند
+          </button>
+        </div>
+        <p class="text-[11px] text-muted">سيظهر هذا البند فوراً في الاقتراحات السريعة عند تسجيل أي مصروف شهري جديد.</p>
+      </div>
+
+      <!-- Catalog List -->
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-muted">البنود المعتادة المسجلة:</span>
+        <div id="catalogItemsList" class="max-h-60 overflow-y-auto divide-y divide-main border border-main rounded-xl p-1 bg-subcard/50">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end pt-2">
+        <button onclick="closeManageExpenseItemsModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main">تم</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: ADD EXPENSE TO MONTH -->
+  <div id="addExpenseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <h3 class="text-base font-bold text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          تسجيل مصروف جديد لهذا الشهر
+        </h3>
+        <button onclick="closeAddExpenseModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">بند المصروف:</label>
+          <input type="text" id="newExpenseItem" list="expenseCatalogDatalist" placeholder="اختر من القائمة أو اكتب اسماً جديداً..." class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm text-main focus:outline-none focus:border-amber-500">
+          <datalist id="expenseCatalogDatalist"></datalist>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">المبلغ المطلوب (ج.م):</label>
+          <input type="number" id="newExpenseCost" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-sm font-bold text-main focus:outline-none focus:border-amber-500" placeholder="0">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">التصنيف:</label>
+          <select id="newExpenseCategory" class="w-full bg-subcard border border-main rounded-xl px-3 py-2 text-xs text-main focus:outline-none focus:border-amber-500">
+            <option value="كهرباء">كهرباء ومرافق</option>
+            <option value="صيانة أسانسير">صيانة أسانسير</option>
+            <option value="حراسة">حراسة وسلف</option>
+            <option value="نظافة">نظافة وخزانات</option>
+            <option value="مياه">مياه البرج</option>
+            <option value="أمن وكاميرات">أمن وكاميرات</option>
+            <option value="نقاشة ودهانات">نقاشة وبويات</option>
+            <option value="أخرى">أخرى / عامة</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-main">
+        <button onclick="closeAddExpenseModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="confirmAddExpense()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-sm shadow-amber-600/30">تسجيل المصروف وتحديث الخزينة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: ONLINE SYNC & CLOUD SETUP -->
+  <div id="cloudModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">⚡</div>
+          <h3 class="text-base font-bold text-main">الربط السحابي مع Supabase والتشغيل أونلاين</h3>
+        </div>
+        <button onclick="closeCloudModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
+        
+        <!-- Live Status Card -->
+        <div class="p-3.5 rounded-xl border border-main bg-subcard flex items-center justify-between">
+          <div>
+            <span class="text-muted block text-[11px]">حالة المزامنة السحابية:</span>
+            <span id="modalCloudStatusText" class="font-bold text-sm text-amber-400">غير متصل (الحفظ محلي في هذا المتصفح)</span>
+          </div>
+          <button onclick="syncWithSupabaseNow()" id="btnSyncNow" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            مزامنة الآن
+          </button>
+        </div>
+
+        <!-- Credentials Form -->
+        <div class="p-4 rounded-xl border border-main bg-subcard/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-main text-xs flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              بيانات مشروع Supabase الخاص بك:
+            </h4>
+            <a href="https://supabase.com/dashboard" target="_blank" class="text-emerald-400 hover:underline text-[11px] flex items-center gap-1">
+              فتح لوحة Supabase
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-muted mb-1">رابط المشروع (Project URL):</label>
+            <input type="text" id="supabaseUrlInput" placeholder="https://xxxxxxxxxxxxxxxx.supabase.co" class="w-full bg-card border border-main rounded-xl px-3 py-2 text-xs font-mono text-main focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-muted mb-1">المفتاح العام (anon public key):</label>
+            <input type="password" id="supabaseKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-card border border-main rounded-xl px-3 py-2 text-xs font-mono text-main focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <button onclick="testAndSaveSupabaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              حفظ وتفعيل الاتصال السحابي
+            </button>
+            <button onclick="disconnectSupabase()" id="btnDisconnectSupabase" class="hidden px-3 py-1.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10">
+              فصل الاتصال
+            </button>
+          </div>
+        </div>
+
+        <!-- Step-by-step Setup Accordion -->
+        <div class="p-3.5 rounded-xl border border-main bg-subcard/30 space-y-2">
+          <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('sqlSetupDetails').classList.toggle('hidden')">
+            <span class="font-bold text-main text-xs flex items-center gap-1.5">
+              <span>📋</span>
+              كود SQL لإنشاء الجدول في Supabase (خطوة واحدة فقط):
+            </span>
+            <span class="text-xs text-muted">عرض / إخفاء ▼</span>
+          </div>
+
+          <div id="sqlSetupDetails" class="space-y-2 pt-2">
+            <p class="text-[11px] text-muted">
+              ادخل إلى لوحة Supabase -> <strong>SQL Editor</strong> -> الصق الكود التالي واضغط <strong>Run</strong>:
+            </p>
+            <div class="relative">
+              <pre class="bg-black/80 text-emerald-400 p-3 rounded-xl text-[10px] font-mono overflow-x-auto border border-emerald-500/20 max-h-40 leading-relaxed" id="sqlCodeBlock">-- إنشاء جدول حسابات العمارة
+create table if not exists building_finance (
+  id text primary key default 'main',
+  data jsonb not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- تمكين الوصول العام (قراءة وتعديل)
+alter table building_finance enable row level security;
+create policy "Public Access Policy" on building_finance for all using (true) with check (true);
+
+-- تمكين المزامنة اللحظية Realtime
+alter publication supabase_realtime add table building_finance;</pre>
+              <button onclick="copySqlCode()" class="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-subcard text-main border border-main hover:bg-card">
+                نسخ الكود 📋
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Backup Section -->
+        <div class="p-3.5 rounded-xl border border-main bg-subcard flex items-center justify-between">
+          <div>
+            <span class="text-main font-bold block text-xs">نسخة احتياطية يدوية (ملف JSON)</span>
+            <span class="text-[11px] text-muted">تنزيل أو استيراد ملف الحسابات بالكامل</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="file" id="jsonImportInput" accept=".json" onchange="importJsonBackup(event)" class="hidden">
+            <button onclick="document.getElementById('jsonImportInput').click()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main">
+              استيراد ملف
+            </button>
+            <button onclick="downloadJsonBackup()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm">
+              تحميل ملف
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end pt-3 border-t border-main">
+        <button onclick="closeCloudModal()" class="px-5 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main hover:bg-card">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMBEDDED DATA & APPLICATION LOGIC -->
+  <script>
+    // RAW INITIAL DATA FROM EXCEL AUDIT
+    const RAW_INITIAL_DATA = {"apartments": [{"row": 2, "apt_num": 1, "floor": 1, "position": "يمين", "owner_name": "احمد وقاد", "phone": "01222714991", "default_fee": 100}, {"row": 3, "apt_num": 2, "floor": null, "position": "يسار", "owner_name": "مديح", "phone": "", "default_fee": 100}, {"row": 4, "apt_num": 3, "floor": 2, "position": "كامل", "owner_name": "عبد العزيز", "phone": "01228091137", "default_fee": 100}, {"row": 5, "apt_num": 4, "floor": 3, "position": "يمين", "owner_name": "ايمن  مصطفي", "phone": "01114821735", "default_fee": 200}, {"row": 6, "apt_num": 5, "floor": 3, "position": "يسار", "owner_name": "احمد السنوري(وسام)", "phone": "01554159183", "default_fee": 200}, {"row": 7, "apt_num": 6, "floor": 4, "position": "كامل", "owner_name": "عبدالوهاب محجوب", "phone": "01500059558", "default_fee": 200}, {"row": 8, "apt_num": 7, "floor": 5, "position": "يمين", "owner_name": "وليد كفل", "phone": "01027223116", "default_fee": 200}, {"row": 9, "apt_num": 8, "floor": 5, "position": "يسار", "owner_name": "ام نشوي", "phone": "01278139828", "default_fee": 250}, {"row": 10, "apt_num": 9, "floor": 6, "position": "كامل", "owner_name": "محمد التايب", "phone": "01118780180", "default_fee": 250}, {"row": 11, "apt_num": 10, "floor": 7, "position": "يمين", "owner_name": "ام احمد", "phone": "01068257159", "default_fee": 250}, {"row": 12, "apt_num": 11, "floor": 7, "position": "يسار", "owner_name": "حسيني بدر", "phone": "01060356461", "default_fee": 200}, {"row": 13, "apt_num": 12, "floor": 8, "position": "كامل", "owner_name": "ام ندي", "phone": "01065683960", "default_fee": 200}, {"row": 14, "apt_num": 13, "floor": 9, "position": "كامل", "owner_name": "ام عمرو", "phone": "01228700853", "default_fee": 200}, {"row": 15, "apt_num": 14, "floor": 10, "position": "كامل", "owner_name": "احمد جابر", "phone": "01280531643", "default_fee": 250}, {"row": 16, "apt_num": 15, "floor": 11, "position": "يمين", "owner_name": "الحاجه فاطمة", "phone": "01153636243", "default_fee": 200}, {"row": 17, "apt_num": 16, "floor": 11, "position": "يسار", "owner_name": "محمد شحاته", "phone": "مدام اماني", "default_fee": 200}, {"row": 18, "apt_num": 17, "floor": 12, "position": "كامل", "owner_name": "أبو حمزة", "phone": "01280531643", "default_fee": 250}, {"row": 19, "apt_num": 18, "floor": 13, "position": "يمين", "owner_name": "الحاجة عايدة", "phone": "01270749193", "default_fee": 200}, {"row": 20, "apt_num": 19, "floor": 13, "position": "يسار", "owner_name": "رامي", "phone": "01094464467", "default_fee": 200}, {"row": 21, "apt_num": 20, "floor": 14, "position": "كامل", "owner_name": "فرج", "phone": "01277315226", "default_fee": 250}, {"row": 22, "apt_num": 21, "floor": 15, "position": "يمين", "owner_name": "محمد إسماعيل", "phone": "01001748886", "default_fee": 200}, {"row": 23, "apt_num": 22, "floor": 15, "position": "يسار", "owner_name": "محمد رأفت", "phone": "01062138670", "default_fee": 200}, {"row": 24, "apt_num": 23, "floor": 16, "position": "كامل", "owner_name": "شعبان الصعيدي", "phone": "01068071425", "default_fee": 200}, {"row": 25, "apt_num": 24, "floor": 17, "position": "كامل", "owner_name": "احمد حمدي", "phone": "01222979122", "default_fee": 250}], "chronological_order": ["11", "12", "1", "2", "3", "4", "5", "6", "7", "8"], "months": {"11": {"id": "11", "title": "نوفمبر 2025 (شهر 11)", "opening_balance": 150, "subscriptions_collected": 4850, "extra_revenue": 5900, "total_revenue": 10750, "total_income": 10900, "total_expenses": 8120, "closing_balance": 2780, "collections": [{"row": 2, "name": "احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "احمد السنوري(وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "عبدالوهاب محجوب", "old_dues": 1400, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 1500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 650, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "رامي", "old_dues": 1750, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "فرج", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "11_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "11_12", "item": "صيانة دورية اسانسير", "cost": 2000, "category": "صيانة أسانسير"}, {"id": "11_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "11_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "11_15", "item": "منظفات", "cost": 120, "category": "نظافة"}, {"id": "11_16", "item": "التليفون للحارس", "cost": 500, "category": "حراسة"}, {"id": "11_17", "item": "كابينة الاسانسير تخريم الباب", "cost": 100, "category": "صيانة أسانسير"}, {"id": "11_18", "item": "طوب و اسمنت و الحديدة", "cost": 600, "category": "أمن وكاميرات"}, {"id": "11_19", "item": "بويات  و مصنعية  للحارس", "cost": 1150, "category": "حراسة"}, {"id": "11_20", "item": "قفل للمدخل العمارة", "cost": 100, "category": "أخرى"}]}, "12": {"id": "12", "title": "ديسمبر 2025 (شهر 12)", "opening_balance": 2780, "subscriptions_collected": 4800, "extra_revenue": 4600, "total_revenue": 9400, "total_income": 12180, "total_expenses": 17360, "closing_balance": -5180, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 150, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 650, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 150, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 10, "name": "د.محمد التايب", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "أ.فرج", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 600, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "12_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "12_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "12_14", "item": "الحارس سلف", "cost": 1400, "category": "حراسة"}, {"id": "12_15", "item": "منظفات تينارلازالة بواقي البويا", "cost": 100, "category": "نظافة"}, {"id": "12_16", "item": "شاشة كاميرات", "cost": 700, "category": "أمن وكاميرات"}, {"id": "12_17", "item": "الكاميرات", "cost": 3500, "category": "أمن وكاميرات"}, {"id": "12_18", "item": "سلك للكاميرات", "cost": 200, "category": "أمن وكاميرات"}, {"id": "12_19", "item": "صندوق زبالة", "cost": 950, "category": "نظافة"}, {"id": "12_20", "item": "تركيب 3 باغات اسانسير+الأرضي كريستال", "cost": 600, "category": "صيانة أسانسير"}, {"id": "12_21", "item": "تركيب زر طلب اسانسير 6", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_22", "item": "للصندوق جنزير و قفل", "cost": 300, "category": "أخرى"}, {"id": "12_23", "item": "صاج للباب الحديد و كالون", "cost": 1600, "category": "أخرى"}, {"id": "12_24", "item": "رمل و اسمنت لغرفة الاسانسر و فاتحة ال17", "cost": 300, "category": "أمن وكاميرات"}, {"id": "12_25", "item": "تخريم باب غرفة الاسانسير", "cost": 140, "category": "صيانة أسانسير"}, {"id": "12_26", "item": "تركيب سيراميك لغرفة الاسانسير", "cost": 100, "category": "صيانة أسانسير"}, {"id": "12_27", "item": "أدوات الدهان للمدخل و الباب", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_28", "item": "أدوات كهرباء", "cost": 1070, "category": "كهرباء"}, {"id": "12_29", "item": "سلك للانوار المدخل", "cost": 200, "category": "أخرى"}, {"id": "12_30", "item": "مصناعية النقاش", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_31", "item": "مصناعية الكهربائى", "cost": 1000, "category": "أخرى"}, {"id": "12_32", "item": "مصناعية الحارس", "cost": 150, "category": "حراسة"}, {"id": "12_33", "item": "ايجار سقالة", "cost": 100, "category": "أخرى"}, {"id": "12_34", "item": "منصناعية الحارس تبيض المسافات بين الادوار", "cost": 200, "category": "حراسة"}]}, "1": {"id": "1", "title": "يناير 2026 (شهر 1)", "opening_balance": -5180, "subscriptions_collected": 4750, "extra_revenue": 1050, "total_revenue": 5800, "total_income": 620, "total_expenses": 4995, "closing_balance": -4375, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 50, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "1_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "1_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 400, "category": "صيانة أسانسير"}, {"id": "1_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "1_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "1_15", "item": "منظفات", "cost": 100, "category": "نظافة"}, {"id": "1_16", "item": "مياه البرج", "cost": 95, "category": "مياه"}, {"id": "1_17", "item": "توصيل  نت الكاميرات", "cost": 150, "category": "أمن وكاميرات"}, {"id": "1_18", "item": "سلك نت للدور  السادس", "cost": 500, "category": "أمن وكاميرات"}, {"id": "1_19", "item": "ستاند  شاشة الكاميرات", "cost": 200, "category": "أمن وكاميرات"}]}, "2": {"id": "2", "title": "فبراير 2026 (شهر 2)", "opening_balance": -4375, "subscriptions_collected": 4800, "extra_revenue": 2500, "total_revenue": 7300, "total_income": 2925, "total_expenses": 3950, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 100, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 100, "monthly_fee": 200, "paid": 250, "remaining": 50}, {"row": 9, "name": "ام نشوي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "2_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "2_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "2_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "2_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "2_15", "item": "منظفات", "cost": 100, "category": "نظافة"}]}, "3": {"id": "3", "title": "مارس 2026 (شهر 3)", "opening_balance": -1025, "subscriptions_collected": 4350, "extra_revenue": 100, "total_revenue": 4450, "total_income": 3425, "total_expenses": 2950, "closing_balance": 475, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 150, "paid": 150, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "3_11", "item": "كهرباء", "cost": 1000, "category": "كهرباء"}, {"id": "3_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "3_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "3_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}]}, "4": {"id": "4", "title": "أبريل 2026 (شهر 4)", "opening_balance": 475, "subscriptions_collected": 4800, "extra_revenue": 0, "total_revenue": 4800, "total_income": 5275, "total_expenses": 4300, "closing_balance": 975, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "4_11", "item": "كهرباء", "cost": 1500, "category": "كهرباء"}, {"id": "4_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "4_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "4_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "4_15", "item": "كهربئ (صنايعي + مستلزمات)", "cost": 850, "category": "كهرباء"}]}, "5": {"id": "5", "title": "مايو 2026 (شهر 5)", "opening_balance": 975, "subscriptions_collected": 4500, "extra_revenue": 0, "total_revenue": 4500, "total_income": 5475, "total_expenses": 6500, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "5_11", "item": "كهرباء", "cost": 3500, "category": "كهرباء"}, {"id": "5_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "5_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "5_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "5_15", "item": "أدوات نظافة", "cost": 75, "category": "نظافة"}, {"id": "5_16", "item": "فاتورة مياة البرج", "cost": 975, "category": "مياه"}]}, "6": {"id": "6", "title": "يونيو 2026 (شهر 6)", "opening_balance": -1025, "subscriptions_collected": 4650, "extra_revenue": 0, "total_revenue": 4650, "total_income": 3625, "total_expenses": 4070, "closing_balance": -445, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "6_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "6_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "6_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "6_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "6_16", "item": "فاتورة مياة البرج", "cost": 120, "category": "مياه"}]}, "7": {"id": "7", "title": "يوليو 2026 (شهر 7)", "opening_balance": -445, "subscriptions_collected": 4450, "extra_revenue": 0, "total_revenue": 4450, "total_income": 4005, "total_expenses": 2420, "closing_balance": 1585, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "7_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "7_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "7_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "7_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "7_16", "item": "فاتورة مياة البرج", "cost": 70, "category": "مياه"}, {"id": "7_17", "item": "تركيب طلب اسانسير15", "cost": 150, "category": "صيانة أسانسير"}, {"id": "7_18", "item": "صيانة اسانسير يوم جمعه", "cost": 100, "category": "صيانة أسانسير"}]}, "8": {"id": "8", "title": "أغسطس 2026 (شهر 8)", "opening_balance": 1585, "subscriptions_collected": 4250, "extra_revenue": 0, "total_revenue": 4250, "total_income": 5835, "total_expenses": 2150, "closing_balance": 3685, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "8_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "8_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "8_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "8_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "8_16", "item": "مباه البرج", "cost": 50, "category": "مياه"}]}}, "expense_catalog": [{"name": "فاتورة كهرباء البرج والمرافق", "category": "كهرباء"}, {"name": "صيانة دورية اسانسير + مستلزمات", "category": "صيانة أسانسير"}, {"name": "نظافة الخزانات العلوية والأرضية", "category": "نظافة"}, {"name": "مرتب الحارس الشهري", "category": "حراسة"}, {"name": "أدوات ومنظفات المدخل والسلالم", "category": "نظافة"}, {"name": "فاتورة مياه البرج", "category": "مياه"}, {"name": "صيانة وقطع غيار أسانسير", "category": "صيانة أسانسير"}, {"name": "كاميرات المراقبة وشاشات العرض", "category": "أمن وكاميرات"}, {"name": "سباكة ومستلزمات صحية للبرج", "category": "سباكة"}, {"name": "صيانة كهرباء ومفاتيح وإنارة المدخل", "category": "كهرباء"}, {"name": "أقفال وأبواب وحدادة المدخل", "category": "صيانة عامة"}, {"name": "بويات ومصنعيات نقاشة للسلالم والمدخل", "category": "نقاشة ودهانات"}]};
+
+    // STORAGE KEY (V6 ensures immediate reload of corrected data)
+    const STORAGE_KEY = 'ALBORG_FINANCE_DATA_V7';
+
+    let APP_DATA = null;
+    let currentFilter = 'all';
+    let currentMFilter = 'all';
+    let currentCategory = 'all';
+    let editingPaymentTarget = null;
+    let editingResidentTargetRow = null;
+
+    // Load Data
+    function loadAppData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          APP_DATA = JSON.parse(saved);
+        } catch(e) {
+          console.error("Corrupted local data, reloading defaults", e);
+          APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
+        }
+      } else {
+        APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
+      }
+
+      // Recalculate accurately
+      recalculateAllBalances();
+    }
+
+    function saveAppData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+      if (supabaseClient) {
+        pushToSupabase();
+      }
+    }
+
+    function resetToInitialData() {
+      if (confirm("هل أنت متأكد من إعادة ضبط جميع البيانات إلى النسخة الأصلية الدقيقة من الإكسيل؟")) {
+        localStorage.removeItem(STORAGE_KEY);
+        APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
+        recalculateAllBalances();
+        initMonthSelector();
+        renderSelectedMonth();
+        renderArrearsTable();
+        renderAllExpensesTable();
+        renderTreasuryFlow();
+        alert("تمت استعادة البيانات المطابقة للإكسيل بنجاح!");
+      }
+    }
+
+    // Recalculate All Months Balances with Mathematical Precision
+    function recalculateAllBalances() {
+      let runningOpening = 150; // Month 11 opening from Excel
+
+      APP_DATA.chronological_order.forEach((mKey, idx) => {
+        const m = APP_DATA.months[mKey];
+        if (!m) return;
+
+        m.opening_balance = runningOpening;
+
+        // Subscriptions from apartments
+        let subs = 0;
+        m.collections.forEach(c => {
+          subs += (c.paid || 0);
+          c.remaining = (c.paid || 0) - (c.monthly_fee || 0);
+        });
+        m.subscriptions_collected = subs;
+
+        // Extra revenue (old debts / maintenance cash collected)
+        const extra = m.extra_revenue || 0;
+        m.total_revenue = subs + extra;
+
+        m.total_income = m.opening_balance + m.total_revenue;
+
+        let expTotal = 0;
+        m.expenses?.forEach(e => {
+          expTotal += (e.cost || 0);
+        });
+        m.total_expenses = expTotal;
+
+        m.closing_balance = m.total_income - m.total_expenses;
+        runningOpening = m.closing_balance;
+      });
+
+      updateKPICards();
+      saveAppData();
+    }
+
+    // Calculate Accurate Past Arrears (With Written-off Bad Debts)
+    function calculateApartmentAudits() {
+      const results = [];
+      const closedMonths = ['11', '12', '1', '2', '3', '4', '5', '6', '7', '8'];
+      
+      // Historical elevator and electricity debts from columns N:S in Excel
+      const specialOldDebtsMap = {
+        6: 1300,  // عبدالوهاب محجوب
+        18: 550   // الحاجة عايدة
+      };
+
+      // Written-off / forgiven bad debts per user request (ديون مفقود الأمل فيها تم إسقاطها)
+      // شقة 1 (أحمد وقاد): 1000 ج | شقة 3 (عبد العزيز): 500 ج | شقة 6 (عبد الوهاب): 1300 ج | شقة 18 (عايدة): 550 ج
+      const writtenOffDebtsMap = {
+        1: { subs: 1000, special: 0, reason: "إسقاط اشتراكات سابقة معدومة (1,000 ج)" },
+        3: { subs: 500, special: 0, reason: "إسقاط اشتراكات سابقة معدومة (500 ج)" },
+        6: { subs: 0, special: 1300, reason: "إسقاط مديونية أسانسير سابقة (1,300 ج)" },
+        18: { subs: 0, special: 550, reason: "إسقاط مديونية أسانسير وكهرباء (550 ج)" }
+      };
+
+      APP_DATA.apartments.forEach(apt => {
+        const row = apt.row;
+        let totalFee = 0;
+        let totalPaid = 0;
+
+        closedMonths.forEach(m => {
+          const mData = APP_DATA.months[m];
+          if (mData) {
+            const c = mData.collections.find(x => x.row === row);
+            if (c) {
+              totalFee += (c.monthly_fee || 0);
+              totalPaid += (c.paid || 0);
+            }
+          }
+        });
+
+        const rawPastUnpaidSubs = Math.max(0, totalFee - totalPaid);
+        const rawSpecialOldDebt = specialOldDebtsMap[apt.apt_num] || 0;
+
+        const wo = writtenOffDebtsMap[apt.apt_num] || { subs: 0, special: 0, reason: "" };
+        const pastUnpaidSubs = Math.max(0, rawPastUnpaidSubs - wo.subs);
+        const specialOldDebt = Math.max(0, rawSpecialOldDebt - wo.special);
+        const totalPastArrears = pastUnpaidSubs + specialOldDebt;
+
+        const isWrittenOff = (wo.subs + wo.special) > 0;
+        const writtenOffAmount = wo.subs + wo.special;
+
+        // Latest active month subscription (e.g. Month 9 or Month 8)
+        const latestMonthKey = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+        const latestMonthCol = APP_DATA.months[latestMonthKey]?.collections.find(x => x.row === row);
+        const currentMonthFee = latestMonthCol?.monthly_fee || apt.default_fee || 200;
+        const currentMonthPaid = latestMonthCol?.paid || 0;
+
+        results.push({
+          ...apt,
+          pastUnpaidSubs,
+          specialOldDebt,
+          totalPastArrears,
+          currentMonthFee,
+          currentMonthPaid,
+          grandTotalDue: totalPastArrears + (currentMonthFee - currentMonthPaid),
+          hasDebt: totalPastArrears > 0,
+          isWrittenOff,
+          writtenOffAmount,
+          writtenOffReason: wo.reason
+        });
+      });
+
+      return results;
+    }
+
+    // Update KPI Cards
+    function updateKPICards() {
+      const lastMonthKey = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+      const lastMonth = APP_DATA.months[lastMonthKey];
+      const currentBalance = lastMonth ? lastMonth.closing_balance : 0;
+
+      let totalRev = 0;
+      let totalExp = 0;
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (m) {
+          totalRev += (m.total_revenue || 0);
+          totalExp += (m.total_expenses || 0);
+        }
+      });
+
+      const audits = calculateApartmentAudits();
+      let totalPastArrears = 0;
+      let debtorCount = 0;
+      audits.forEach(a => {
+        totalPastArrears += a.totalPastArrears;
+        if (a.hasDebt) debtorCount++;
+      });
+
+      // Card 1: Balance
+      const balEl = document.getElementById('kpiBalance');
+      balEl.textContent = currentBalance.toLocaleString();
+      if (currentBalance >= 0) {
+        balEl.className = "text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight";
+      } else {
+        balEl.className = "text-2xl sm:text-3xl font-extrabold text-rose-400 tracking-tight";
+      }
+      document.getElementById('kpiBalanceSub').textContent = `حتى نهاية ${lastMonth?.title?.split('(')[0]?.trim() || ''}`;
+
+      // Card 2: Revenue
+      document.getElementById('kpiRevenue').textContent = totalRev.toLocaleString();
+
+      // Card 3: Expenses
+      document.getElementById('kpiExpenses').textContent = totalExp.toLocaleString();
+
+      // Card 4: Arrears (Accurate 5,050 on 9 apts)
+      document.getElementById('kpiArrears').textContent = totalPastArrears.toLocaleString();
+      document.getElementById('kpiArrearsSub').textContent = `${debtorCount} شقق فقط (${24 - debtorCount} شقة خالصة 100%)`;
+      document.getElementById('badgeArrearsCount').textContent = `${debtorCount} شقق عليها ديون سابقة (تم إسقاط 4 شقق)`;
+      document.getElementById('badgeCurrentMonth').textContent = lastMonth?.title?.split('(')[0]?.trim() || 'الشهر الأخير';
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      const tabs = ['month', 'arrears', 'expenses', 'flow'];
+      tabs.forEach(t => {
+        const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tabId) {
+          content?.classList.remove('hidden');
+          btn?.classList.add('border-emerald-500', 'text-emerald-400');
+          btn?.classList.remove('border-transparent', 'text-muted');
+        } else {
+          content?.classList.add('hidden');
+          btn?.classList.remove('border-emerald-500', 'text-emerald-400');
+          btn?.classList.add('border-transparent', 'text-muted');
+        }
+      });
+
+      if (tabId === 'arrears') renderArrearsTable();
+      if (tabId === 'expenses') renderAllExpensesTable();
+      if (tabId === 'flow') renderTreasuryFlow();
+    }
+
+    // Month Selector Initialization
+    function initMonthSelector() {
+      const select = document.getElementById('monthSelect');
+      select.innerHTML = '';
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m) return;
+        const opt = document.createElement('option');
+        opt.value = mKey;
+        opt.textContent = m.title;
+        select.appendChild(opt);
+      });
+      // select latest month
+      select.value = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+    }
+
+    // Render Month View
+    function renderSelectedMonth() {
+      const mKey = document.getElementById('monthSelect').value;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+
+      // Update Strip (Matching Excel Cells L1, L2, L3, L4, L5)
+      document.getElementById('mStripOpening').textContent = `${m.opening_balance.toLocaleString()} ج.م`;
+      document.getElementById('mStripRevenue').textContent = `${m.total_revenue.toLocaleString()} ج.م`;
+      document.getElementById('mStripAvailable').textContent = `${(m.opening_balance + m.total_revenue).toLocaleString()} ج.م`;
+      document.getElementById('mStripExpenses').textContent = `${m.total_expenses.toLocaleString()} ج.م`;
+      const closingEl = document.getElementById('mStripClosing');
+      closingEl.textContent = `${m.closing_balance.toLocaleString()} ج.م`;
+      closingEl.className = m.closing_balance >= 0 ? "font-bold text-emerald-400" : "font-bold text-rose-400";
+
+      const audits = calculateApartmentAudits();
+      const auditsMap = {};
+      audits.forEach(a => auditsMap[a.row] = a);
+
+      // Render Collections Table
+      const tbody = document.getElementById('monthCollectionsTableBody');
+      tbody.innerHTML = '';
+
+      let paidCount = 0;
+      m.collections.forEach(c => {
+        const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+        const audit = auditsMap[c.row] || {};
+        const isPaid = (c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0;
+        if (isPaid) paidCount++;
+
+        if (currentMFilter === 'paid' && !isPaid) return;
+        if (currentMFilter === 'unpaid' && isPaid) return;
+
+        const pastDebt = audit.totalPastArrears || 0;
+        const totalDue = pastDebt + (c.monthly_fee || 0);
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-main whitespace-nowrap">
+            شقة ${apt.apt_num}
+            <span class="block text-[10px] font-normal text-muted">${apt.floor} ${apt.position}</span>
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <span class="font-semibold text-main">${c.name || apt.owner_name}</span>
+              <button onclick="openEditResidentModal(${c.row})" class="text-muted hover:text-purple-400 p-0.5" title="تعديل الساكن">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              </button>
+            </div>
+            <span class="block text-[10px] text-muted">${apt.phone || 'بدون هاتف'}</span>
+          </td>
+          <td class="py-2.5 px-3 text-center font-semibold text-main whitespace-nowrap">${c.monthly_fee || 0} ج</td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            ${pastDebt > 0 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">${pastDebt.toLocaleString()} ج</span>` 
+              : `<span class="text-emerald-400 text-[11px]">خالص (0 ج)</span>`}
+          </td>
+          <td class="py-2.5 px-3 text-center font-bold text-main whitespace-nowrap">${totalDue.toLocaleString()} ج</td>
+          <td class="py-2.5 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            ${isPaid 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`}
+          </td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <div class="inline-flex items-center gap-1.5">
+              ${!isPaid ? `
+                <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95">
+                  سداد كامل
+                </button>
+              ` : ''}
+              <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main">
+                ${isPaid ? 'تعديل الدفعة' : 'مخصص'}
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('mPaidRatioBadge').textContent = `${paidCount} من 24 سددوا (${Math.round((paidCount/24)*100)}%)`;
+
+      // Render Month Expenses
+      const expList = document.getElementById('monthExpensesList');
+      expList.innerHTML = '';
+      if (!m.expenses || m.expenses.length === 0) {
+        expList.innerHTML = `<div class="p-8 text-center text-xs text-muted">لا توجد مصروفات مسجلة لهذا الشهر بعد</div>`;
+      } else {
+        m.expenses.forEach((e, idx) => {
+          const itemEl = document.createElement('div');
+          itemEl.className = "p-3 flex items-center justify-between hover:bg-subcard/50 transition-colors";
+          itemEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/50 hover:text-rose-400 p-1" title="حذف">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+              <div>
+                <span class="text-xs font-semibold text-main block">${e.item}</span>
+                <span class="text-[10px] text-muted">${e.category || 'عام'}</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-amber-400 whitespace-nowrap">${e.cost.toLocaleString()} ج.م</span>
+          `;
+          expList.appendChild(itemEl);
+        });
+      }
+      document.getElementById('mTotalExpensesBadge').textContent = `${m.total_expenses.toLocaleString()} ج.م`;
+    }
+
+    function setMonthFilter(filter) {
+      currentMFilter = filter;
+      document.getElementById('mFilterAll').className = filter === 'all' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium' : 'px-2.5 py-1 rounded-lg bg-subcard text-muted hover:text-main font-medium';
+      document.getElementById('mFilterUnpaid').className = filter === 'unpaid' ? 'px-2.5 py-1 rounded-lg bg-rose-600 text-white font-medium' : 'px-2.5 py-1 rounded-lg bg-subcard text-muted hover:text-main font-medium';
+      document.getElementById('mFilterPaid').className = filter === 'paid' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium' : 'px-2.5 py-1 rounded-lg bg-subcard text-muted hover:text-main font-medium';
+      renderSelectedMonth();
+    }
+
+    // Quick 1-Click Pay
+    function quickPay(mKey, row) {
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+      const c = m.collections.find(x => x.row === row);
+      if (!c) return;
+
+      c.paid = c.monthly_fee || 200;
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+    }
+
+    // Edit Payment Modal
+    function openEditPaymentModal(mKey, row) {
+      editingPaymentTarget = { mKey, row };
+      const m = APP_DATA.months[mKey];
+      const c = m?.collections.find(x => x.row === row);
+      const apt = APP_DATA.apartments.find(a => a.row === row);
+      const audits = calculateApartmentAudits();
+      const audit = audits.find(a => a.row === row);
+
+      document.getElementById('payModalAptTitle').textContent = `شقة ${apt?.apt_num} - ${c?.name || apt?.owner_name}`;
+      document.getElementById('payModalFee').textContent = `الاشتراك: ${c?.monthly_fee || 0} ج.م`;
+      document.getElementById('payModalArrears').textContent = `${audit?.totalPastArrears || 0} ج.م`;
+      document.getElementById('payModalAmount').value = c?.paid || 0;
+
+      const fullTotal = (c?.monthly_fee || 0) + (audit?.totalPastArrears || 0);
+      document.getElementById('btnPayFullTotal').textContent = `سداد الإجمالي مع المتأخرات (${fullTotal} ج)`;
+
+      document.getElementById('editPaymentModal').classList.remove('hidden');
+    }
+
+    function closeEditPaymentModal() {
+      document.getElementById('editPaymentModal').classList.add('hidden');
+      editingPaymentTarget = null;
+    }
+
+    function setPresetPayment(type) {
+      if (!editingPaymentTarget) return;
+      const { mKey, row } = editingPaymentTarget;
+      const m = APP_DATA.months[mKey];
+      const c = m?.collections.find(x => x.row === row);
+      const audits = calculateApartmentAudits();
+      const audit = audits.find(a => a.row === row);
+
+      if (type === 'full_month') {
+        document.getElementById('payModalAmount').value = c?.monthly_fee || 200;
+      } else if (type === 'full_total') {
+        document.getElementById('payModalAmount').value = (c?.monthly_fee || 0) + (audit?.totalPastArrears || 0);
+      } else if (type === 'zero') {
+        document.getElementById('payModalAmount').value = 0;
+      }
+    }
+
+    function confirmEditPayment() {
+      if (!editingPaymentTarget) return;
+      const { mKey, row } = editingPaymentTarget;
+      const amount = parseFloat(document.getElementById('payModalAmount').value) || 0;
+
+      const m = APP_DATA.months[mKey];
+      const c = m?.collections.find(x => x.row === row);
+      if (c) {
+        c.paid = amount;
+      }
+
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+      closeEditPaymentModal();
+    }
+
+    // Edit Resident Modal
+    function openEditResidentModal(row) {
+      editingResidentTargetRow = row;
+      const apt = APP_DATA.apartments.find(a => a.row === row);
+      if (!apt) return;
+
+      document.getElementById('resModalName').value = apt.owner_name || '';
+      document.getElementById('resModalPhone').value = apt.phone || '';
+      document.getElementById('resModalDefaultFee').value = apt.default_fee || 200;
+
+      document.getElementById('editResidentModal').classList.remove('hidden');
+    }
+
+    function closeEditResidentModal() {
+      document.getElementById('editResidentModal').classList.add('hidden');
+      editingResidentTargetRow = null;
+    }
+
+    function confirmEditResident() {
+      if (!editingResidentTargetRow) return;
+      const row = editingResidentTargetRow;
+      const name = document.getElementById('resModalName').value.trim();
+      const phone = document.getElementById('resModalPhone').value.trim();
+      const fee = parseFloat(document.getElementById('resModalDefaultFee').value) || 200;
+
+      const apt = APP_DATA.apartments.find(a => a.row === row);
+      if (apt) {
+        apt.owner_name = name;
+        apt.phone = phone;
+        apt.default_fee = fee;
+      }
+
+      // update current collections for this row
+      const curMonthKey = document.getElementById('monthSelect')?.value;
+      if (curMonthKey) {
+        const c = APP_DATA.months[curMonthKey]?.collections.find(x => x.row === row);
+        if (c) {
+          c.name = name;
+          c.monthly_fee = fee;
+        }
+      }
+
+      recalculateAllBalances();
+      renderSelectedMonth();
+      if (!document.getElementById('manageResidentsModal').classList.contains('hidden')) {
+        renderManageResidentsTable();
+      }
+      closeEditResidentModal();
+    }
+
+    // Manage Residents Directory Modal
+    function openManageResidentsModal() {
+      renderManageResidentsTable();
+      document.getElementById('manageResidentsModal').classList.remove('hidden');
+    }
+
+    function closeManageResidentsModal() {
+      document.getElementById('manageResidentsModal').classList.add('hidden');
+    }
+
+    function renderManageResidentsTable() {
+      const tbody = document.getElementById('manageResidentsTableBody');
+      tbody.innerHTML = '';
+      APP_DATA.apartments.forEach(apt => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2 px-3 font-bold text-main">شقة ${apt.apt_num}</td>
+          <td class="py-2 px-3 text-muted">${apt.floor} ${apt.position}</td>
+          <td class="py-2 px-3 font-semibold text-main">${apt.owner_name}</td>
+          <td class="py-2 px-3 text-muted">${apt.phone || '—'}</td>
+          <td class="py-2 px-3 text-center font-bold text-main">${apt.default_fee || 200} ج</td>
+          <td class="py-2 px-3 text-center">
+            <button onclick="openEditResidentModal(${apt.row})" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-600/20 text-purple-300 hover:bg-purple-600/30">
+              تعديل
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Expense Catalog (Add by name only)
+    function openManageExpenseItemsModal() {
+      renderCatalogItemsList();
+      document.getElementById('manageExpenseItemsModal').classList.remove('hidden');
+    }
+
+    function closeManageExpenseItemsModal() {
+      document.getElementById('manageExpenseItemsModal').classList.add('hidden');
+    }
+
+    function renderCatalogItemsList() {
+      const listEl = document.getElementById('catalogItemsList');
+      listEl.innerHTML = '';
+      APP_DATA.expense_catalog.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = "p-2.5 flex items-center justify-between hover:bg-card/50 rounded-lg";
+        row.innerHTML = `
+          <div>
+            <span class="text-xs font-semibold text-main block">${item.name}</span>
+            <span class="text-[10px] text-muted">${item.category || 'عام'}</span>
+          </div>
+          <button onclick="removeCatalogItem(${idx})" class="text-muted hover:text-rose-400 p-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        `;
+        listEl.appendChild(row);
+      });
+      updateExpenseDatalist();
+    }
+
+    function addNewCatalogItemByName() {
+      const name = document.getElementById('newCatalogItemName').value.trim();
+      if (!name) return;
+
+      APP_DATA.expense_catalog.unshift({
+        name: name,
+        category: 'صيانة عامة'
+      });
+
+      document.getElementById('newCatalogItemName').value = '';
+      saveAppData();
+      renderCatalogItemsList();
+      alert(`تم بنجاح إضافة بند "${name}" إلى دليل المصاريف المعتادة!`);
+    }
+
+    function removeCatalogItem(idx) {
+      APP_DATA.expense_catalog.splice(idx, 1);
+      saveAppData();
+      renderCatalogItemsList();
+    }
+
+    function updateExpenseDatalist() {
+      const datalist = document.getElementById('expenseCatalogDatalist');
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      APP_DATA.expense_catalog.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.name;
+        datalist.appendChild(opt);
+      });
+    }
+
+    // Add Expense to Current Month
+    function openAddExpenseModal() {
+      document.getElementById('newExpenseItem').value = '';
+      document.getElementById('newExpenseCost').value = '';
+      updateExpenseDatalist();
+      document.getElementById('addExpenseModal').classList.remove('hidden');
+    }
+
+    function closeAddExpenseModal() {
+      document.getElementById('addExpenseModal').classList.add('hidden');
+    }
+
+    function confirmAddExpense() {
+      const mKey = document.getElementById('monthSelect').value;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+
+      const item = document.getElementById('newExpenseItem').value.trim();
+      const cost = parseFloat(document.getElementById('newExpenseCost').value) || 0;
+      const category = document.getElementById('newExpenseCategory').value;
+
+      if (!item || cost <= 0) {
+        alert("يرجى إدخال اسم البند والمبلغ بشكل صحيح.");
+        return;
+      }
+
+      if (!m.expenses) m.expenses = [];
+      m.expenses.push({
+        id: `${mKey}_${Date.now()}`,
+        item: item,
+        cost: cost,
+        category: category
+      });
+
+      // Auto-add to catalog if new
+      if (!APP_DATA.expense_catalog.some(c => c.name.toLowerCase() === item.toLowerCase())) {
+        APP_DATA.expense_catalog.push({ name: item, category: category });
+      }
+
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+      closeAddExpenseModal();
+    }
+
+    function deleteExpense(mKey, idx) {
+      const m = APP_DATA.months[mKey];
+      if (!m || !m.expenses) return;
+      if (confirm(`هل أنت متأكد من حذف مصروف "${m.expenses[idx].item}"?`)) {
+        m.expenses.splice(idx, 1);
+        recalculateAllBalances();
+        renderSelectedMonth();
+        updateKPICards();
+      }
+    }
+
+    // Add New Month Modal & Wizard
+    function openNewMonthModal() {
+      const lastMonthKey = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+      const lastMonth = APP_DATA.months[lastMonthKey];
+      const currentCash = lastMonth ? lastMonth.closing_balance : 3685;
+
+      document.getElementById('newMonthCarriedCash').textContent = `${currentCash.toLocaleString()} ج.م`;
+      document.getElementById('newMonthModal').classList.remove('hidden');
+    }
+
+    function closeNewMonthModal() {
+      document.getElementById('newMonthModal').classList.add('hidden');
+    }
+
+    function confirmAddNewMonth() {
+      const monthNum = document.getElementById('newMonthNum').value;
+      const year = document.getElementById('newMonthYear').value;
+      const monthKey = `${monthNum}_${year}`;
+
+      if (APP_DATA.chronological_order.includes(monthKey)) {
+        alert(`هذا الشهر موجود بالفعل في السجل!`);
+        return;
+      }
+
+      const monthArabicNames = {
+        '1': 'يناير', '2': 'فبراير', '3': 'مارس', '4': 'أبريل',
+        '5': 'مايو', '6': 'يونيو', '7': 'يوليو', '8': 'أغسطس',
+        '9': 'سبتمبر', '10': 'أكتوبر', '11': 'نوفمبر', '12': 'ديسمبر'
+      };
+
+      const title = `${monthArabicNames[monthNum] || ''} ${year} (شهر ${monthNum})`;
+      const prevKey = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+      const prevMonth = APP_DATA.months[prevKey];
+      const openingBalance = prevMonth ? prevMonth.closing_balance : 3685;
+
+      const newCollections = [];
+      APP_DATA.apartments.forEach(apt => {
+        const regularFee = apt.default_fee || 200;
+        newCollections.push({
+          row: apt.row,
+          name: apt.owner_name,
+          old_dues: 0,
+          monthly_fee: regularFee,
+          paid: 0,
+          remaining: -regularFee
+        });
+      });
+
+      APP_DATA.months[monthKey] = {
+        id: monthKey,
+        title: title,
+        opening_balance: openingBalance,
+        subscriptions_collected: 0,
+        extra_revenue: 0,
+        total_revenue: 0,
+        total_income: openingBalance,
+        total_expenses: 0,
+        closing_balance: openingBalance,
+        collections: newCollections,
+        expenses: []
+      };
+
+      APP_DATA.chronological_order.push(monthKey);
+
+      recalculateAllBalances();
+      initMonthSelector();
+      document.getElementById('monthSelect').value = monthKey;
+      renderSelectedMonth();
+      closeNewMonthModal();
+
+      alert(`تم بنجاح إضافة ${title} وجاهز لتسجيل التحصيلات! رصيد أول الشهر: ${openingBalance.toLocaleString()} ج.م`);
+    }
+
+    // TAB 2: Arrears Table
+    function renderArrearsTable() {
+      const audits = calculateApartmentAudits();
+      const tbody = document.getElementById('arrearsTableBody');
+      const searchQuery = (document.getElementById('arrearsSearch')?.value || '').trim().toLowerCase();
+      tbody.innerHTML = '';
+
+      let totalDisplayed = 0;
+      audits.forEach(apt => {
+        if (currentFilter === 'debtors' && !apt.hasDebt) return;
+        if (currentFilter === 'paid' && apt.hasDebt) return;
+
+        const searchStr = `${apt.apt_num} ${apt.owner_name} ${apt.floor} ${apt.position} ${apt.phone}`.toLowerCase();
+        if (searchQuery && !searchStr.includes(searchQuery)) return;
+
+        totalDisplayed += apt.totalPastArrears;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-main whitespace-nowrap">شقة ${apt.apt_num}</td>
+          <td class="py-3 px-3 text-muted whitespace-nowrap">${apt.floor} ${apt.position}</td>
+          <td class="py-3 px-3 font-semibold text-main whitespace-nowrap">${apt.owner_name}</td>
+          <td class="py-3 px-3 text-muted whitespace-nowrap">${apt.phone || '—'}</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-bold ${apt.pastUnpaidSubs > 0 ? 'text-rose-400' : 'text-muted'}">
+            ${apt.pastUnpaidSubs > 0 ? apt.pastUnpaidSubs.toLocaleString() + ' ج' : '—'}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-bold ${apt.specialOldDebt > 0 ? 'text-amber-400' : 'text-muted'}">
+            ${apt.specialOldDebt > 0 ? apt.specialOldDebt.toLocaleString() + ' ج' : '—'}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-extrabold ${apt.totalPastArrears > 0 ? 'text-rose-400' : 'text-emerald-400'}">
+            ${apt.totalPastArrears > 0 ? apt.totalPastArrears.toLocaleString() + ' ج' : '0 ج (خالص)'}
+          </td>
+          <td class="py-3 px-3 text-center text-muted whitespace-nowrap">${apt.currentMonthFee} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${apt.hasDebt 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">عليه متأخرات</span>` 
+              : (apt.isWrittenOff 
+                  ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30" title="${apt.writtenOffReason}">خالص (إسقاط معدومة ${apt.writtenOffAmount} ج)</span>`
+                  : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">خالص تماماً ✓</span>`)}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${apt.hasDebt ? `
+              <button onclick="switchTab('month'); openEditPaymentModal(document.getElementById('monthSelect').value, ${apt.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600/20 text-blue-300 hover:bg-blue-600/30">
+                تسجيل سداد
+              </button>
+            ` : '—'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('arrTotalDisplayed').textContent = `${totalDisplayed.toLocaleString()} ج.م`;
+    }
+
+    function filterArrearsTable() {
+      renderArrearsTable();
+    }
+
+    function setArrearsFilter(filter) {
+      currentFilter = filter;
+      document.getElementById('arrFilterAll').className = filter === 'all' ? 'px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      document.getElementById('arrFilterDebtors').className = filter === 'debtors' ? 'px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold shadow-sm shadow-rose-600/30' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      document.getElementById('arrFilterPaid').className = filter === 'paid' ? 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      renderArrearsTable();
+    }
+
+    // TAB 3: All Expenses Table
+    function renderAllExpensesTable() {
+      const tbody = document.getElementById('allExpensesTableBody');
+      tbody.innerHTML = '';
+
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m || !m.expenses) return;
+
+        m.expenses.forEach(e => {
+          if (currentCategory !== 'all' && e.category !== currentCategory) return;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-subcard/50 transition-colors";
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-semibold text-main whitespace-nowrap">${m.title}</td>
+            <td class="py-2.5 px-3 font-medium text-main">${e.item}</td>
+            <td class="py-2.5 px-3 text-muted whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-subcard border border-main">${e.category || 'عام'}</span>
+            </td>
+            <td class="py-2.5 px-3 text-center font-bold text-amber-400 whitespace-nowrap">${e.cost.toLocaleString()} ج.م</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function filterExpensesByCategory() {
+      currentCategory = document.getElementById('expenseCategoryFilter').value;
+      renderAllExpensesTable();
+    }
+
+    // TAB 4: Treasury Flow
+    function renderTreasuryFlow() {
+      const tbody = document.getElementById('treasuryFlowTableBody');
+      tbody.innerHTML = '';
+
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m) return;
+
+        const isPositive = m.closing_balance >= 0;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-main whitespace-nowrap">${m.title}</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-semibold ${m.opening_balance >= 0 ? 'text-main' : 'text-rose-400'}">${m.opening_balance.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-blue-400 font-semibold">${m.subscriptions_collected.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-emerald-400 font-semibold">${(m.extra_revenue || 0).toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-main font-bold">${m.total_revenue.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-main font-semibold">${m.total_income.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-amber-400 font-semibold">${m.total_expenses.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-extrabold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}">${m.closing_balance.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${isPositive 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">فائض متاح</span>` 
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400">عجز مؤقت</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Cloud Modal & Backup
+    function openCloudModal() {
+      document.getElementById('cloudModal').classList.remove('hidden');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.add('hidden');
+    }
+
+    function downloadJsonBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(APP_DATA, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `حسابات_برج_العمارة_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function exportToCSV() {
+      const mKey = document.getElementById('monthSelect').value;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+
+      let csv = "\uFEFFالشقة,الدور,الموقع,الساكن,الهاتف,الاشتراك,المدفوع,المتبقي\n";
+      m.collections.forEach(c => {
+        const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+        csv += `"${apt.apt_num}","${apt.floor}","${apt.position}","${c.name || apt.owner_name}","${apt.phone || ''}",${c.monthly_fee || 0},${c.paid || 0},${c.remaining || 0}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `كشف_تحصيل_${m.title.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      document.getElementById('themeIconSun').classList.toggle('hidden', isDark);
+      document.getElementById('themeIconMoon').classList.toggle('hidden', !isDark);
+      localStorage.setItem('ALBORG_THEME', isDark ? 'dark' : 'light');
+    }
+
+    // Initialize on DOM load
+    
+    // ==========================================
+    // SUPABASE CLOUD INTEGRATION & REALTIME SYNC
+    // ==========================================
+    let supabaseClient = null;
+    let isSyncingToCloud = false;
+
+    function showSyncToast(msg) {
+      const toast = document.getElementById('syncToast');
+      const text = document.getElementById('syncToastText');
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      }, 3500);
+    }
+
+    function initSupabase() {
+      const rawCfg = localStorage.getItem('SUPABASE_CONFIG');
+      if (!rawCfg) {
+        updateSupabaseUIState(false);
+        return;
+      }
+
+      try {
+        const cfg = JSON.parse(rawCfg);
+        if (!cfg.url || !cfg.key) {
+          updateSupabaseUIState(false);
+          return;
+        }
+
+        if (window.supabase) {
+          supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
+          updateSupabaseUIState(true, cfg.url);
+          // Initial Pull from Supabase
+          pullFromSupabase(true);
+          // Subscribe to Realtime Updates
+          subscribeToSupabaseRealtime();
+        }
+      } catch (err) {
+        console.error("Supabase init error:", err);
+        updateSupabaseUIState(false);
+      }
+    }
+
+    function updateSupabaseUIState(isConnected, url = '') {
+      const badge = document.getElementById('supabaseStatusBadge');
+      const dot = document.getElementById('supabaseStatusDot');
+      const text = document.getElementById('supabaseStatusText');
+      const modalText = document.getElementById('modalCloudStatusText');
+      const btnSync = document.getElementById('btnSyncNow');
+      const btnDisc = document.getElementById('btnDisconnectSupabase');
+
+      if (isConnected) {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400 ml-1.5 animate-pulse";
+        if (text) text.textContent = "متصل سحابياً (Supabase Live)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.textContent = `متصل سحابياً مع: ${url.replace('https://', '').split('.')[0]}`;
+          modalText.className = "font-bold text-sm text-emerald-400";
+        }
+        if (btnSync) btnSync.classList.remove('hidden');
+        if (btnDisc) btnDisc.classList.remove('hidden');
+      } else {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400 ml-1.5";
+        if (text) text.textContent = "حفظ محلي (اضغط للربط بـ Supabase)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.textContent = "غير متصل بالسحابة (الحفظ محلي فقط في هذا المتصفح)";
+          modalText.className = "font-bold text-sm text-amber-400";
+        }
+        if (btnSync) btnSync.classList.add('hidden');
+        if (btnDisc) btnDisc.classList.add('hidden');
+      }
+    }
+
+    async function pullFromSupabase(isInitial = false) {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('building_finance')
+          .select('data, updated_at')
+          .eq('id', 'main')
+          .maybeSingle();
+
+        if (error) {
+          console.warn("Could not pull from Supabase:", error.message);
+          return;
+        }
+
+        if (data && data.data) {
+          console.log("Supabase data pulled successfully:", data.updated_at);
+          APP_DATA = data.data;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+          recalculateAllBalances();
+          renderSelectedMonth();
+          renderArrearsTable();
+          if (!isInitial) showSyncToast("تم تحديث البيانات من السحابة بنجاح ⚡");
+        } else {
+          // Table is empty, push initial data
+          console.log("No data found in Supabase, pushing local data as initial seed...");
+          pushToSupabase();
+        }
+      } catch (err) {
+        console.error("Pull from Supabase failed:", err);
+      }
+    }
+
+    async function pushToSupabase() {
+      if (!supabaseClient || isSyncingToCloud) return;
+      isSyncingToCloud = true;
+      try {
+        const { error } = await supabaseClient
+          .from('building_finance')
+          .upsert({
+            id: 'main',
+            data: APP_DATA,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error("Push to Supabase error:", error);
+        } else {
+          showSyncToast("تمت المزامنة السحابية بنجاح ☁️");
+        }
+      } catch (err) {
+        console.error("Failed to push to Supabase:", err);
+      } finally {
+        isSyncingToCloud = false;
+      }
+    }
+
+    function subscribeToSupabaseRealtime() {
+      if (!supabaseClient) return;
+      try {
+        supabaseClient
+          .channel('public:building_finance')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'building_finance' }, payload => {
+            if (payload.new && payload.new.data) {
+              console.log("Realtime event received from other client!");
+              APP_DATA = payload.new.data;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+              recalculateAllBalances();
+              renderSelectedMonth();
+              renderArrearsTable();
+              showSyncToast("⚡ تم استلام تحديث جديد لحظياً من جهاز آخر!");
+            }
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime subscription failed:", err);
+      }
+    }
+
+    async function testAndSaveSupabaseConfig() {
+      const url = document.getElementById('supabaseUrlInput').value.trim();
+      const key = document.getElementById('supabaseKeyInput').value.trim();
+
+      if (!url || !key) {
+        alert("يرجى إدخال كل من Project URL و Anon Key.");
+        return;
+      }
+
+      if (!url.startsWith('https://')) {
+        alert("تأكد أن رابط المشروع يبدأ بـ https://");
+        return;
+      }
+
+      try {
+        const testClient = window.supabase.createClient(url, key);
+        // Test query
+        const { data, error } = await testClient.from('building_finance').select('id').limit(1);
+        if (error && error.code === '42P01') {
+          alert("تم الاتصال بمشروعك بنجاح ولكن الجدول 'building_finance' غير موجود بعد!\nيرجى نسخ كود SQL الموضح بالأسفل وتشغيله في SQL Editor داخل Supabase ثم إعادة المحاولة.");
+          return;
+        }
+
+        // Save config
+        localStorage.setItem('SUPABASE_CONFIG', JSON.stringify({ url, key }));
+        supabaseClient = testClient;
+        updateSupabaseUIState(true, url);
+
+        // Sync initial data
+        await pullFromSupabase(false);
+        subscribeToSupabaseRealtime();
+
+        alert("تم بنجاح الاتصال بـ Supabase وتفعيل المزامنة السحابية اللحظية!");
+        closeCloudModal();
+      } catch (err) {
+        alert(`فشل الاتصال بـ Supabase: ${err.message || err}`);
+      }
+    }
+
+    function disconnectSupabase() {
+      if (confirm("هل تريد قطع الاتصال بسحابة Supabase والرجوع إلى الحفظ المحلي فقط؟")) {
+        localStorage.removeItem('SUPABASE_CONFIG');
+        supabaseClient = null;
+        updateSupabaseUIState(false);
+        document.getElementById('supabaseUrlInput').value = '';
+        document.getElementById('supabaseKeyInput').value = '';
+        alert("تم فصل الاتصال السحابي.");
+      }
+    }
+
+    function syncWithSupabaseNow() {
+      pushToSupabase();
+    }
+
+    function copySqlCode() {
+      const code = document.getElementById('sqlCodeBlock').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("تم نسخ كود SQL إلى الحافظة! الصقه الآن في SQL Editor في Supabase واضغط Run.");
+      });
+    }
+
+    function importJsonBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && parsed.apartments && parsed.months) {
+            APP_DATA = parsed;
+            recalculateAllBalances();
+            renderSelectedMonth();
+            renderArrearsTable();
+            if (supabaseClient) pushToSupabase();
+            alert("تم استيراد النسخة الاحتياطية بنجاح!");
+            closeCloudModal();
+          } else {
+            alert("ملف JSON غير صالح لهيكل بيانات البرج.");
+          }
+        } catch (err) {
+          alert("خطأ في قراءة ملف JSON: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Theme init
+      const savedTheme = localStorage.getItem('ALBORG_THEME');
+      if (savedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIconSun').classList.remove('hidden');
+        document.getElementById('themeIconMoon').classList.add('hidden');
+      }
+
+      loadAppData();
+      initMonthSelector();
+      renderSelectedMonth();
+      updateKPICards();
+      initSupabase();
+    });
+  </script>
+
+  <!-- SYNC TOAST NOTIFICATION -->
+  <div id="syncToast" class="fixed bottom-5 left-5 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-emerald-500/40 text-emerald-300 text-xs font-bold shadow-2xl shadow-black/80">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <span id="syncToastText">تم الحفظ سحابياً بنجاح ☁️</span>
+  </div>
+
+</body>
+</html>
