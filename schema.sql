@@ -18,3 +18,8 @@ create policy "Public Access Policy"
 
 -- تمكين الاستماع اللحظي (Realtime) لمزامنة أي تعديل فوراً عبر جميع الأجهزة والهواتف
 alter publication supabase_realtime add table building_finance;
+
+-- منح الصلاحيات الكاملة للوصول عبر المفتاح العام (Anon Key)
+grant all on table building_finance to anon;
+grant all on table building_finance to authenticated;
+grant usage, select on all sequences in schema public to anon;
