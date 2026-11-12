@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA & Web App Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="حسابات البرج">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
   <title>منظومة إدارة وحسابات برج العمارة - النسخة المحدثة الدقيقة</title>
   <!-- Supabase Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -107,6 +116,12 @@
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center gap-2 no-print">
+        <!-- PWA Install Button -->
+        <button id="btnInstallPwa" onclick="installPwaApp()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95 animate-pulse">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          تثبيت التطبيق 📲
+        </button>
+
         <!-- Add New Month -->
         <button onclick="openNewMonthModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all hover:scale-105 active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -151,7 +166,7 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 md:pb-6 flex-1 w-full space-y-6">
 
     <!-- 4 TOP KPI CARDS (100% AUDITED) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1112,14 +1127,17 @@ alter publication supabase_realtime add table building_finance;</pre>
       tabs.forEach(t => {
         const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
         const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const mobBtn = document.getElementById(`mobileNav${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (t === tabId) {
           content?.classList.remove('hidden');
           btn?.classList.add('border-emerald-500', 'text-emerald-400');
           btn?.classList.remove('border-transparent', 'text-muted');
+          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400";
         } else {
           content?.classList.add('hidden');
           btn?.classList.remove('border-emerald-500', 'text-emerald-400');
           btn?.classList.add('border-transparent', 'text-muted');
+          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main";
         }
       });
 
@@ -2027,6 +2045,55 @@ alter publication supabase_realtime add table building_finance;</pre>
       reader.readAsText(file);
     }
 
+    
+    // ==========================================
+    // PWA WEB APP INSTALL & SERVICE WORKER LOGIC
+    // ==========================================
+    let deferredPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] ServiceWorker registered with scope:', reg.scope))
+          .catch(err => console.log('[PWA] ServiceWorker registration failed:', err));
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btnInstallPwa');
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const btn = document.getElementById('btnInstallPwa');
+      if (btn) btn.classList.add('hidden');
+      showSyncToast("تم تثبيت التطبيق بنجاح على جهازك! 🎉");
+    });
+
+    function installPwaApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choiceResult => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('[PWA] User accepted install prompt');
+          }
+          deferredPrompt = null;
+          const btn = document.getElementById('btnInstallPwa');
+          if (btn) btn.classList.add('hidden');
+        });
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          alert("لتثبيت التطبيق على شاشة الآيفون الرئيسية:\n\n1. اضغط على زر المشاركة (Share) ⎋ في أسفل سفاري.\n2. مرر للأسفل واختر 'إضافة إلى الصفحة الرئيسية' (Add to Home Screen) ➕.\n3. اضغط إضافة (Add).");
+        } else {
+          alert("يمكنك تثبيت هذا التطبيق عبر الضغط على خيارات المتصفح (⋮) ثم اختيار 'تثبيت التطبيق' أو 'Install App'.");
+        }
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Theme init
       const savedTheme = localStorage.getItem('ALBORG_THEME');
@@ -2048,6 +2115,31 @@ alter publication supabase_realtime add table building_finance;</pre>
   <div id="syncToast" class="fixed bottom-5 left-5 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-emerald-500/40 text-emerald-300 text-xs font-bold shadow-2xl shadow-black/80">
     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
     <span id="syncToastText">تم الحفظ سحابياً بنجاح ☁️</span>
+  </div>
+
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR (PWA NATIVE FEEL) -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-main py-2 px-3 flex items-center justify-around no-print shadow-2xl">
+    <button onclick="switchTab('month')" id="mobileNavMonth" class="flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      الشهور
+    </button>
+    <button onclick="switchTab('arrears')" id="mobileNavArrears" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      المتأخرات
+    </button>
+    <button onclick="switchTab('expenses')" id="mobileNavExpenses" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      المصروفات
+    </button>
+    <button onclick="switchTab('flow')" id="mobileNavFlow" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+      الخزينة
+    </button>
+    <button onclick="openCloudModal()" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+      السحابة
+    </button>
   </div>
 
 </body>
