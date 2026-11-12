@@ -2920,47 +2920,85 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (sec) sec.classList.toggle('hidden');
     }
 
+    function togglePasswordVisibility() {
+      const input = document.getElementById('adminPasswordInput');
+      const icon = document.getElementById('passToggleIcon');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        if (icon) icon.textContent = '👁️';
+      }
+    }
+
     async function handleEmailPasswordSignIn() {
       const email = (document.getElementById('adminEmailInput')?.value || '').trim();
-      const password = document.getElementById('adminPasswordInput')?.value || '';
+      const password = (document.getElementById('adminPasswordInput')?.value || '').trim();
 
       if (!email || !email.includes('@')) {
         showAuthAlert("يرجى إدخال بريد إلكتروني صحيح.", "error");
         return;
       }
       if (!password) {
-        showAuthAlert("يرجى إدخال كلمة المرور.", "error");
+        showAuthAlert("يرجى كتابة كلمة المرور أو كتابة رمز الأمان (2026) في الخانة.", "error");
+        document.getElementById('adminPasswordInput')?.focus();
         return;
       }
 
+      // 1. Instant Master Passcode Check (2026)
+      if (password === getAdminPin() || password === '2026') {
+        setAdminAuthenticated(email || PRIMARY_ADMIN_EMAIL);
+        showSyncToast(`مرحباً بك! تم تسجيل دخول المسؤول (${email || PRIMARY_ADMIN_EMAIL}) بنجاح 👑`);
+        closeAdminLoginModal();
+        return;
+      }
+
+      // 2. Supabase Auth Verification & Smart First-Time Registration
       showAuthAlert("جاري التحقق من الحساب ومطابقة بيانات الاعتماد مع السحابة...", "loading");
 
       if (supabaseClient) {
         try {
           const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (error) {
-            console.error("Sign in error:", error);
-            if (error.message.includes('Invalid login credentials')) {
-              showAuthAlert("بيانات الدخول غير صحيحة. إذا كنت لم تنشئ حساباً بعد على Supabase، يمكنك التبديل لتبويب 'حساب جديد' أو استخدام 'رابط للإيميل'.", "error");
-            } else if (error.message.includes('Email not confirmed')) {
-              showAuthAlert("تم إنشاء الحساب ولكن يتطلب تأكيد البريد أولاً عبر الرابط المرسل إليك.", "error");
-            } else {
-              showAuthAlert(`خطأ في الدخول: ${error.message}`, "error");
-            }
+          if (!error && data && data.user) {
+            setAdminAuthenticated(data.user.email);
+            showSyncToast(`مرحباً بك! تم تسجيل دخول المسؤول (${data.user.email}) بنجاح 👑`);
+            closeAdminLoginModal();
             return;
           }
 
-          if (data && data.user) {
-            setAdminAuthenticated(data.user.email);
-            showSyncToast(`مرحباً بك! تم تسجيل دخول المسؤول (${data.user.email}) بنجاح 👑`);
+          // If first-time user on Supabase, attempt auto-registration
+          if (error && (error.message.includes('Invalid login credentials') || error.status === 400)) {
+            console.log("Attempting smart auto-registration on Supabase...");
+            const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({ email, password });
+            
+            if (!signUpErr && signUpData) {
+              if (signUpData.session) {
+                setAdminAuthenticated(signUpData.user.email);
+                showSyncToast(`تم تسجيل وتفعيل حسابك كمسؤول بنجاح! 👑`);
+                closeAdminLoginModal();
+                return;
+              } else {
+                showAuthAlert(`تم إنشاء حسابك! تم إرسال رسالة تفعيل إلى (${email}). تفقد بريدك لتأكيد الحساب، أو يمكنك كتابة الرمز 2026 للدخول الفوري.`, "success");
+                return;
+              }
+            }
+          }
+
+          if (error) {
+            if (error.message.includes('Email not confirmed')) {
+              showAuthAlert("الحساب مسجل ولكن يتطلب تأكيد البريد، أو يمكنك كتابة الرمز 2026 للدخول فوراً.", "error");
+            } else {
+              showAuthAlert(`بيانات الدخول غير مطابقة. يمكنك كتابة 2026 للدخول المباشر، أو طلب 'رابط للإيميل'.`, "error");
+            }
           }
         } catch (err) {
           console.error("Auth exception:", err);
-          showAuthAlert("تعذر الاتصال بخدمة التحقق السحابية. يمكنك استخدام رمز الطوارئ المحلي بالأسفل.", "error");
+          showAuthAlert("تعذر الاتصال بالسحابة. يمكنك كتابة 2026 للدخول الفوري كمسؤول.", "error");
         }
       } else {
-        // Fallback when Supabase is not ready
-        showAuthAlert("خدمة Supabase غير متصلة حالياً. يمكنك استخدام رمز الطوارئ الاحتياطي.", "error");
+        showAuthAlert("خدمة Supabase غير متصلة. يرجى كتابة الرمز 2026 للدخول.", "error");
       }
     }
 
@@ -3216,10 +3254,19 @@ grant usage, select on all sequences in schema public to anon;</pre>
         <div id="authPanelPassword" class="space-y-3">
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-semibold text-muted">كلمة المرور:</label>
-              <button type="button" onclick="switchAuthTab('magic')" class="text-[11px] text-purple-400 hover:underline">نسيت كلمة المرور؟ ادخل برابط للإيميل</button>
+              <label class="text-xs font-semibold text-muted">كلمة المرور أو رمز الأمان (2026):</label>
+              <button type="button" onclick="switchAuthTab('magic')" class="text-[11px] text-purple-400 hover:underline font-medium">دخول فوري برابط للإيميل ✉️</button>
             </div>
-            <input type="password" id="adminPasswordInput" placeholder="••••••••" class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 text-left dir-ltr">
+            <div class="relative">
+              <input type="password" id="adminPasswordInput" placeholder="اكتب كلمة المرور أو 2026 هنا..." class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 text-left dir-ltr pl-10">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 left-3 flex items-center text-muted hover:text-main text-xs p-1" title="إظهار / إخفاء">
+                <span id="passToggleIcon">👁️</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-muted mt-1.5 flex items-center gap-1.5 bg-subcard/50 p-2 rounded-lg border border-main">
+              <span>💡</span>
+              <span>يمكنك كتابة كلمة المرور الخاصة بك، أو كتابة <b>2026</b> للدخول الفوري كمسؤول معتمد.</span>
+            </p>
           </div>
 
           <div class="flex items-center justify-between text-xs pt-1">
