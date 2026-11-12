@@ -92,6 +92,15 @@
 </head>
 <body class="bg-main text-main min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200">
 
+  <!-- VIEWER MODE NOTICE BANNER (FOR RESIDENTS) -->
+  <div id="viewerBanner" class="bg-blue-900/40 border-b border-blue-500/20 px-4 py-1.5 text-center text-xs text-blue-200 flex items-center justify-center gap-2 no-print">
+    <span>👁️ أنت تتصفح الآن في <strong class="text-white">وضع المشاهدة (خاص بالسكان)</strong> — لا يمكن تعديل أو حذف البيانات.</span>
+    <button onclick="openAdminLoginModal()" class="underline font-bold text-emerald-400 hover:text-emerald-300 mr-2 flex items-center gap-1">
+      <span>🔐</span> تسجيل دخول الإدارة
+    </button>
+  </div>
+
+
   <!-- TOP HEADER -->
   <header class="bg-card border-b border-main sticky top-0 z-30 shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
@@ -116,6 +125,20 @@
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center gap-2 no-print">
+
+        <!-- Admin Auth Status Pill -->
+        <div id="adminAuthContainer">
+          <button id="btnHeaderAdminLogin" onclick="openAdminLoginModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30 transition-all hover:scale-105 active:scale-95">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            دخول الإدارة 🔐
+          </button>
+          <div id="adminActiveBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+            وضع المسؤول (إدارة كاملة) 👑
+            <button onclick="logoutAdmin()" class="text-muted hover:text-rose-400 mr-1 text-[11px] underline" title="تسجيل خروج">خروج</button>
+          </div>
+        </div>
+
         <!-- PWA Install Button -->
         <button id="btnInstallPwa" onclick="installPwaApp()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95 animate-pulse">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -1023,6 +1046,7 @@ alter publication supabase_realtime add table building_finance;</pre>
     }
 
     function resetToInitialData() {
+      if (!requireAdmin('إعادة ضبط البيانات')) return;
       if (confirm("هل أنت متأكد من إعادة ضبط جميع البيانات إلى النسخة الأصلية الدقيقة من الإكسيل؟")) {
         localStorage.removeItem(STORAGE_KEY);
         APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
@@ -1306,16 +1330,22 @@ alter publication supabase_realtime add table building_finance;</pre>
             </div>
           </td>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
-            <div class="inline-flex items-center gap-1.5">
-              ${!isPaid ? `
-                <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95">
-                  سداد كامل
+            ${IS_ADMIN ? `
+              <div class="inline-flex items-center gap-1.5">
+                ${!isPaid ? `
+                  <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95">
+                    سداد كامل
+                  </button>
+                ` : ''}
+                <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main">
+                  ${isPaid ? 'تعديل الدفعة' : 'مخصص'}
                 </button>
-              ` : ''}
-              <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main">
-                ${isPaid ? 'تعديل الدفعة' : 'مخصص'}
+              </div>
+            ` : `
+              <button onclick="openAdminLoginModal()" class="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-subcard text-muted hover:text-purple-300 border border-main" title="يتطلب تسجيل دخول الإدارة">
+                🔒 خاص بالإدارة
               </button>
-            </div>
+            `}
           </td>
         `;
         tbody.appendChild(tr);
@@ -1334,9 +1364,11 @@ alter publication supabase_realtime add table building_finance;</pre>
           itemEl.className = "p-3 flex items-center justify-between hover:bg-subcard/50 transition-colors";
           itemEl.innerHTML = `
             <div class="flex items-center gap-2">
-              <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/50 hover:text-rose-400 p-1" title="حذف">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
+              ${IS_ADMIN ? `
+                <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/50 hover:text-rose-400 p-1" title="حذف">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              ` : ''}
               ${e.receipt_image ? `
                 <img src="${e.receipt_image}" onclick="openLightbox('${e.receipt_image}', '${e.item} - ${e.cost} ج.م', 'فاتورة مصروف: ${e.item}')" class="w-8 h-8 rounded-lg object-cover cursor-pointer border border-amber-500/30 hover:opacity-80 transition-opacity" title="اضغط لعرض الفاتورة">
               ` : ''}
@@ -1363,6 +1395,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Quick 1-Click Pay
     function quickPay(mKey, row) {
+      if (!requireAdmin('سداد اشتراك')) return;
       const m = APP_DATA.months[mKey];
       if (!m) return;
       const c = m.collections.find(x => x.row === row);
@@ -1376,6 +1409,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Edit Payment Modal
     function openEditPaymentModal(mKey, row) {
+      if (!requireAdmin('تسجيل دفعة')) return;
       editingPaymentTarget = { mKey, row };
       const m = APP_DATA.months[mKey];
       const c = m?.collections.find(x => x.row === row);
@@ -1447,6 +1481,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Edit Resident Modal
     function openEditResidentModal(row) {
+      if (!requireAdmin('تعديل الساكن')) return;
       editingResidentTargetRow = row;
       const apt = APP_DATA.apartments.find(a => a.row === row);
       if (!apt) return;
@@ -1497,6 +1532,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Manage Residents Directory Modal
     function openManageResidentsModal() {
+      if (!requireAdmin('تعديل السكان')) return;
       renderManageResidentsTable();
       document.getElementById('manageResidentsModal').classList.remove('hidden');
     }
@@ -1591,6 +1627,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Add Expense to Current Month
     function openAddExpenseModal() {
+      if (!requireAdmin('إضافة مصروف')) return;
       document.getElementById('newExpenseItem').value = '';
       document.getElementById('newExpenseCost').value = '';
       updateExpenseDatalist();
@@ -1637,6 +1674,7 @@ alter publication supabase_realtime add table building_finance;</pre>
     }
 
     function deleteExpense(mKey, idx) {
+      if (!requireAdmin('حذف مصروف')) return;
       const m = APP_DATA.months[mKey];
       if (!m || !m.expenses) return;
       if (confirm(`هل أنت متأكد من حذف مصروف "${m.expenses[idx].item}"?`)) {
@@ -1649,6 +1687,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
     // Add New Month Modal & Wizard
     function openNewMonthModal() {
+      if (!requireAdmin('إضافة شهر جديد')) return;
       const lastMonthKey = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
       const lastMonth = APP_DATA.months[lastMonthKey];
       const currentCash = lastMonth ? lastMonth.closing_balance : 3685;
@@ -2132,6 +2171,7 @@ alter publication supabase_realtime add table building_finance;</pre>
     function syncWithSupabaseNow() {
       if (!supabaseClient) {
         initSupabase();
+      checkAdminSession();
       }
       pullFromSupabase(false);
       pushToSupabase();
@@ -3093,6 +3133,54 @@ alter publication supabase_realtime add table building_finance;</pre>
   <div style="max-width: 1000px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155;">
     ${reportContent}
   </div>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">🔐</div>
+          <div>
+            <h3 class="text-sm font-bold text-main">تسجيل دخول المسؤول / الإدارة</h3>
+            <p class="text-[10px] text-muted">أدخل رمز PIN لتفعيل صلاحيات التعديل والتحصيل</p>
+          </div>
+        </div>
+        <button onclick="closeAdminLoginModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 pt-1">
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1.5">رمز PIN للإدارة (الافتراضي: 2026):</label>
+          <input type="password" id="adminPinInput" maxlength="12" placeholder="••••" class="w-full bg-subcard border border-main rounded-xl px-4 py-2.5 text-center text-lg font-bold tracking-widest text-main focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-1.5 text-muted cursor-pointer">
+            <input type="checkbox" id="adminRememberMe" checked class="rounded border-main text-purple-600 focus:ring-purple-500">
+            تذكرني على هذا الجهاز
+          </label>
+          <button type="button" onclick="toggleChangePinSection()" class="text-purple-400 hover:underline text-[11px]">
+            تغيير رمز PIN
+          </button>
+        </div>
+
+        <!-- Change PIN Accordion -->
+        <div id="changePinSection" class="hidden p-3 rounded-xl border border-main bg-subcard/50 space-y-2 text-xs">
+          <span class="font-bold text-main block text-[11px]">تغيير رمز PIN الإدارة:</span>
+          <input type="password" id="newPinInput" placeholder="أدخل رمز PIN الجديد..." class="w-full bg-card border border-main rounded-lg px-2.5 py-1.5 text-xs text-main">
+          <button type="button" onclick="confirmChangePin()" class="w-full py-1.5 rounded-lg text-xs font-bold bg-subcard text-purple-300 border border-main hover:bg-card">
+            حفظ الرمز الجديد
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-main">
+        <button onclick="closeAdminLoginModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="verifyAdminPin()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30">دخول الإدارة</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>`;
 
@@ -3104,6 +3192,120 @@ alter publication supabase_realtime add table building_finance;</pre>
       a.click();
       a.remove();
       showSyncToast("تم تصدير ملف التقرير المستقل بنجاح! 📥");
+    }
+
+    
+    // ==========================================
+    // ROLE-BASED ACCESS CONTROL (ADMIN VS RESIDENTS)
+    // ==========================================
+    let IS_ADMIN = false;
+
+    function getAdminPin() {
+      return localStorage.getItem('ALBORG_ADMIN_PIN') || '2026';
+    }
+
+    function checkAdminSession() {
+      const isSession = sessionStorage.getItem('ALBORG_ADMIN_AUTH') === 'true';
+      const isRemembered = localStorage.getItem('ALBORG_ADMIN_REMEMBER') === 'true';
+      IS_ADMIN = isSession || isRemembered;
+      updateAdminUI();
+    }
+
+    function updateAdminUI() {
+      const banner = document.getElementById('viewerBanner');
+      const btnLogin = document.getElementById('btnHeaderAdminLogin');
+      const badgeActive = document.getElementById('adminActiveBadge');
+
+      if (IS_ADMIN) {
+        if (banner) banner.classList.add('hidden');
+        if (btnLogin) btnLogin.classList.add('hidden');
+        if (badgeActive) badgeActive.classList.remove('hidden');
+        document.body.classList.add('is-admin');
+        document.body.classList.remove('is-viewer');
+      } else {
+        if (banner) banner.classList.remove('hidden');
+        if (btnLogin) btnLogin.classList.remove('hidden');
+        if (badgeActive) badgeActive.classList.add('hidden');
+        document.body.classList.add('is-viewer');
+        document.body.classList.remove('is-admin');
+      }
+
+      // Re-render current month to show/hide admin buttons
+      renderSelectedMonth();
+    }
+
+    function openAdminLoginModal() {
+      document.getElementById('adminPinInput').value = '';
+      document.getElementById('changePinSection').classList.add('hidden');
+      document.getElementById('adminLoginModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('adminPinInput').focus(), 150);
+    }
+
+    function closeAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
+    }
+
+    function verifyAdminPin() {
+      const input = document.getElementById('adminPinInput').value.trim();
+      const actualPin = getAdminPin();
+
+      if (input === actualPin) {
+        IS_ADMIN = true;
+        sessionStorage.setItem('ALBORG_ADMIN_AUTH', 'true');
+        if (document.getElementById('adminRememberMe').checked) {
+          localStorage.setItem('ALBORG_ADMIN_REMEMBER', 'true');
+        } else {
+          localStorage.removeItem('ALBORG_ADMIN_REMEMBER');
+        }
+        updateAdminUI();
+        closeAdminLoginModal();
+        showSyncToast("تم تسجيل دخول الإدارة بنجاح! تم فتح كافة صلاحيات التعديل 👑");
+      } else {
+        alert("رمز PIN غير صحيح. يرجى المحاولة مرة أخرى.");
+        document.getElementById('adminPinInput').value = '';
+      }
+    }
+
+    function logoutAdmin() {
+      if (confirm("هل تريد تسجيل الخروج من وضع الإدارة والعودة لوضع المشاهدة؟")) {
+        IS_ADMIN = false;
+        sessionStorage.removeItem('ALBORG_ADMIN_AUTH');
+        localStorage.removeItem('ALBORG_ADMIN_REMEMBER');
+        updateAdminUI();
+        showSyncToast("تم تسجيل الخروج والعودة لوضع المشاهدة (خاص بالسكان) 👁️");
+      }
+    }
+
+    function toggleChangePinSection() {
+      document.getElementById('changePinSection').classList.toggle('hidden');
+    }
+
+    function confirmChangePin() {
+      const currentInput = document.getElementById('adminPinInput').value.trim();
+      const actualPin = getAdminPin();
+      if (currentInput !== actualPin) {
+        alert("يرجى إدخال رمز PIN الحالي أولاً في خانة الرمز بالأعلى.");
+        return;
+      }
+      const newPin = document.getElementById('newPinInput').value.trim();
+      if (!newPin || newPin.length < 4) {
+        alert("يرجى إدخال رمز PIN جديد مكون من 4 أرقام أو حروف على الأقل.");
+        return;
+      }
+      localStorage.setItem('ALBORG_ADMIN_PIN', newPin);
+      alert(`تم بنجاح تغيير رمز PIN للإدارة إلى: ${newPin}\nيرجى حفظه جيداً.`);
+      document.getElementById('changePinSection').classList.add('hidden');
+      document.getElementById('newPinInput').value = '';
+    }
+
+    // Permission Guard Helper
+    function requireAdmin(actionName, callback) {
+      if (!IS_ADMIN) {
+        openAdminLoginModal();
+        return false;
+      }
+      if (callback) callback();
+      return true;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -3121,6 +3323,7 @@ alter publication supabase_realtime add table building_finance;</pre>
       renderSelectedMonth();
       updateKPICards();
       initSupabase();
+      checkAdminSession();
     });
   </script>
 
@@ -3179,6 +3382,54 @@ alter publication supabase_realtime add table building_finance;</pre>
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           تحميل الصورة
         </a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">🔐</div>
+          <div>
+            <h3 class="text-sm font-bold text-main">تسجيل دخول المسؤول / الإدارة</h3>
+            <p class="text-[10px] text-muted">أدخل رمز PIN لتفعيل صلاحيات التعديل والتحصيل</p>
+          </div>
+        </div>
+        <button onclick="closeAdminLoginModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 pt-1">
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1.5">رمز PIN للإدارة (الافتراضي: 2026):</label>
+          <input type="password" id="adminPinInput" maxlength="12" placeholder="••••" class="w-full bg-subcard border border-main rounded-xl px-4 py-2.5 text-center text-lg font-bold tracking-widest text-main focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-1.5 text-muted cursor-pointer">
+            <input type="checkbox" id="adminRememberMe" checked class="rounded border-main text-purple-600 focus:ring-purple-500">
+            تذكرني على هذا الجهاز
+          </label>
+          <button type="button" onclick="toggleChangePinSection()" class="text-purple-400 hover:underline text-[11px]">
+            تغيير رمز PIN
+          </button>
+        </div>
+
+        <!-- Change PIN Accordion -->
+        <div id="changePinSection" class="hidden p-3 rounded-xl border border-main bg-subcard/50 space-y-2 text-xs">
+          <span class="font-bold text-main block text-[11px]">تغيير رمز PIN الإدارة:</span>
+          <input type="password" id="newPinInput" placeholder="أدخل رمز PIN الجديد..." class="w-full bg-card border border-main rounded-lg px-2.5 py-1.5 text-xs text-main">
+          <button type="button" onclick="confirmChangePin()" class="w-full py-1.5 rounded-lg text-xs font-bold bg-subcard text-purple-300 border border-main hover:bg-card">
+            حفظ الرمز الجديد
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-main">
+        <button onclick="closeAdminLoginModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
+        <button onclick="verifyAdminPin()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30">دخول الإدارة</button>
       </div>
     </div>
   </div>
