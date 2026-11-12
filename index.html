@@ -949,9 +949,12 @@
           <span id="woModalCurrentDebt" class="text-rose-400 font-extrabold text-sm">600 ج.م</span>
         </div>
         <div class="flex items-center justify-between text-[11px] text-muted">
-          <span>اشتراكات سابقة: <strong id="woModalSubsDebt" class="text-main">600 ج</strong></span>
-          <span>مديونية خاصة/أسانسير: <strong id="woModalSpecialDebt" class="text-main">0 ج</strong></span>
+          <span>متأخرات سابقة: <strong id="woModalSubsDebt" class="text-main">600 ج</strong></span>
+          <span id="woModalSpecialDebtContainer">اشتراك الشهر: <strong id="woModalSpecialDebt" class="text-main">0 ج</strong></span>
         </div>
+
+        <!-- Quick Choice Pills for Write-off -->
+        <div id="woQuickPillsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
       </div>
 
       <!-- Action Form -->
@@ -1219,7 +1222,11 @@ grant usage, select on all sequences in schema public to anon;</pre>
         let subs = 0;
         m.collections.forEach(c => {
           subs += (c.paid || 0);
-          c.remaining = (c.paid || 0) - (c.monthly_fee || 0);
+          if (c.waived) {
+            c.remaining = 0;
+          } else {
+            c.remaining = (c.paid || 0) - (c.monthly_fee || 0);
+          }
         });
         m.subscriptions_collected = subs;
 
@@ -1274,8 +1281,10 @@ grant usage, select on all sequences in schema public to anon;</pre>
           if (mData) {
             const c = mData.collections.find(x => x.row === row);
             if (c) {
-              totalFee += (c.monthly_fee || 0);
-              totalPaid += (c.paid || 0);
+              if (!c.waived) {
+                totalFee += (c.monthly_fee || 0);
+                totalPaid += (c.paid || 0);
+              }
             }
           }
         });
@@ -1457,17 +1466,20 @@ grant usage, select on all sequences in schema public to anon;</pre>
       tbody.innerHTML = '';
 
       let paidCount = 0;
+      let waivedCount = 0;
       m.collections.forEach(c => {
         const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
         const audit = auditsMap[c.row] || {};
         const isPaid = (c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0;
+        const isWaived = c.waived === true;
         if (isPaid) paidCount++;
+        if (isWaived) waivedCount++;
 
-        if (currentMFilter === 'paid' && !isPaid) return;
-        if (currentMFilter === 'unpaid' && isPaid) return;
+        if (currentMFilter === 'paid' && (!isPaid && !isWaived)) return;
+        if (currentMFilter === 'unpaid' && (isPaid || isWaived)) return;
 
         const pastDebt = audit.totalPastArrears || 0;
-        const totalDue = pastDebt + (c.monthly_fee || 0);
+        const totalDue = pastDebt + (isWaived ? 0 : (c.monthly_fee || 0));
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-subcard/50 transition-colors";
@@ -1500,9 +1512,11 @@ grant usage, select on all sequences in schema public to anon;</pre>
           <td class="py-2.5 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
             <div class="inline-flex items-center gap-1">
-              ${isPaid 
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
-                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`}
+              ${isWaived 
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30" title="${c.waived_reason || 'إسقاط اشتراك'}">معفى (إسقاط) ✓</span>`
+                : (isPaid 
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`)}
               ${c.receipt_image ? `
                 <button type="button" onclick="openLightbox('${c.receipt_image}', 'إيصال سداد شقة ${apt.apt_num} - ${c.paid} ج.م', 'إيصال سداد شقة ${apt.apt_num}')" class="text-emerald-400 hover:text-emerald-300 p-0.5 text-xs" title="عرض إيصال التحويل">📷</button>
               ` : ''}
@@ -1511,14 +1525,24 @@ grant usage, select on all sequences in schema public to anon;</pre>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
             ${IS_ADMIN ? `
               <div class="inline-flex items-center gap-1.5">
-                ${!isPaid ? `
-                  <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95">
+                ${!isPaid && !isWaived ? `
+                  <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95" title="سداد كامل اشتراك الشهر">
                     سداد كامل
                   </button>
                 ` : ''}
-                <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main">
+                <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main" title="سداد مخصص أو إرفاق إيصال">
                   ${isPaid ? 'تعديل الدفعة' : 'مخصص'}
                 </button>
+                ${!isWaived ? `
+                  <button onclick="openWriteOffDebtModal(${apt.apt_num}, ${c.row}, '${mKey}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 border border-purple-500/30 transition-all shadow-sm flex items-center gap-1" title="إسقاط أو إعفاء المديونية">
+                    <span>إسقاط</span>
+                    <span class="text-[10px]">⚖️</span>
+                  </button>
+                ` : `
+                  <button onclick="cancelMonthWaiver('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:underline border border-rose-500/30 transition-all" title="إلغاء قرار إسقاط هذا الشهر">
+                    إلغاء الإسقاط ↺
+                  </button>
+                `}
               </div>
             ` : `
               <button onclick="openAdminLoginModal()" class="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-subcard text-muted hover:text-purple-300 border border-main" title="يتطلب تسجيل دخول الإدارة">
@@ -1530,7 +1554,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
         tbody.appendChild(tr);
       });
 
-      document.getElementById('mPaidRatioBadge').textContent = `${paidCount} من 24 سددوا (${Math.round((paidCount/24)*100)}%)`;
+      document.getElementById('mPaidRatioBadge').textContent = `${paidCount} من 24 سددوا (${Math.round((paidCount/24)*100)}%)${waivedCount > 0 ? ` + ${waivedCount} معفى` : ''}`;
 
       // Render Month Expenses
       const expList = document.getElementById('monthExpensesList');
@@ -2125,19 +2149,36 @@ grant usage, select on all sequences in schema public to anon;</pre>
       renderArrearsTable();
     }
 
-    // WRITE-OFF DEBT FUNCTIONS (إسقاط وإعفاء المديونيات)
+    // WRITE-OFF DEBT & SUBSCRIPTION FUNCTIONS (إسقاط وإعفاء المديونيات والاشتراكات)
     let currentWriteOffTarget = null;
 
-    function openWriteOffDebtModal(aptNum, row) {
-      if (!requireAdmin('إسقاط مديونية')) return;
+    function openWriteOffDebtModal(aptNum, row, mKey) {
+      if (!requireAdmin('إسقاط أو إعفاء')) return;
 
       const audits = calculateApartmentAudits();
       const apt = audits.find(a => a.apt_num === aptNum || a.row === row);
       if (!apt) return;
 
-      const totalCurrentDebt = apt.totalPastArrears;
-      if (totalCurrentDebt <= 0) {
-        alert(`شقة ${apt.apt_num} ليس عليها أي متأخرات سابقة حالياً لإسقاطها.`);
+      const pastDebt = apt.totalPastArrears || 0;
+
+      // Determine current month context
+      const currentMKey = mKey || document.getElementById('monthSelect')?.value;
+      const m = currentMKey ? APP_DATA.months[currentMKey] : null;
+      const c = m?.collections.find(x => x.row === row);
+
+      const monthFee = c ? (c.monthly_fee || 0) : 0;
+      const monthPaid = c ? (c.paid || 0) : 0;
+      const isMonthWaived = c?.waived === true;
+      const monthRemaining = isMonthWaived ? 0 : Math.max(0, monthFee - monthPaid);
+
+      const totalDroppable = pastDebt + monthRemaining;
+
+      if (totalDroppable <= 0) {
+        if (isMonthWaived) {
+          alert(`شقة ${apt.apt_num} تم بالفعل إسقاط اشتراك هذا الشهر عنها بنجاح.`);
+        } else {
+          alert(`شقة ${apt.apt_num} ليس عليها أي متأخرات سابقة أو متبقي لاشتراك الشهر حالياً لإسقاطه.`);
+        }
         return;
       }
 
@@ -2148,21 +2189,63 @@ grant usage, select on all sequences in schema public to anon;</pre>
         position: apt.position,
         owner_name: apt.owner_name,
         phone: apt.phone,
-        pastUnpaidSubs: apt.pastUnpaidSubs,
-        specialOldDebt: apt.specialOldDebt,
-        totalPastArrears: totalCurrentDebt
+        mKey: currentMKey,
+        monthTitle: m?.title || 'الشهر الحالي',
+        monthFee: monthFee,
+        monthPaid: monthPaid,
+        monthRemaining: monthRemaining,
+        isMonthWaived: isMonthWaived,
+        pastUnpaidSubs: apt.pastUnpaidSubs || 0,
+        specialOldDebt: apt.specialOldDebt || 0,
+        pastDebt: pastDebt,
+        totalDroppable: totalDroppable
       };
 
       document.getElementById('woModalFloorPos').textContent = `الدور ${apt.floor || 1} (${apt.position})`;
       document.getElementById('woModalAptBadge').textContent = `شقة ${apt.apt_num}`;
       document.getElementById('woModalResidentName').textContent = apt.owner_name;
       document.getElementById('woModalResidentPhone').textContent = apt.phone || 'بدون هاتف';
-      document.getElementById('woModalCurrentDebt').textContent = `${totalCurrentDebt.toLocaleString()} ج.م`;
-      document.getElementById('woModalSubsDebt').textContent = `${apt.pastUnpaidSubs.toLocaleString()} ج`;
-      document.getElementById('woModalSpecialDebt').textContent = `${apt.specialOldDebt.toLocaleString()} ج`;
+      document.getElementById('woModalCurrentDebt').textContent = `${totalDroppable.toLocaleString()} ج.م`;
+      document.getElementById('woModalSubsDebt').textContent = `${pastDebt.toLocaleString()} ج`;
+      document.getElementById('woModalSpecialDebt').textContent = `${monthRemaining.toLocaleString()} ج (${currentWriteOffTarget.monthTitle?.split('(')[0]?.trim() || ''})`;
 
-      document.getElementById('writeOffAmountInput').value = totalCurrentDebt;
-      document.getElementById('writeOffAmountInput').max = totalCurrentDebt;
+      // Quick pills
+      const pillsContainer = document.getElementById('woQuickPillsContainer');
+      if (pillsContainer) {
+        if (monthRemaining > 0 && pastDebt > 0) {
+          pillsContainer.innerHTML = `
+            <button type="button" onclick="setWriteOffOption('month')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30">
+              إسقاط اشتراك الشهر فقط (${monthRemaining} ج)
+            </button>
+            <button type="button" onclick="setWriteOffOption('arrears')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 border border-amber-500/30">
+              إسقاط المتأخرات السابقة فقط (${pastDebt} ج)
+            </button>
+            <button type="button" onclick="setWriteOffOption('all')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
+              إسقاط كامل المطلوب (${totalDroppable} ج)
+            </button>
+          `;
+        } else if (monthRemaining > 0) {
+          pillsContainer.innerHTML = `
+            <button type="button" onclick="setWriteOffOption('month')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
+              إسقاط كامل اشتراك الشهر (${monthRemaining} ج)
+            </button>
+          `;
+        } else {
+          pillsContainer.innerHTML = `
+            <button type="button" onclick="setWriteOffOption('arrears')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
+              إسقاط كامل المتأخرات السابقة (${pastDebt} ج)
+            </button>
+          `;
+        }
+      }
+
+      // Default amount
+      if (monthRemaining > 0 && pastDebt === 0) {
+        document.getElementById('writeOffAmountInput').value = monthRemaining;
+      } else {
+        document.getElementById('writeOffAmountInput').value = totalDroppable;
+      }
+      document.getElementById('writeOffAmountInput').max = totalDroppable;
       document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
       document.getElementById('writeOffCustomReasonInput').value = '';
       document.getElementById('customWriteOffReasonContainer').classList.add('hidden');
@@ -2170,9 +2253,22 @@ grant usage, select on all sequences in schema public to anon;</pre>
       document.getElementById('writeOffDebtModal').classList.remove('hidden');
     }
 
+    function setWriteOffOption(opt) {
+      if (!currentWriteOffTarget) return;
+      if (opt === 'month') {
+        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.monthRemaining;
+        document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
+      } else if (opt === 'arrears') {
+        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.pastDebt;
+        document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
+      } else {
+        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalDroppable;
+      }
+    }
+
     function setFullWriteOffAmount() {
       if (currentWriteOffTarget) {
-        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalPastArrears;
+        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalDroppable;
       }
     }
 
@@ -2196,6 +2292,8 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (!currentWriteOffTarget) return;
 
       const aptNum = currentWriteOffTarget.apt_num;
+      const row = currentWriteOffTarget.row;
+      const mKey = currentWriteOffTarget.mKey;
       const amountToDrop = parseFloat(document.getElementById('writeOffAmountInput').value) || 0;
       const reasonSelect = document.getElementById('writeOffReasonSelect').value;
       const customReason = document.getElementById('writeOffCustomReasonInput').value.trim();
@@ -2206,41 +2304,75 @@ grant usage, select on all sequences in schema public to anon;</pre>
         return;
       }
 
-      const maxDroppable = currentWriteOffTarget.totalPastArrears;
+      const maxDroppable = currentWriteOffTarget.totalDroppable;
       if (amountToDrop > maxDroppable) {
-        alert(`المبلغ المدخل (${amountToDrop.toLocaleString()} ج) أكبر من إجمالي المديونية المستحقة (${maxDroppable.toLocaleString()} ج).`);
+        alert(`المبلغ المدخل (${amountToDrop.toLocaleString()} ج) أكبر من إجمالي المبلغ المستحق (${maxDroppable.toLocaleString()} ج).`);
         return;
       }
 
-      const subsDebt = currentWriteOffTarget.pastUnpaidSubs;
-      let dropSubs = 0;
-      let dropSpecial = 0;
+      const monthRem = currentWriteOffTarget.monthRemaining;
+      const pastDebt = currentWriteOffTarget.pastDebt;
 
-      if (amountToDrop <= subsDebt) {
-        dropSubs = amountToDrop;
-        dropSpecial = 0;
+      let dropForMonth = 0;
+      let dropForArrears = 0;
+
+      // Prioritize month fee when invoked in month context
+      if (mKey && monthRem > 0) {
+        if (amountToDrop <= monthRem) {
+          dropForMonth = amountToDrop;
+          dropForArrears = 0;
+        } else {
+          dropForMonth = monthRem;
+          dropForArrears = amountToDrop - monthRem;
+        }
       } else {
-        dropSubs = subsDebt;
-        dropSpecial = amountToDrop - subsDebt;
+        dropForMonth = 0;
+        dropForArrears = amountToDrop;
       }
 
-      if (!APP_DATA.written_off_debts) {
-        APP_DATA.written_off_debts = {};
+      // 1. Apply Month Waiver if applicable
+      if (dropForMonth > 0 && mKey) {
+        const m = APP_DATA.months[mKey];
+        const c = m?.collections.find(x => x.row === row);
+        if (c) {
+          c.waived = true;
+          c.waived_amount = dropForMonth;
+          c.waived_reason = finalReason;
+        }
       }
 
-      const existing = APP_DATA.written_off_debts[aptNum] || { subs: 0, special: 0, total: 0 };
-      const newSubs = existing.subs + dropSubs;
-      const newSpecial = existing.special + dropSpecial;
-      const newTotal = existing.total + amountToDrop;
+      // 2. Apply Past Arrears Write-Off if applicable
+      if (dropForArrears > 0) {
+        const subsDebt = currentWriteOffTarget.pastUnpaidSubs;
+        let dropSubs = 0;
+        let dropSpecial = 0;
 
-      APP_DATA.written_off_debts[aptNum] = {
-        subs: newSubs,
-        special: newSpecial,
-        total: newTotal,
-        reason: `${finalReason} (${newTotal.toLocaleString()} ج)`,
-        date: new Date().toLocaleDateString('ar-EG'),
-        timestamp: new Date().toISOString()
-      };
+        if (dropForArrears <= subsDebt) {
+          dropSubs = dropForArrears;
+          dropSpecial = 0;
+        } else {
+          dropSubs = subsDebt;
+          dropSpecial = dropForArrears - subsDebt;
+        }
+
+        if (!APP_DATA.written_off_debts) {
+          APP_DATA.written_off_debts = {};
+        }
+
+        const existing = APP_DATA.written_off_debts[aptNum] || { subs: 0, special: 0, total: 0 };
+        const newSubs = existing.subs + dropSubs;
+        const newSpecial = existing.special + dropSpecial;
+        const newTotal = existing.total + dropForArrears;
+
+        APP_DATA.written_off_debts[aptNum] = {
+          subs: newSubs,
+          special: newSpecial,
+          total: newTotal,
+          reason: `${finalReason} (${newTotal.toLocaleString()} ج)`,
+          date: new Date().toLocaleDateString('ar-EG'),
+          timestamp: new Date().toISOString()
+        };
+      }
 
       saveAppData();
       recalculateAllBalances();
@@ -2249,7 +2381,33 @@ grant usage, select on all sequences in schema public to anon;</pre>
       updateKPICards();
       closeWriteOffDebtModal();
 
-      alert(`تم بنجاح إسقاط مديونية قدرها ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum}!`);
+      alert(`تم بنجاح تسجيل الإسقاط والإعفاء بمبلغ ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum}!`);
+    }
+
+    function cancelMonthWaiver(mKey, row) {
+      if (!requireAdmin('إلغاء إعفاء الشهر')) return;
+
+      const m = APP_DATA.months[mKey];
+      const c = m?.collections.find(x => x.row === row);
+      const apt = APP_DATA.apartments.find(a => a.row === row);
+
+      if (!confirm(`هل أنت متأكد من إلغاء قرار إسقاط اشتراك ${m?.title || 'هذا الشهر'} عن شقة ${apt?.apt_num || ''} وإعادته كمستحق السداد؟`)) {
+        return;
+      }
+
+      if (c) {
+        c.waived = false;
+        delete c.waived_amount;
+        delete c.waived_reason;
+      }
+
+      saveAppData();
+      recalculateAllBalances();
+      renderArrearsTable();
+      renderSelectedMonth();
+      updateKPICards();
+
+      alert(`تم بنجاح إلغاء الإسقاط وإعادة اشتراك الشهر كمستحق.`);
     }
 
     function cancelWriteOffDebt(aptNum) {
@@ -3009,9 +3167,11 @@ grant usage, select on all sequences in schema public to anon;</pre>
             <td class="py-2 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
             <td class="py-2 px-3 text-center whitespace-nowrap ${rem < 0 ? 'text-rose-400 font-bold' : 'text-muted'}">${rem < 0 ? rem + ' ج' : '0 ج'}</td>
             <td class="py-2 px-3 text-center whitespace-nowrap">
-              ${isPaid 
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">تم السداد ✓</span>` 
-                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400">لم يسدد ✕</span>`}
+              ${c.waived 
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400">معفى بقرار الإدارة ✓</span>`
+                : (isPaid 
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">تم السداد ✓</span>` 
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400">لم يسدد ✕</span>`)}
             </td>
             ${includeImages ? `
               <td class="py-2 px-3 text-center whitespace-nowrap">
