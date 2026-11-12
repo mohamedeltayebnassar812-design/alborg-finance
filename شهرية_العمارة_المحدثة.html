@@ -378,7 +378,7 @@
 
           <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
             <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table class="w-full text-right text-xs">
+              <table class="w-full text-right text-xs min-w-[740px]">
                 <thead class="bg-subcard text-muted sticky top-0 z-10 border-b border-main">
                   <tr>
                     <th class="py-2.5 px-3">الدور / الشقة</th>
@@ -388,7 +388,7 @@
                     <th class="py-2.5 px-3 text-center">إجمالي المطلوب</th>
                     <th class="py-2.5 px-3 text-center">المدفوع</th>
                     <th class="py-2.5 px-3 text-center">الحالة</th>
-                    <th class="py-2.5 px-3 text-center">إجراءات الدفع</th>
+                    <th class="py-2.5 px-3 text-center min-w-[140px] whitespace-nowrap">إجراءات الدفع</th>
                   </tr>
                 </thead>
                 <tbody id="monthCollectionsTableBody" class="divide-y divide-main">
@@ -484,8 +484,7 @@
           <table class="w-full text-right text-xs">
             <thead class="bg-subcard text-muted border-b border-main">
               <tr>
-                <th class="py-3 px-3">الدور والموقع</th>
-                <th class="py-3 px-3">رقم الشقة</th>
+                <th class="py-3 px-3">الدور / الشقة</th>
                 <th class="py-3 px-3">اسم الساكن / المالك</th>
                 <th class="py-3 px-3">رقم الهاتف</th>
                 <th class="py-3 px-3 text-center">متأخرات اشتراكات سابقة</th>
@@ -811,38 +810,87 @@
   </div>
 
   <!-- MODAL 5: MANAGE EXPENSE ITEMS CATALOG (ADD BY NAME ONLY) -->
-  <div id="manageExpenseItemsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+  <div id="manageExpenseItemsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <h3 class="text-base font-bold text-main flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-          دليل بنود المصاريف المعتادة للبرج
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          إعدادات المصاريف الشهرية وبنود الصيانة
         </h3>
-        <button onclick="closeManageExpenseItemsModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+        <button onclick="closeManageExpenseItemsModal()" class="text-muted hover:text-main text-lg font-bold p-1">&times;</button>
       </div>
 
-      <!-- Add New Item By Name Only -->
-      <div class="bg-subcard p-4 rounded-xl border border-main space-y-2">
-        <label class="block text-xs font-bold text-main">إضافة بند مصروف جديد بالاسم فقط:</label>
-        <div class="flex gap-2">
-          <input type="text" id="newCatalogItemName" placeholder="مثال: صيانة إنتركم، عزل أسطح..." class="flex-1 bg-card border border-main rounded-xl px-3 py-2 text-xs text-main placeholder-muted focus:outline-none focus:border-amber-500">
-          <button onclick="addNewCatalogItemByName()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white whitespace-nowrap">
-            + إضافة البند
+      <!-- Segmented Tabs -->
+      <div class="flex p-1 bg-subcard rounded-xl border border-main text-xs">
+        <button type="button" id="tabBtnRecurringExpenses" onclick="switchExpenseSettingsTab('recurring')" class="flex-1 py-1.5 rounded-lg font-bold bg-card text-amber-400 shadow-sm border border-main transition-all">
+          📌 المصاريف الثابتة شهرياً
+        </button>
+        <button type="button" id="tabBtnCatalogExpenses" onclick="switchExpenseSettingsTab('catalog')" class="flex-1 py-1.5 rounded-lg font-medium text-muted hover:text-main transition-all">
+          📋 دليل الاقتراحات العامة
+        </button>
+      </div>
+
+      <!-- TAB 1: RECURRING EXPENSES (FIXED MONTHLY) -->
+      <div id="panelRecurringExpenses" class="space-y-4 flex-1 overflow-y-auto pr-1">
+        <div class="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-[11px] text-amber-300 leading-relaxed">
+          ⚡ <strong>البنود الشهرية الثابتة:</strong> هذه البنود تنزل تلقائياً في قائمة مصاريف كل شهر جديد (مثل مرتب الحارس، صيانة الأسانسير، نظافة الخزان، أدوات النظافة). يمكنك تعديل المبلغ أو حذف أو إضافة بنود ثابتة أخرى هنا.
+        </div>
+
+        <!-- Add New Recurring Item Form -->
+        <div class="bg-subcard p-3.5 rounded-xl border border-main space-y-2.5">
+          <span class="block text-xs font-bold text-main">إضافة بند شهري ثابت جديد:</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" id="newRecurringItemName" placeholder="اسم البند (مثال: كهرباء السلم)" class="sm:col-span-1 bg-card border border-main rounded-xl px-2.5 py-2 text-xs text-main placeholder-muted focus:outline-none focus:border-amber-500">
+            <input type="number" id="newRecurringItemCost" placeholder="المبلغ (ج.م)" min="0" step="10" class="sm:col-span-1 bg-card border border-main rounded-xl px-2.5 py-2 text-xs text-main placeholder-muted focus:outline-none focus:border-amber-500">
+            <select id="newRecurringItemCategory" class="sm:col-span-1 bg-card border border-main rounded-xl px-2.5 py-2 text-xs text-main focus:outline-none focus:border-amber-500">
+              <option value="حراسة">حراسة</option>
+              <option value="صيانة أسانسير">صيانة أسانسير</option>
+              <option value="نظافة">نظافة</option>
+              <option value="كهرباء">كهرباء</option>
+              <option value="مياه">مياه</option>
+              <option value="صيانة عامة">صيانة عامة</option>
+              <option value="سباكة">سباكة</option>
+            </select>
+          </div>
+          <button type="button" onclick="addNewRecurringExpenseItem()" class="w-full py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition-all shadow-sm">
+            + إضافة كبند شهري ثابت 📌
           </button>
         </div>
-        <p class="text-[11px] text-muted">سيظهر هذا البند فوراً في الاقتراحات السريعة عند تسجيل أي مصروف شهري جديد.</p>
-      </div>
 
-      <!-- Catalog List -->
-      <div class="space-y-2">
-        <span class="text-xs font-bold text-muted">البنود المعتادة المسجلة:</span>
-        <div id="catalogItemsList" class="max-h-60 overflow-y-auto divide-y divide-main border border-main rounded-xl p-1 bg-subcard/50">
-          <!-- Populated via JS -->
+        <!-- Recurring Items List -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-muted">البنود الثابتة الحالية:</span>
+            <span id="recurringExpensesTotalBadge" class="text-amber-400 font-bold">2,100 ج.م / شهرياً</span>
+          </div>
+          <div id="recurringExpensesList" class="divide-y divide-main border border-main rounded-xl bg-subcard/50 overflow-hidden">
+            <!-- Populated via JS -->
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-end pt-2">
-        <button onclick="closeManageExpenseItemsModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main">تم</button>
+      <!-- TAB 2: GENERAL CATALOG -->
+      <div id="panelCatalogExpenses" class="space-y-4 flex-1 overflow-y-auto pr-1 hidden">
+        <div class="bg-subcard p-3 rounded-xl border border-main space-y-2">
+          <label class="block text-xs font-bold text-main">إضافة بند للاقتراحات السريعة (بالاسم فقط):</label>
+          <div class="flex gap-2">
+            <input type="text" id="newCatalogItemName" placeholder="مثال: صيانة إنتركم، عزل أسطح..." class="flex-1 bg-card border border-main rounded-xl px-3 py-2 text-xs text-main placeholder-muted focus:outline-none focus:border-amber-500">
+            <button type="button" onclick="addNewCatalogItemByName()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white whitespace-nowrap">
+              + إضافة
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-muted">قائمة البنود المسجلة:</span>
+          <div id="catalogItemsList" class="max-h-56 overflow-y-auto divide-y divide-main border border-main rounded-xl p-1 bg-subcard/50">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end pt-2 border-t border-main">
+        <button type="button" onclick="closeManageExpenseItemsModal()" class="px-5 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main hover:bg-card">تم</button>
       </div>
     </div>
   </div>
@@ -1304,7 +1352,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
   <script>
 
     // RAW INITIAL DATA FROM EXCEL AUDIT
-    const RAW_INITIAL_DATA = {"apartments": [{"row": 2, "apt_num": 1, "floor": 1, "position": "يمين", "owner_name": "احمد وقاد", "phone": "01222714991", "default_fee": 100}, {"row": 3, "apt_num": 2, "floor": 1, "position": "يسار", "owner_name": "مديح", "phone": "", "default_fee": 100}, {"row": 4, "apt_num": 3, "floor": 2, "position": "كامل", "owner_name": "عبد العزيز", "phone": "01228091137", "default_fee": 100}, {"row": 5, "apt_num": 4, "floor": 3, "position": "يمين", "owner_name": "ايمن  مصطفي", "phone": "01114821735", "default_fee": 200}, {"row": 6, "apt_num": 5, "floor": 3, "position": "يسار", "owner_name": "احمد السنوري(وسام)", "phone": "01554159183", "default_fee": 200}, {"row": 7, "apt_num": 6, "floor": 4, "position": "كامل", "owner_name": "عبدالوهاب محجوب", "phone": "01500059558", "default_fee": 200}, {"row": 8, "apt_num": 7, "floor": 5, "position": "يمين", "owner_name": "وليد كفل", "phone": "01027223116", "default_fee": 200}, {"row": 9, "apt_num": 8, "floor": 5, "position": "يسار", "owner_name": "ام نشوي", "phone": "01278139828", "default_fee": 250}, {"row": 10, "apt_num": 9, "floor": 6, "position": "كامل", "owner_name": "محمد التايب", "phone": "01118780180", "default_fee": 250}, {"row": 11, "apt_num": 10, "floor": 7, "position": "يمين", "owner_name": "ام احمد", "phone": "01068257159", "default_fee": 250}, {"row": 12, "apt_num": 11, "floor": 7, "position": "يسار", "owner_name": "حسيني بدر", "phone": "01060356461", "default_fee": 200}, {"row": 13, "apt_num": 12, "floor": 8, "position": "كامل", "owner_name": "ام ندي", "phone": "01065683960", "default_fee": 200}, {"row": 14, "apt_num": 13, "floor": 9, "position": "كامل", "owner_name": "ام عمرو", "phone": "01228700853", "default_fee": 200}, {"row": 15, "apt_num": 14, "floor": 10, "position": "كامل", "owner_name": "احمد جابر", "phone": "01280531643", "default_fee": 250}, {"row": 16, "apt_num": 15, "floor": 11, "position": "يمين", "owner_name": "الحاجه فاطمة", "phone": "01153636243", "default_fee": 200}, {"row": 17, "apt_num": 16, "floor": 11, "position": "يسار", "owner_name": "محمد شحاته", "phone": "مدام اماني", "default_fee": 200}, {"row": 18, "apt_num": 17, "floor": 12, "position": "كامل", "owner_name": "أبو حمزة", "phone": "01280531643", "default_fee": 250}, {"row": 19, "apt_num": 18, "floor": 13, "position": "يمين", "owner_name": "الحاجة عايدة", "phone": "01270749193", "default_fee": 200}, {"row": 20, "apt_num": 19, "floor": 13, "position": "يسار", "owner_name": "رامي", "phone": "01094464467", "default_fee": 200}, {"row": 21, "apt_num": 20, "floor": 14, "position": "كامل", "owner_name": "فرج", "phone": "01277315226", "default_fee": 250}, {"row": 22, "apt_num": 21, "floor": 15, "position": "يمين", "owner_name": "محمد إسماعيل", "phone": "01001748886", "default_fee": 200}, {"row": 23, "apt_num": 22, "floor": 15, "position": "يسار", "owner_name": "محمد رأفت", "phone": "01062138670", "default_fee": 200}, {"row": 24, "apt_num": 23, "floor": 16, "position": "كامل", "owner_name": "شعبان الصعيدي", "phone": "01068071425", "default_fee": 200}, {"row": 25, "apt_num": 24, "floor": 17, "position": "كامل", "owner_name": "احمد حمدي", "phone": "01222979122", "default_fee": 250}], "chronological_order": ["11", "12", "1", "2", "3", "4", "5", "6", "7", "8"], "months": {"11": {"id": "11", "title": "نوفمبر 2025 (شهر 11)", "opening_balance": 150, "subscriptions_collected": 4850, "extra_revenue": 5900, "total_revenue": 10750, "total_income": 10900, "total_expenses": 8120, "closing_balance": 2780, "collections": [{"row": 2, "name": "احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "احمد السنوري(وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "عبدالوهاب محجوب", "old_dues": 1400, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 1500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 650, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "رامي", "old_dues": 1750, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "فرج", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "11_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "11_12", "item": "صيانة دورية اسانسير", "cost": 2000, "category": "صيانة أسانسير"}, {"id": "11_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "11_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "11_15", "item": "منظفات", "cost": 120, "category": "نظافة"}, {"id": "11_16", "item": "التليفون للحارس", "cost": 500, "category": "حراسة"}, {"id": "11_17", "item": "كابينة الاسانسير تخريم الباب", "cost": 100, "category": "صيانة أسانسير"}, {"id": "11_18", "item": "طوب و اسمنت و الحديدة", "cost": 600, "category": "أمن وكاميرات"}, {"id": "11_19", "item": "بويات  و مصنعية  للحارس", "cost": 1150, "category": "حراسة"}, {"id": "11_20", "item": "قفل للمدخل العمارة", "cost": 100, "category": "أخرى"}]}, "12": {"id": "12", "title": "ديسمبر 2025 (شهر 12)", "opening_balance": 2780, "subscriptions_collected": 4800, "extra_revenue": 4600, "total_revenue": 9400, "total_income": 12180, "total_expenses": 17360, "closing_balance": -5180, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 150, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 650, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 150, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 10, "name": "د.محمد التايب", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "أ.فرج", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 600, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "12_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "12_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "12_14", "item": "الحارس سلف", "cost": 1400, "category": "حراسة"}, {"id": "12_15", "item": "منظفات تينارلازالة بواقي البويا", "cost": 100, "category": "نظافة"}, {"id": "12_16", "item": "شاشة كاميرات", "cost": 700, "category": "أمن وكاميرات"}, {"id": "12_17", "item": "الكاميرات", "cost": 3500, "category": "أمن وكاميرات"}, {"id": "12_18", "item": "سلك للكاميرات", "cost": 200, "category": "أمن وكاميرات"}, {"id": "12_19", "item": "صندوق زبالة", "cost": 950, "category": "نظافة"}, {"id": "12_20", "item": "تركيب 3 باغات اسانسير+الأرضي كريستال", "cost": 600, "category": "صيانة أسانسير"}, {"id": "12_21", "item": "تركيب زر طلب اسانسير 6", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_22", "item": "للصندوق جنزير و قفل", "cost": 300, "category": "أخرى"}, {"id": "12_23", "item": "صاج للباب الحديد و كالون", "cost": 1600, "category": "أخرى"}, {"id": "12_24", "item": "رمل و اسمنت لغرفة الاسانسر و فاتحة ال17", "cost": 300, "category": "أمن وكاميرات"}, {"id": "12_25", "item": "تخريم باب غرفة الاسانسير", "cost": 140, "category": "صيانة أسانسير"}, {"id": "12_26", "item": "تركيب سيراميك لغرفة الاسانسير", "cost": 100, "category": "صيانة أسانسير"}, {"id": "12_27", "item": "أدوات الدهان للمدخل و الباب", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_28", "item": "أدوات كهرباء", "cost": 1070, "category": "كهرباء"}, {"id": "12_29", "item": "سلك للانوار المدخل", "cost": 200, "category": "أخرى"}, {"id": "12_30", "item": "مصناعية النقاش", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_31", "item": "مصناعية الكهربائى", "cost": 1000, "category": "أخرى"}, {"id": "12_32", "item": "مصناعية الحارس", "cost": 150, "category": "حراسة"}, {"id": "12_33", "item": "ايجار سقالة", "cost": 100, "category": "أخرى"}, {"id": "12_34", "item": "منصناعية الحارس تبيض المسافات بين الادوار", "cost": 200, "category": "حراسة"}]}, "1": {"id": "1", "title": "يناير 2026 (شهر 1)", "opening_balance": -5180, "subscriptions_collected": 4750, "extra_revenue": 1050, "total_revenue": 5800, "total_income": 620, "total_expenses": 4995, "closing_balance": -4375, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 50, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "1_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "1_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 400, "category": "صيانة أسانسير"}, {"id": "1_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "1_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "1_15", "item": "منظفات", "cost": 100, "category": "نظافة"}, {"id": "1_16", "item": "مياه البرج", "cost": 95, "category": "مياه"}, {"id": "1_17", "item": "توصيل  نت الكاميرات", "cost": 150, "category": "أمن وكاميرات"}, {"id": "1_18", "item": "سلك نت للدور  السادس", "cost": 500, "category": "أمن وكاميرات"}, {"id": "1_19", "item": "ستاند  شاشة الكاميرات", "cost": 200, "category": "أمن وكاميرات"}]}, "2": {"id": "2", "title": "فبراير 2026 (شهر 2)", "opening_balance": -4375, "subscriptions_collected": 4800, "extra_revenue": 2500, "total_revenue": 7300, "total_income": 2925, "total_expenses": 3950, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 100, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 100, "monthly_fee": 200, "paid": 250, "remaining": 50}, {"row": 9, "name": "ام نشوي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "2_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "2_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "2_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "2_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "2_15", "item": "منظفات", "cost": 100, "category": "نظافة"}]}, "3": {"id": "3", "title": "مارس 2026 (شهر 3)", "opening_balance": -1025, "subscriptions_collected": 4350, "extra_revenue": 100, "total_revenue": 4450, "total_income": 3425, "total_expenses": 2950, "closing_balance": 475, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 150, "paid": 150, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "3_11", "item": "كهرباء", "cost": 1000, "category": "كهرباء"}, {"id": "3_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "3_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "3_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}]}, "4": {"id": "4", "title": "أبريل 2026 (شهر 4)", "opening_balance": 475, "subscriptions_collected": 4800, "extra_revenue": 0, "total_revenue": 4800, "total_income": 5275, "total_expenses": 4300, "closing_balance": 975, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "4_11", "item": "كهرباء", "cost": 1500, "category": "كهرباء"}, {"id": "4_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "4_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "4_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "4_15", "item": "كهربئ (صنايعي + مستلزمات)", "cost": 850, "category": "كهرباء"}]}, "5": {"id": "5", "title": "مايو 2026 (شهر 5)", "opening_balance": 975, "subscriptions_collected": 4500, "extra_revenue": 0, "total_revenue": 4500, "total_income": 5475, "total_expenses": 6500, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "5_11", "item": "كهرباء", "cost": 3500, "category": "كهرباء"}, {"id": "5_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "5_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "5_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "5_15", "item": "أدوات نظافة", "cost": 75, "category": "نظافة"}, {"id": "5_16", "item": "فاتورة مياة البرج", "cost": 975, "category": "مياه"}]}, "6": {"id": "6", "title": "يونيو 2026 (شهر 6)", "opening_balance": -1025, "subscriptions_collected": 4650, "extra_revenue": 0, "total_revenue": 4650, "total_income": 3625, "total_expenses": 4070, "closing_balance": -445, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "6_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "6_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "6_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "6_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "6_16", "item": "فاتورة مياة البرج", "cost": 120, "category": "مياه"}]}, "7": {"id": "7", "title": "يوليو 2026 (شهر 7)", "opening_balance": -445, "subscriptions_collected": 4450, "extra_revenue": 0, "total_revenue": 4450, "total_income": 4005, "total_expenses": 2420, "closing_balance": 1585, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "7_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "7_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "7_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "7_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "7_16", "item": "فاتورة مياة البرج", "cost": 70, "category": "مياه"}, {"id": "7_17", "item": "تركيب طلب اسانسير15", "cost": 150, "category": "صيانة أسانسير"}, {"id": "7_18", "item": "صيانة اسانسير يوم جمعه", "cost": 100, "category": "صيانة أسانسير"}]}, "8": {"id": "8", "title": "أغسطس 2026 (شهر 8)", "opening_balance": 1585, "subscriptions_collected": 4250, "extra_revenue": 0, "total_revenue": 4250, "total_income": 5835, "total_expenses": 2150, "closing_balance": 3685, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "8_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "8_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "8_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "8_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "8_16", "item": "مباه البرج", "cost": 50, "category": "مياه"}]}}, "expense_catalog": [{"name": "فاتورة كهرباء البرج والمرافق", "category": "كهرباء"}, {"name": "صيانة دورية اسانسير + مستلزمات", "category": "صيانة أسانسير"}, {"name": "نظافة الخزانات العلوية والأرضية", "category": "نظافة"}, {"name": "مرتب الحارس الشهري", "category": "حراسة"}, {"name": "أدوات ومنظفات المدخل والسلالم", "category": "نظافة"}, {"name": "فاتورة مياه البرج", "category": "مياه"}, {"name": "صيانة وقطع غيار أسانسير", "category": "صيانة أسانسير"}, {"name": "كاميرات المراقبة وشاشات العرض", "category": "أمن وكاميرات"}, {"name": "سباكة ومستلزمات صحية للبرج", "category": "سباكة"}, {"name": "صيانة كهرباء ومفاتيح وإنارة المدخل", "category": "كهرباء"}, {"name": "أقفال وأبواب وحدادة المدخل", "category": "صيانة عامة"}, {"name": "بويات ومصنعيات نقاشة للسلالم والمدخل", "category": "نقاشة ودهانات"}]};
+    const RAW_INITIAL_DATA = {"apartments": [{"row": 2, "apt_num": 1, "floor": 1, "position": "يمين", "owner_name": "احمد وقاد", "phone": "01222714991", "default_fee": 100}, {"row": 3, "apt_num": 2, "floor": 1, "position": "يسار", "owner_name": "مديح", "phone": "", "default_fee": 100}, {"row": 4, "apt_num": 3, "floor": 2, "position": "كامل", "owner_name": "عبد العزيز", "phone": "01228091137", "default_fee": 100}, {"row": 5, "apt_num": 4, "floor": 3, "position": "يمين", "owner_name": "ايمن  مصطفي", "phone": "01114821735", "default_fee": 200}, {"row": 6, "apt_num": 5, "floor": 3, "position": "يسار", "owner_name": "احمد السنوري(وسام)", "phone": "01554159183", "default_fee": 200}, {"row": 7, "apt_num": 6, "floor": 4, "position": "كامل", "owner_name": "عبدالوهاب محجوب", "phone": "01500059558", "default_fee": 200}, {"row": 8, "apt_num": 7, "floor": 5, "position": "يمين", "owner_name": "وليد كفل", "phone": "01027223116", "default_fee": 200}, {"row": 9, "apt_num": 8, "floor": 5, "position": "يسار", "owner_name": "ام نشوي", "phone": "01278139828", "default_fee": 250}, {"row": 10, "apt_num": 9, "floor": 6, "position": "كامل", "owner_name": "محمد التايب", "phone": "01118780180", "default_fee": 250}, {"row": 11, "apt_num": 10, "floor": 7, "position": "يمين", "owner_name": "ام احمد", "phone": "01068257159", "default_fee": 250}, {"row": 12, "apt_num": 11, "floor": 7, "position": "يسار", "owner_name": "حسيني بدر", "phone": "01060356461", "default_fee": 200}, {"row": 13, "apt_num": 12, "floor": 8, "position": "كامل", "owner_name": "ام ندي", "phone": "01065683960", "default_fee": 200}, {"row": 14, "apt_num": 13, "floor": 9, "position": "كامل", "owner_name": "ام عمرو", "phone": "01228700853", "default_fee": 200}, {"row": 15, "apt_num": 14, "floor": 10, "position": "كامل", "owner_name": "احمد جابر", "phone": "01280531643", "default_fee": 250}, {"row": 16, "apt_num": 15, "floor": 11, "position": "يمين", "owner_name": "الحاجه فاطمة", "phone": "01153636243", "default_fee": 200}, {"row": 17, "apt_num": 16, "floor": 11, "position": "يسار", "owner_name": "محمد شحاته", "phone": "مدام اماني", "default_fee": 200}, {"row": 18, "apt_num": 17, "floor": 12, "position": "كامل", "owner_name": "أبو حمزة", "phone": "01280531643", "default_fee": 250}, {"row": 19, "apt_num": 18, "floor": 13, "position": "يمين", "owner_name": "الحاجة عايدة", "phone": "01270749193", "default_fee": 200}, {"row": 20, "apt_num": 19, "floor": 13, "position": "يسار", "owner_name": "رامي", "phone": "01094464467", "default_fee": 200}, {"row": 21, "apt_num": 20, "floor": 14, "position": "كامل", "owner_name": "فرج", "phone": "01277315226", "default_fee": 250}, {"row": 22, "apt_num": 21, "floor": 15, "position": "يمين", "owner_name": "محمد إسماعيل", "phone": "01001748886", "default_fee": 200}, {"row": 23, "apt_num": 22, "floor": 15, "position": "يسار", "owner_name": "محمد رأفت", "phone": "01062138670", "default_fee": 200}, {"row": 24, "apt_num": 23, "floor": 16, "position": "كامل", "owner_name": "شعبان الصعيدي", "phone": "01068071425", "default_fee": 200}, {"row": 25, "apt_num": 24, "floor": 17, "position": "كامل", "owner_name": "احمد حمدي", "phone": "01222979122", "default_fee": 250}], "chronological_order": ["11", "12", "1", "2", "3", "4", "5", "6", "7", "8"], "months": {"11": {"id": "11", "title": "نوفمبر 2025 (شهر 11)", "opening_balance": 150, "subscriptions_collected": 4850, "extra_revenue": 5900, "total_revenue": 10750, "total_income": 10900, "total_expenses": 8120, "closing_balance": 2780, "collections": [{"row": 2, "name": "احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "احمد السنوري(وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "عبدالوهاب محجوب", "old_dues": 1400, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 1500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 650, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "رامي", "old_dues": 1750, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "فرج", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "11_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "11_12", "item": "صيانة دورية اسانسير", "cost": 2000, "category": "صيانة أسانسير"}, {"id": "11_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "11_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "11_15", "item": "منظفات", "cost": 120, "category": "نظافة"}, {"id": "11_16", "item": "التليفون للحارس", "cost": 500, "category": "حراسة"}, {"id": "11_17", "item": "كابينة الاسانسير تخريم الباب", "cost": 100, "category": "صيانة أسانسير"}, {"id": "11_18", "item": "طوب و اسمنت و الحديدة", "cost": 600, "category": "أمن وكاميرات"}, {"id": "11_19", "item": "بويات  و مصنعية  للحارس", "cost": 1150, "category": "حراسة"}, {"id": "11_20", "item": "قفل للمدخل العمارة", "cost": 100, "category": "أخرى"}]}, "12": {"id": "12", "title": "ديسمبر 2025 (شهر 12)", "opening_balance": 2780, "subscriptions_collected": 4800, "extra_revenue": 4600, "total_revenue": 9400, "total_income": 12180, "total_expenses": 17360, "closing_balance": -5180, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 150, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 650, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 150, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 10, "name": "د.محمد التايب", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "أ.فرج", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 150, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 600, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 150, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "12_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "12_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "12_14", "item": "الحارس سلف", "cost": 1400, "category": "حراسة"}, {"id": "12_15", "item": "منظفات تينارلازالة بواقي البويا", "cost": 100, "category": "نظافة"}, {"id": "12_16", "item": "شاشة كاميرات", "cost": 700, "category": "أمن وكاميرات"}, {"id": "12_17", "item": "الكاميرات", "cost": 3500, "category": "أمن وكاميرات"}, {"id": "12_18", "item": "سلك للكاميرات", "cost": 200, "category": "أمن وكاميرات"}, {"id": "12_19", "item": "صندوق زبالة", "cost": 950, "category": "نظافة"}, {"id": "12_20", "item": "تركيب 3 باغات اسانسير+الأرضي كريستال", "cost": 600, "category": "صيانة أسانسير"}, {"id": "12_21", "item": "تركيب زر طلب اسانسير 6", "cost": 300, "category": "صيانة أسانسير"}, {"id": "12_22", "item": "للصندوق جنزير و قفل", "cost": 300, "category": "أخرى"}, {"id": "12_23", "item": "صاج للباب الحديد و كالون", "cost": 1600, "category": "أخرى"}, {"id": "12_24", "item": "رمل و اسمنت لغرفة الاسانسر و فاتحة ال17", "cost": 300, "category": "أمن وكاميرات"}, {"id": "12_25", "item": "تخريم باب غرفة الاسانسير", "cost": 140, "category": "صيانة أسانسير"}, {"id": "12_26", "item": "تركيب سيراميك لغرفة الاسانسير", "cost": 100, "category": "صيانة أسانسير"}, {"id": "12_27", "item": "أدوات الدهان للمدخل و الباب", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_28", "item": "أدوات كهرباء", "cost": 1070, "category": "كهرباء"}, {"id": "12_29", "item": "سلك للانوار المدخل", "cost": 200, "category": "أخرى"}, {"id": "12_30", "item": "مصناعية النقاش", "cost": 1000, "category": "نقاشة ودهانات"}, {"id": "12_31", "item": "مصناعية الكهربائى", "cost": 1000, "category": "أخرى"}, {"id": "12_32", "item": "مصناعية الحارس", "cost": 150, "category": "حراسة"}, {"id": "12_33", "item": "ايجار سقالة", "cost": 100, "category": "أخرى"}, {"id": "12_34", "item": "منصناعية الحارس تبيض المسافات بين الادوار", "cost": 200, "category": "حراسة"}]}, "1": {"id": "1", "title": "يناير 2026 (شهر 1)", "opening_balance": -5180, "subscriptions_collected": 4750, "extra_revenue": 1050, "total_revenue": 5800, "total_income": 620, "total_expenses": 4995, "closing_balance": -4375, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 500, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 50, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 250, "paid": 200, "remaining": -50}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "1_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "1_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 400, "category": "صيانة أسانسير"}, {"id": "1_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "1_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "1_15", "item": "منظفات", "cost": 100, "category": "نظافة"}, {"id": "1_16", "item": "مياه البرج", "cost": 95, "category": "مياه"}, {"id": "1_17", "item": "توصيل  نت الكاميرات", "cost": 150, "category": "أمن وكاميرات"}, {"id": "1_18", "item": "سلك نت للدور  السادس", "cost": 500, "category": "أمن وكاميرات"}, {"id": "1_19", "item": "ستاند  شاشة الكاميرات", "cost": 200, "category": "أمن وكاميرات"}]}, "2": {"id": "2", "title": "فبراير 2026 (شهر 2)", "opening_balance": -4375, "subscriptions_collected": 4800, "extra_revenue": 2500, "total_revenue": 7300, "total_income": 2925, "total_expenses": 3950, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 100, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 100, "monthly_fee": 200, "paid": 250, "remaining": 50}, {"row": 9, "name": "ام نشوي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 500, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 100, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "2_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "2_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "2_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "2_14", "item": "الحارس", "cost": 1400, "category": "حراسة"}, {"id": "2_15", "item": "منظفات", "cost": 100, "category": "نظافة"}]}, "3": {"id": "3", "title": "مارس 2026 (شهر 3)", "opening_balance": -1025, "subscriptions_collected": 4350, "extra_revenue": 100, "total_revenue": 4450, "total_income": 3425, "total_expenses": 2950, "closing_balance": 475, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 150, "paid": 150, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 100, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "3_11", "item": "كهرباء", "cost": 1000, "category": "كهرباء"}, {"id": "3_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "3_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "3_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}]}, "4": {"id": "4", "title": "أبريل 2026 (شهر 4)", "opening_balance": 475, "subscriptions_collected": 4800, "extra_revenue": 0, "total_revenue": 4800, "total_income": 5275, "total_expenses": 4300, "closing_balance": 975, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "4_11", "item": "كهرباء", "cost": 1500, "category": "كهرباء"}, {"id": "4_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "4_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "4_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "4_15", "item": "كهربئ (صنايعي + مستلزمات)", "cost": 850, "category": "كهرباء"}]}, "5": {"id": "5", "title": "مايو 2026 (شهر 5)", "opening_balance": 975, "subscriptions_collected": 4500, "extra_revenue": 0, "total_revenue": 4500, "total_income": 5475, "total_expenses": 6500, "closing_balance": -1025, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "5_11", "item": "كهرباء", "cost": 3500, "category": "كهرباء"}, {"id": "5_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "5_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "5_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "5_15", "item": "أدوات نظافة", "cost": 75, "category": "نظافة"}, {"id": "5_16", "item": "فاتورة مياة البرج", "cost": 975, "category": "مياه"}]}, "6": {"id": "6", "title": "يونيو 2026 (شهر 6)", "opening_balance": -1025, "subscriptions_collected": 4650, "extra_revenue": 0, "total_revenue": 4650, "total_income": 3625, "total_expenses": 4070, "closing_balance": -445, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 275, "remaining": 25}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 225, "remaining": 25}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "6_11", "item": "كهرباء", "cost": 2000, "category": "كهرباء"}, {"id": "6_12", "item": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "6_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "6_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "6_16", "item": "فاتورة مياة البرج", "cost": 120, "category": "مياه"}]}, "7": {"id": "7", "title": "يوليو 2026 (شهر 7)", "opening_balance": -445, "subscriptions_collected": 4450, "extra_revenue": 0, "total_revenue": 4450, "total_income": 4005, "total_expenses": 2420, "closing_balance": 1585, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "7_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "7_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "7_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "7_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "7_16", "item": "فاتورة مياة البرج", "cost": 70, "category": "مياه"}, {"id": "7_17", "item": "تركيب طلب اسانسير15", "cost": 150, "category": "صيانة أسانسير"}, {"id": "7_18", "item": "صيانة اسانسير يوم جمعه", "cost": 100, "category": "صيانة أسانسير"}]}, "8": {"id": "8", "title": "أغسطس 2026 (شهر 8)", "opening_balance": 1585, "subscriptions_collected": 4250, "extra_revenue": 0, "total_revenue": 4250, "total_income": 5835, "total_expenses": 2150, "closing_balance": 3685, "collections": [{"row": 2, "name": "أ.احمد وقاد", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 3, "name": "أ.مديح", "old_dues": 0, "monthly_fee": 100, "paid": 100, "remaining": 0}, {"row": 4, "name": "أ.عبد العزيز", "old_dues": 0, "monthly_fee": 100, "paid": 0, "remaining": -100}, {"row": 5, "name": "أ.ايمن  مصطفي", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 6, "name": "أ.احمد الشال (د.وسام)", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 7, "name": "أ.عبدالوهاب محجوب", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 8, "name": "أ.وليد كفل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 9, "name": "ام نشوي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 10, "name": "د.محمد التايب", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 11, "name": "ام احمد", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 12, "name": "أ.حسيني بدر", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 13, "name": "ام ندي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 14, "name": "ام عمرو", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 15, "name": "أ.احمد جابر", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 16, "name": "الحاجه فاطمة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 17, "name": "أ.محمد شحاته", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 18, "name": "أ.أبو حمزة", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 19, "name": "الحاجة عايدة", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 20, "name": "أ.رامي (محمد رمضان)", "old_dues": 0, "monthly_fee": 200, "paid": 0, "remaining": -200}, {"row": 21, "name": "د.  مني", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}, {"row": 22, "name": "أ.محمد إسماعيل", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 23, "name": "أ.محمد رأفت", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 24, "name": "أ.شعبان الصعيدي", "old_dues": 0, "monthly_fee": 200, "paid": 200, "remaining": 0}, {"row": 25, "name": "أ.احمد حمدي", "old_dues": 0, "monthly_fee": 250, "paid": 250, "remaining": 0}], "expenses": [{"id": "8_12", "item": "صيانة دورية اسانسير+ غراء", "cost": 300, "category": "صيانة أسانسير"}, {"id": "8_13", "item": "نضافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "8_14", "item": "الحارس", "cost": 1500, "category": "حراسة"}, {"id": "8_15", "item": "أدوات نظافة", "cost": 150, "category": "نظافة"}, {"id": "8_16", "item": "مباه البرج", "cost": 50, "category": "مياه"}]}}, "recurring_expenses": [{"id": "guard", "name": "مرتب الحارس الشهري", "cost": 1500, "category": "حراسة"}, {"id": "elevator", "name": "صيانة دورية اسانسير", "cost": 300, "category": "صيانة أسانسير"}, {"id": "tank", "name": "نظافة الخزانات", "cost": 150, "category": "نظافة"}, {"id": "cleaning", "name": "أدوات نظافة", "cost": 150, "category": "نظافة"}], "expense_catalog": [{"name": "فاتورة كهرباء البرج والمرافق", "category": "كهرباء"}, {"name": "صيانة دورية اسانسير + مستلزمات", "category": "صيانة أسانسير"}, {"name": "نظافة الخزانات العلوية والأرضية", "category": "نظافة"}, {"name": "مرتب الحارس الشهري", "category": "حراسة"}, {"name": "أدوات ومنظفات المدخل والسلالم", "category": "نظافة"}, {"name": "فاتورة مياه البرج", "category": "مياه"}, {"name": "صيانة وقطع غيار أسانسير", "category": "صيانة أسانسير"}, {"name": "كاميرات المراقبة وشاشات العرض", "category": "أمن وكاميرات"}, {"name": "سباكة ومستلزمات صحية للبرج", "category": "سباكة"}, {"name": "صيانة كهرباء ومفاتيح وإنارة المدخل", "category": "كهرباء"}, {"name": "أقفال وأبواب وحدادة المدخل", "category": "صيانة عامة"}, {"name": "بويات ومصنعيات نقاشة للسلالم والمدخل", "category": "نقاشة ودهانات"}]};
 
     // STORAGE KEY (V6 ensures immediate reload of corrected data)
     const STORAGE_KEY = 'ALBORG_FINANCE_DATA_V10_ACCURATE';
@@ -1357,6 +1405,46 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (needsRepair) {
         console.log("Self-healing applied: restored exact audited Excel figures for historical months.");
       }
+
+      // 1. Ensure Recurring Expenses Template is loaded
+      if (!APP_DATA.recurring_expenses || APP_DATA.recurring_expenses.length === 0) {
+        APP_DATA.recurring_expenses = [
+          { id: "guard", name: "مرتب الحارس الشهري", cost: 1500, category: "حراسة" },
+          { id: "elevator", name: "صيانة دورية اسانسير", cost: 300, category: "صيانة أسانسير" },
+          { id: "tank", name: "نظافة الخزانات", cost: 150, category: "نظافة" },
+          { id: "cleaning", name: "أدوات نظافة", cost: 150, category: "نظافة" }
+        ];
+      }
+
+      // 2. Clean any lingering monthly waived flags (Waivers belong strictly to arrears write-offs)
+      Object.values(APP_DATA.months || {}).forEach(m => {
+        if (m && m.collections) {
+          m.collections.forEach(c => {
+            if (c.waived) {
+              delete c.waived;
+              delete c.waived_amount;
+              delete c.waived_reason;
+            }
+          });
+        }
+      });
+
+      // 3. Auto-populate recurring expenses for open/new months (e.g. Month 9) if empty
+      const historicalClosed = ['11', '12', '1', '2', '3', '4', '5', '6', '7', '8'];
+      Object.keys(APP_DATA.months || {}).forEach(mKey => {
+        if (!historicalClosed.includes(mKey)) {
+          const m = APP_DATA.months[mKey];
+          if (m && (!m.expenses || m.expenses.length === 0)) {
+            m.expenses = APP_DATA.recurring_expenses.map(r => ({
+              id: `${mKey}_${r.id}_${Date.now()}`,
+              item: r.name,
+              cost: r.cost,
+              category: r.category,
+              confirmed: true
+            }));
+          }
+        }
+      });
 
       // Recalculate accurately across all months
       recalculateAllBalances();
@@ -1629,6 +1717,28 @@ grant usage, select on all sequences in schema public to anon;</pre>
       const m = APP_DATA.months[mKey];
       if (!m) return;
 
+      const historicalClosed = ['11', '12', '1', '2', '3', '4', '5', '6', '7', '8'];
+
+      // Self-healing / auto-populate recurring expenses if empty for open active month (e.g. Month 9)
+      if (!historicalClosed.includes(mKey) && (!m.expenses || m.expenses.length === 0)) {
+        if (!APP_DATA.recurring_expenses || APP_DATA.recurring_expenses.length === 0) {
+          APP_DATA.recurring_expenses = [
+            { id: "guard", name: "مرتب الحارس الشهري", cost: 1500, category: "حراسة" },
+            { id: "elevator", name: "صيانة دورية اسانسير", cost: 300, category: "صيانة أسانسير" },
+            { id: "tank", name: "نظافة الخزانات", cost: 150, category: "نظافة" },
+            { id: "cleaning", name: "أدوات نظافة", cost: 150, category: "نظافة" }
+          ];
+        }
+        m.expenses = APP_DATA.recurring_expenses.map(r => ({
+          id: `${mKey}_${r.id}_${Date.now()}`,
+          item: r.name,
+          cost: r.cost,
+          category: r.category,
+          confirmed: true
+        }));
+        recalculateAllBalances();
+      }
+
       // Update Strip (Matching Excel Cells L1, L2, L3, L4, L5)
       document.getElementById('mStripOpening').textContent = `${m.opening_balance.toLocaleString()} ج.م`;
       document.getElementById('mStripRevenue').textContent = `${m.total_revenue.toLocaleString()} ج.م`;
@@ -1647,20 +1757,17 @@ grant usage, select on all sequences in schema public to anon;</pre>
       tbody.innerHTML = '';
 
       let paidCount = 0;
-      let waivedCount = 0;
       m.collections.forEach(c => {
         const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
         const audit = auditsMap[c.row] || {};
         const isPaid = (c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0;
-        const isWaived = c.waived === true;
         if (isPaid) paidCount++;
-        if (isWaived) waivedCount++;
 
-        if (currentMFilter === 'paid' && (!isPaid && !isWaived)) return;
-        if (currentMFilter === 'unpaid' && (isPaid || isWaived)) return;
+        if (currentMFilter === 'paid' && !isPaid) return;
+        if (currentMFilter === 'unpaid' && isPaid) return;
 
         const pastDebt = audit.totalPastArrears || 0;
-        const totalDue = pastDebt + (isWaived ? 0 : (c.monthly_fee || 0));
+        const totalDue = pastDebt + (c.monthly_fee || 0);
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-subcard/50 transition-colors";
@@ -1687,46 +1794,34 @@ grant usage, select on all sequences in schema public to anon;</pre>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
             ${pastDebt > 0 
               ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">${pastDebt.toLocaleString()} ج</span>` 
-              : `<span class="text-emerald-400 text-[11px]">خالص (0 ج)</span>`}
+              : `<span class="text-emerald-400 text-[11px] font-semibold">خالص (0 ج)</span>`}
           </td>
           <td class="py-2.5 px-3 text-center font-bold text-main whitespace-nowrap">${totalDue.toLocaleString()} ج</td>
           <td class="py-2.5 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
             <div class="inline-flex items-center gap-1">
-              ${isWaived 
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30" title="${c.waived_reason || 'إسقاط اشتراك'}">معفى (إسقاط) ✓</span>`
-                : (isPaid 
-                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
-                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`)}
+              ${isPaid 
+                ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
+                : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`}
               ${c.receipt_image ? `
                 <button type="button" onclick="openLightbox('${c.receipt_image}', 'إيصال سداد شقة ${apt.apt_num} - ${c.paid} ج.م', 'إيصال سداد شقة ${apt.apt_num}')" class="text-emerald-400 hover:text-emerald-300 p-0.5 text-xs" title="عرض إيصال التحويل">📷</button>
               ` : ''}
             </div>
           </td>
-          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <td class="py-2.5 px-3 text-center whitespace-nowrap min-w-[140px]">
             ${IS_ADMIN ? `
-              <div class="inline-flex items-center gap-1.5">
-                ${!isPaid && !isWaived ? `
-                  <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95" title="سداد كامل اشتراك الشهر">
+              <div class="inline-flex items-center justify-center gap-1.5">
+                ${!isPaid ? `
+                  <button onclick="quickPay('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all active:scale-95 whitespace-nowrap" title="سداد كامل اشتراك الشهر">
                     سداد كامل
                   </button>
                 ` : ''}
-                <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-medium bg-subcard text-muted hover:text-main border border-main" title="سداد مخصص أو إرفاق إيصال">
+                <button onclick="openEditPaymentModal('${mKey}', ${c.row})" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-subcard text-muted hover:text-main border border-main whitespace-nowrap" title="سداد مخصص أو إرفاق إيصال">
                   ${isPaid ? 'تعديل الدفعة' : 'مخصص'}
                 </button>
-                ${!isWaived ? `
-                  <button onclick="openWriteOffDebtModal(${apt.apt_num}, ${c.row}, '${mKey}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 border border-purple-500/30 transition-all shadow-sm flex items-center gap-1" title="إسقاط أو إعفاء المديونية">
-                    <span>إسقاط</span>
-                    <span class="text-[10px]">⚖️</span>
-                  </button>
-                ` : `
-                  <button onclick="cancelMonthWaiver('${mKey}', ${c.row})" class="px-2 py-1 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:underline border border-rose-500/30 transition-all" title="إلغاء قرار إسقاط هذا الشهر">
-                    إلغاء الإسقاط ↺
-                  </button>
-                `}
               </div>
             ` : `
-              <button onclick="openAdminLoginModal()" class="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-subcard text-muted hover:text-purple-300 border border-main" title="يتطلب تسجيل دخول الإدارة">
+              <button onclick="openAdminLoginModal()" class="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-subcard text-muted hover:text-purple-300 border border-main whitespace-nowrap">
                 🔒 خاص بالإدارة
               </button>
             `}
@@ -1735,22 +1830,32 @@ grant usage, select on all sequences in schema public to anon;</pre>
         tbody.appendChild(tr);
       });
 
-      document.getElementById('mPaidRatioBadge').textContent = `${paidCount} من 24 سددوا (${Math.round((paidCount/24)*100)}%)${waivedCount > 0 ? ` + ${waivedCount} معفى` : ''}`;
+      document.getElementById('mPaidRatioBadge').textContent = `${paidCount} من 24 سددوا (${Math.round((paidCount/24)*100)}%)`;
 
       // Render Month Expenses
       const expList = document.getElementById('monthExpensesList');
       expList.innerHTML = '';
       if (!m.expenses || m.expenses.length === 0) {
-        expList.innerHTML = `<div class="p-8 text-center text-xs text-muted">لا توجد مصروفات مسجلة لهذا الشهر بعد</div>`;
+        expList.innerHTML = `
+          <div class="p-8 text-center space-y-3">
+            <p class="text-xs text-muted">لا توجد مصروفات مسجلة لهذا الشهر بعد.</p>
+            <button onclick="autoPopulateRecurringExpenses('${mKey}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-all">
+              ⚡ تنزيل المصاريف الشهرية المعتادة (2,100 ج.م)
+            </button>
+          </div>
+        `;
       } else {
         m.expenses.forEach((e, idx) => {
           const itemEl = document.createElement('div');
-          itemEl.className = "p-3 flex items-center justify-between hover:bg-subcard/50 transition-colors";
+          itemEl.className = "p-3 flex items-center justify-between hover:bg-subcard/50 transition-colors border-b border-main/30 last:border-0";
           itemEl.innerHTML = `
             <div class="flex items-center gap-2">
               ${IS_ADMIN ? `
-                <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/50 hover:text-rose-400 p-1" title="حذف">
+                <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/60 hover:text-rose-400 p-1 hover:bg-rose-500/10 rounded-lg transition-colors" title="حذف هذا المصروف">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+                <button onclick="quickEditExpenseCost('${mKey}', ${idx})" class="text-muted hover:text-amber-400 p-1 hover:bg-amber-500/10 rounded-lg transition-colors" title="تعديل قيمة المصروف">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                 </button>
               ` : ''}
               ${e.receipt_image ? `
@@ -1758,15 +1863,58 @@ grant usage, select on all sequences in schema public to anon;</pre>
               ` : ''}
               <div>
                 <span class="text-xs font-semibold text-main block">${e.item}</span>
-                <span class="text-[10px] text-muted">${e.category || 'عام'}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] text-muted">${e.category || 'عام'}</span>
+                  <span class="text-[10px] text-emerald-400 font-medium">✓ مؤكد</span>
+                </div>
               </div>
             </div>
-            <span class="text-xs font-bold text-amber-400 whitespace-nowrap">${e.cost.toLocaleString()} ج.م</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="quickEditExpenseCost('${mKey}', ${idx})" class="text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline whitespace-nowrap cursor-pointer" title="اضغط لتعديل القيمة">
+                ${e.cost.toLocaleString()} ج.م
+              </button>
+            </div>
           `;
           expList.appendChild(itemEl);
         });
       }
       document.getElementById('mTotalExpensesBadge').textContent = `${m.total_expenses.toLocaleString()} ج.م`;
+    }
+
+    function quickEditExpenseCost(mKey, idx) {
+      if (!requireAdmin('تعديل المصروف')) return;
+      const m = APP_DATA.months[mKey];
+      const exp = m?.expenses[idx];
+      if (!exp) return;
+
+      const val = prompt(`تعديل قيمة المصروف (${exp.item}):`, exp.cost);
+      if (val === null) return;
+      const num = parseFloat(val);
+      if (isNaN(num) || num < 0) {
+        alert("يرجى إدخال مبلغ صحيح.");
+        return;
+      }
+
+      exp.cost = num;
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+      showSyncToast(`تم تعديل قيمة "${exp.item}" إلى ${num.toLocaleString()} ج.م بنجاح ✓`);
+    }
+
+    function deleteExpense(mKey, idx) {
+      if (!requireAdmin('حذف المصروف')) return;
+      const m = APP_DATA.months[mKey];
+      const exp = m?.expenses[idx];
+      if (!exp) return;
+
+      if (!confirm(`هل أنت متأكد من حذف مصروف "${exp.item}" (${exp.cost.toLocaleString()} ج.م) من هذا الشهر؟`)) return;
+
+      m.expenses.splice(idx, 1);
+      recalculateAllBalances();
+      renderSelectedMonth();
+      updateKPICards();
+      showSyncToast(`تم حذف المصروف بنجاح 🗑️`);
     }
 
     function setMonthFilter(filter) {
@@ -1948,7 +2096,28 @@ grant usage, select on all sequences in schema public to anon;</pre>
     }
 
     // Expense Catalog (Add by name only)
+    function switchExpenseSettingsTab(tab) {
+      const btnRec = document.getElementById('tabBtnRecurringExpenses');
+      const btnCat = document.getElementById('tabBtnCatalogExpenses');
+      const panelRec = document.getElementById('panelRecurringExpenses');
+      const panelCat = document.getElementById('panelCatalogExpenses');
+
+      if (tab === 'recurring') {
+        if (btnRec) btnRec.className = "flex-1 py-1.5 rounded-lg font-bold bg-card text-amber-400 shadow-sm border border-main transition-all";
+        if (btnCat) btnCat.className = "flex-1 py-1.5 rounded-lg font-medium text-muted hover:text-main transition-all";
+        if (panelRec) panelRec.classList.remove('hidden');
+        if (panelCat) panelCat.classList.add('hidden');
+      } else {
+        if (btnCat) btnCat.className = "flex-1 py-1.5 rounded-lg font-bold bg-card text-amber-400 shadow-sm border border-main transition-all";
+        if (btnRec) btnRec.className = "flex-1 py-1.5 rounded-lg font-medium text-muted hover:text-main transition-all";
+        if (panelCat) panelCat.classList.remove('hidden');
+        if (panelRec) panelRec.classList.add('hidden');
+      }
+    }
+
     function openManageExpenseItemsModal() {
+      switchExpenseSettingsTab('recurring');
+      renderRecurringExpensesList();
       renderCatalogItemsList();
       document.getElementById('manageExpenseItemsModal').classList.remove('hidden');
     }
@@ -1957,8 +2126,105 @@ grant usage, select on all sequences in schema public to anon;</pre>
       document.getElementById('manageExpenseItemsModal').classList.add('hidden');
     }
 
+    function renderRecurringExpensesList() {
+      const listEl = document.getElementById('recurringExpensesList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      if (!APP_DATA.recurring_expenses || APP_DATA.recurring_expenses.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-xs text-muted">لا توجد بنود شهرية ثابتة مسجلة بعد.</div>`;
+        const totalBadge = document.getElementById('recurringExpensesTotalBadge');
+        if (totalBadge) totalBadge.textContent = '0 ج.م / شهرياً';
+        return;
+      }
+
+      let total = 0;
+      APP_DATA.recurring_expenses.forEach((item, idx) => {
+        total += (item.cost || 0);
+        const row = document.createElement('div');
+        row.className = "p-3 flex items-center justify-between hover:bg-card/50 transition-colors";
+        row.innerHTML = `
+          <div>
+            <span class="text-xs font-bold text-main block">${item.name}</span>
+            <span class="text-[10px] text-muted">${item.category || 'عام'}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-extrabold text-amber-400">${(item.cost || 0).toLocaleString()} ج.م</span>
+            <div class="flex items-center gap-1">
+              <button onclick="editRecurringExpenseCost(${idx})" class="text-muted hover:text-amber-400 p-1 hover:bg-card rounded-lg" title="تعديل المبلغ الشهري التلقائي">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              </button>
+              <button onclick="deleteRecurringExpense(${idx})" class="text-muted hover:text-rose-400 p-1 hover:bg-card rounded-lg" title="حذف من البنود الثابتة">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+
+      const totalBadge = document.getElementById('recurringExpensesTotalBadge');
+      if (totalBadge) totalBadge.textContent = `${total.toLocaleString()} ج.م / شهرياً`;
+    }
+
+    function addNewRecurringExpenseItem() {
+      const name = (document.getElementById('newRecurringItemName')?.value || '').trim();
+      const cost = parseFloat(document.getElementById('newRecurringItemCost')?.value) || 0;
+      const category = document.getElementById('newRecurringItemCategory')?.value || 'عام';
+
+      if (!name || cost <= 0) {
+        alert("يرجى إدخال اسم البند والمبلغ الشهري بشكل صحيح.");
+        return;
+      }
+
+      if (!APP_DATA.recurring_expenses) APP_DATA.recurring_expenses = [];
+      APP_DATA.recurring_expenses.push({
+        id: `rec_${Date.now()}`,
+        name: name,
+        cost: cost,
+        category: category
+      });
+
+      document.getElementById('newRecurringItemName').value = '';
+      document.getElementById('newRecurringItemCost').value = '';
+      saveAppData();
+      renderRecurringExpensesList();
+      showSyncToast(`تم بنجاح إضافة "${name}" (${cost} ج.م) كبند شهري ثابت 📌`);
+    }
+
+    function editRecurringExpenseCost(idx) {
+      const item = APP_DATA.recurring_expenses?.[idx];
+      if (!item) return;
+
+      const val = prompt(`تعديل المبلغ الشهري التلقائي لبند (${item.name}):`, item.cost);
+      if (val === null) return;
+      const num = parseFloat(val);
+      if (isNaN(num) || num < 0) {
+        alert("يرجى إدخال مبلغ صحيح.");
+        return;
+      }
+
+      item.cost = num;
+      saveAppData();
+      renderRecurringExpensesList();
+      showSyncToast(`تم تحديث المبلغ الشهري لبند "${item.name}" إلى ${num.toLocaleString()} ج.م بنجاح ✓`);
+    }
+
+    function deleteRecurringExpense(idx) {
+      const item = APP_DATA.recurring_expenses?.[idx];
+      if (!item) return;
+
+      if (!confirm(`هل أنت متأكد من حذف بند "${item.name}" من قائمة المصاريف الشهرية الثابتة؟`)) return;
+
+      APP_DATA.recurring_expenses.splice(idx, 1);
+      saveAppData();
+      renderRecurringExpensesList();
+      showSyncToast(`تم حذف البند الثابت بنجاح 🗑️`);
+    }
+
     function renderCatalogItemsList() {
       const listEl = document.getElementById('catalogItemsList');
+      if (!listEl) return;
       listEl.innerHTML = '';
       APP_DATA.expense_catalog.forEach((item, idx) => {
         const row = document.createElement('div');
@@ -2007,6 +2273,45 @@ grant usage, select on all sequences in schema public to anon;</pre>
         opt.value = item.name;
         datalist.appendChild(opt);
       });
+    }
+
+    function autoPopulateRecurringExpenses(mKey) {
+      if (!requireAdmin('تنزيل المصاريف الثابتة')) return;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+      if (!m.expenses) m.expenses = [];
+
+      const recurringList = (APP_DATA.recurring_expenses && APP_DATA.recurring_expenses.length > 0)
+        ? APP_DATA.recurring_expenses
+        : [
+            { id: "guard", name: "مرتب الحارس الشهري", cost: 1500, category: "حراسة" },
+            { id: "elevator", name: "صيانة دورية اسانسير", cost: 300, category: "صيانة أسانسير" },
+            { id: "tank", name: "نظافة الخزانات", cost: 150, category: "نظافة" },
+            { id: "cleaning", name: "أدوات نظافة", cost: 150, category: "نظافة" }
+          ];
+
+      let addedCount = 0;
+      recurringList.forEach(std => {
+        const exists = m.expenses.some(e => e.item.includes(std.name) || std.name.includes(e.item));
+        if (!exists) {
+          m.expenses.push({
+            id: `${mKey}_${std.id || 'rec'}_${Date.now()}`,
+            item: std.name,
+            cost: std.cost,
+            category: std.category || "عام",
+            confirmed: true
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        recalculateAllBalances();
+        renderSelectedMonth();
+        showSyncToast(`تم تنزيل ${addedCount} بنود ثابتة بنجاح لهذا الشهر ⚡`);
+      } else {
+        alert("البنود الشهرية الثابتة موجودة بالفعل في قائمة هذا الشهر!");
+      }
     }
 
     // Add Expense to Current Month
@@ -2266,10 +2571,14 @@ grant usage, select on all sequences in schema public to anon;</pre>
         tr.className = "hover:bg-subcard/50 transition-colors";
         tr.innerHTML = `
           <td class="py-3 px-3 whitespace-nowrap">
-            <span class="font-extrabold text-xs text-main">الدور ${apt.floor || 1}</span>
-            <span class="text-[11px] font-semibold text-purple-400">(${apt.position})</span>
+            <div class="font-extrabold text-xs text-main flex items-center gap-1.5">
+              <span>الدور ${apt.floor || 1}</span>
+              <span class="text-xs font-semibold text-purple-400">(${apt.position})</span>
+            </div>
+            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-subcard text-muted border border-main">
+              شقة ${apt.apt_num}
+            </span>
           </td>
-          <td class="py-3 px-3 text-muted whitespace-nowrap font-bold text-xs">شقة ${apt.apt_num}</td>
           <td class="py-3 px-3 font-semibold text-main whitespace-nowrap">${apt.owner_name}</td>
           <td class="py-3 px-3 text-muted whitespace-nowrap">${apt.phone || '—'}</td>
           <td class="py-3 px-3 text-center whitespace-nowrap font-bold ${apt.pastUnpaidSubs > 0 ? 'text-rose-400' : 'text-muted'}">
@@ -2332,10 +2641,10 @@ grant usage, select on all sequences in schema public to anon;</pre>
       renderArrearsTable();
     }
 
-    // WRITE-OFF DEBT & SUBSCRIPTION FUNCTIONS (إسقاط وإعفاء المديونيات والاشتراكات)
+    // WRITE-OFF DEBT FUNCTIONS (إسقاط وإعفاء المتأخرات السابقة بقرار الإدارة)
     let currentWriteOffTarget = null;
 
-    function openWriteOffDebtModal(aptNum, row, mKey) {
+    function openWriteOffDebtModal(aptNum, row) {
       if (!requireAdmin('إسقاط أو إعفاء')) return;
 
       const audits = calculateApartmentAudits();
@@ -2344,24 +2653,8 @@ grant usage, select on all sequences in schema public to anon;</pre>
 
       const pastDebt = apt.totalPastArrears || 0;
 
-      // Determine current month context
-      const currentMKey = mKey || document.getElementById('monthSelect')?.value;
-      const m = currentMKey ? APP_DATA.months[currentMKey] : null;
-      const c = m?.collections.find(x => x.row === row);
-
-      const monthFee = c ? (c.monthly_fee || 0) : 0;
-      const monthPaid = c ? (c.paid || 0) : 0;
-      const isMonthWaived = c?.waived === true;
-      const monthRemaining = isMonthWaived ? 0 : Math.max(0, monthFee - monthPaid);
-
-      const totalDroppable = pastDebt + monthRemaining;
-
-      if (totalDroppable <= 0) {
-        if (isMonthWaived) {
-          alert(`شقة ${apt.apt_num} تم بالفعل إسقاط اشتراك هذا الشهر عنها بنجاح.`);
-        } else {
-          alert(`شقة ${apt.apt_num} ليس عليها أي متأخرات سابقة أو متبقي لاشتراك الشهر حالياً لإسقاطه.`);
-        }
+      if (pastDebt <= 0) {
+        alert(`شقة ${apt.apt_num} ليس عليها أي متأخرات سابقة حالياً لإسقاطها.`);
         return;
       }
 
@@ -2372,97 +2665,34 @@ grant usage, select on all sequences in schema public to anon;</pre>
         position: apt.position,
         owner_name: apt.owner_name,
         phone: apt.phone,
-        mKey: currentMKey,
-        monthTitle: m?.title || 'الشهر الحالي',
-        monthFee: monthFee,
-        monthPaid: monthPaid,
-        monthRemaining: monthRemaining,
-        isMonthWaived: isMonthWaived,
         pastUnpaidSubs: apt.pastUnpaidSubs || 0,
         specialOldDebt: apt.specialOldDebt || 0,
-        pastDebt: pastDebt,
-        totalDroppable: totalDroppable
+        totalDroppable: pastDebt
       };
 
       document.getElementById('woModalFloorPos').textContent = `الدور ${apt.floor || 1} (${apt.position})`;
       document.getElementById('woModalAptBadge').textContent = `شقة ${apt.apt_num}`;
       document.getElementById('woModalResidentName').textContent = apt.owner_name;
       document.getElementById('woModalResidentPhone').textContent = apt.phone || 'بدون هاتف';
-      document.getElementById('woModalCurrentDebt').textContent = `${totalDroppable.toLocaleString()} ج.م`;
-      document.getElementById('woModalSubsDebt').textContent = `${pastDebt.toLocaleString()} ج`;
-      document.getElementById('woModalSpecialDebt').textContent = `${monthRemaining.toLocaleString()} ج (${currentWriteOffTarget.monthTitle?.split('(')[0]?.trim() || ''})`;
+      document.getElementById('woModalCurrentDebt').textContent = `${pastDebt.toLocaleString()} ج.م`;
+      document.getElementById('woModalSubsDebt').textContent = `${apt.pastUnpaidSubs?.toLocaleString() || 0} ج`;
+      document.getElementById('woModalSpecialDebt').textContent = `${apt.specialOldDebt?.toLocaleString() || 0} ج`;
 
-      // Quick pills
       const pillsContainer = document.getElementById('woQuickPillsContainer');
       if (pillsContainer) {
-        if (monthRemaining > 0 && pastDebt > 0) {
-          pillsContainer.innerHTML = `
-            <button type="button" onclick="setWriteOffOption('month')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30">
-              إسقاط اشتراك الشهر فقط (${monthRemaining} ج)
-            </button>
-            <button type="button" onclick="setWriteOffOption('arrears')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 border border-amber-500/30">
-              إسقاط المتأخرات السابقة فقط (${pastDebt} ج)
-            </button>
-            <button type="button" onclick="setWriteOffOption('all')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
-              إسقاط كامل المطلوب (${totalDroppable} ج)
-            </button>
-          `;
-        } else if (monthRemaining > 0) {
-          pillsContainer.innerHTML = `
-            <button type="button" onclick="setWriteOffOption('month')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
-              إسقاط كامل اشتراك الشهر (${monthRemaining} ج)
-            </button>
-          `;
-        } else {
-          pillsContainer.innerHTML = `
-            <button type="button" onclick="setWriteOffOption('arrears')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
-              إسقاط كامل المتأخرات السابقة (${pastDebt} ج)
-            </button>
-          `;
-        }
+        pillsContainer.innerHTML = `
+          <button type="button" onclick="setFullWriteOffAmount()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 border border-purple-500/40">
+            إسقاط كامل المتأخرات (${pastDebt.toLocaleString()} ج)
+          </button>
+        `;
       }
 
-      // Default amount
-      if (monthRemaining > 0 && pastDebt === 0) {
-        document.getElementById('writeOffAmountInput').value = monthRemaining;
-      } else {
-        document.getElementById('writeOffAmountInput').value = totalDroppable;
-      }
-      document.getElementById('writeOffAmountInput').max = totalDroppable;
-      document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
-      document.getElementById('writeOffCustomReasonInput').value = '';
-      document.getElementById('customWriteOffReasonContainer').classList.add('hidden');
+      document.getElementById('writeOffAmountInput').value = pastDebt;
+      document.getElementById('writeOffAmountInput').max = pastDebt;
+      document.getElementById('writeOffReasonSelect').value = "إعفاء بقرار إدارة العمارة";
+      toggleCustomWriteOffReason();
 
       document.getElementById('writeOffDebtModal').classList.remove('hidden');
-    }
-
-    function setWriteOffOption(opt) {
-      if (!currentWriteOffTarget) return;
-      if (opt === 'month') {
-        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.monthRemaining;
-        document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
-      } else if (opt === 'arrears') {
-        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.pastDebt;
-        document.getElementById('writeOffReasonSelect').value = 'إعفاء بقرار إدارة العمارة';
-      } else {
-        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalDroppable;
-      }
-    }
-
-    function setFullWriteOffAmount() {
-      if (currentWriteOffTarget) {
-        document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalDroppable;
-      }
-    }
-
-    function toggleCustomWriteOffReason() {
-      const sel = document.getElementById('writeOffReasonSelect').value;
-      const c = document.getElementById('customWriteOffReasonContainer');
-      if (sel === 'سبب آخر') {
-        c.classList.remove('hidden');
-      } else {
-        c.classList.add('hidden');
-      }
     }
 
     function closeWriteOffDebtModal() {
@@ -2470,92 +2700,74 @@ grant usage, select on all sequences in schema public to anon;</pre>
       currentWriteOffTarget = null;
     }
 
+    function setFullWriteOffAmount() {
+      if (!currentWriteOffTarget) return;
+      document.getElementById('writeOffAmountInput').value = currentWriteOffTarget.totalDroppable;
+    }
+
+    function toggleCustomWriteOffReason() {
+      const sel = document.getElementById('writeOffReasonSelect').value;
+      const customBox = document.getElementById('customWriteOffReasonContainer');
+      if (sel === 'سبب آخر') {
+        customBox.classList.remove('hidden');
+      } else {
+        customBox.classList.add('hidden');
+      }
+    }
+
     function confirmWriteOffDebt() {
-      if (!requireAdmin('إسقاط مديونية')) return;
       if (!currentWriteOffTarget) return;
 
       const aptNum = currentWriteOffTarget.apt_num;
-      const row = currentWriteOffTarget.row;
-      const mKey = currentWriteOffTarget.mKey;
+      const maxDroppable = currentWriteOffTarget.totalDroppable;
       const amountToDrop = parseFloat(document.getElementById('writeOffAmountInput').value) || 0;
-      const reasonSelect = document.getElementById('writeOffReasonSelect').value;
-      const customReason = document.getElementById('writeOffCustomReasonInput').value.trim();
-      const finalReason = (reasonSelect === 'سبب آخر' && customReason) ? customReason : (customReason ? `${reasonSelect} (${customReason})` : reasonSelect);
 
       if (amountToDrop <= 0) {
-        alert("يرجى إدخال مبلغ صحيح للإسقاط أكبر من صفر.");
+        alert("يرجى إدخال مبلغ صحيح للإسقاط.");
         return;
       }
-
-      const maxDroppable = currentWriteOffTarget.totalDroppable;
       if (amountToDrop > maxDroppable) {
-        alert(`المبلغ المدخل (${amountToDrop.toLocaleString()} ج) أكبر من إجمالي المبلغ المستحق (${maxDroppable.toLocaleString()} ج).`);
+        alert(`المبلغ المدخل (${amountToDrop} ج) أكبر من إجمالي المتأخرات المستحقة (${maxDroppable} ج).`);
         return;
       }
 
-      const monthRem = currentWriteOffTarget.monthRemaining;
-      const pastDebt = currentWriteOffTarget.pastDebt;
+      const selReason = document.getElementById('writeOffReasonSelect').value;
+      const customReason = document.getElementById('writeOffCustomReasonInput')?.value.trim();
+      const finalReason = selReason === 'سبب آخر' && customReason ? customReason : selReason;
 
-      let dropForMonth = 0;
-      let dropForArrears = 0;
+      if (!confirm(`هل أنت متأكد من إسقاط وإعفاء مبلغ ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum} بقرار الإدارة؟`)) {
+        return;
+      }
 
-      // Prioritize month fee when invoked in month context
-      if (mKey && monthRem > 0) {
-        if (amountToDrop <= monthRem) {
-          dropForMonth = amountToDrop;
-          dropForArrears = 0;
-        } else {
-          dropForMonth = monthRem;
-          dropForArrears = amountToDrop - monthRem;
-        }
+      const subsDebt = currentWriteOffTarget.pastUnpaidSubs;
+      let dropSubs = 0;
+      let dropSpecial = 0;
+
+      if (amountToDrop <= subsDebt) {
+        dropSubs = amountToDrop;
+        dropSpecial = 0;
       } else {
-        dropForMonth = 0;
-        dropForArrears = amountToDrop;
+        dropSubs = subsDebt;
+        dropSpecial = amountToDrop - subsDebt;
       }
 
-      // 1. Apply Month Waiver if applicable
-      if (dropForMonth > 0 && mKey) {
-        const m = APP_DATA.months[mKey];
-        const c = m?.collections.find(x => x.row === row);
-        if (c) {
-          c.waived = true;
-          c.waived_amount = dropForMonth;
-          c.waived_reason = finalReason;
-        }
+      if (!APP_DATA.written_off_debts) {
+        APP_DATA.written_off_debts = {};
       }
 
-      // 2. Apply Past Arrears Write-Off if applicable
-      if (dropForArrears > 0) {
-        const subsDebt = currentWriteOffTarget.pastUnpaidSubs;
-        let dropSubs = 0;
-        let dropSpecial = 0;
+      const existing = APP_DATA.written_off_debts[aptNum] || { subs: 0, special: 0, total: 0 };
+      const newSubs = existing.subs + dropSubs;
+      const newSpecial = existing.special + dropSpecial;
+      const newTotal = existing.total + amountToDrop;
 
-        if (dropForArrears <= subsDebt) {
-          dropSubs = dropForArrears;
-          dropSpecial = 0;
-        } else {
-          dropSubs = subsDebt;
-          dropSpecial = dropForArrears - subsDebt;
-        }
-
-        if (!APP_DATA.written_off_debts) {
-          APP_DATA.written_off_debts = {};
-        }
-
-        const existing = APP_DATA.written_off_debts[aptNum] || { subs: 0, special: 0, total: 0 };
-        const newSubs = existing.subs + dropSubs;
-        const newSpecial = existing.special + dropSpecial;
-        const newTotal = existing.total + dropForArrears;
-
-        APP_DATA.written_off_debts[aptNum] = {
-          subs: newSubs,
-          special: newSpecial,
-          total: newTotal,
-          reason: `${finalReason} (${newTotal.toLocaleString()} ج)`,
-          date: new Date().toLocaleDateString('ar-EG'),
-          timestamp: new Date().toISOString()
-        };
-      }
+      APP_DATA.written_off_debts[aptNum] = {
+        subs: newSubs,
+        special: newSpecial,
+        total: newTotal,
+        reason: `${finalReason} (${newTotal.toLocaleString()} ج)`,
+        date: new Date().toLocaleDateString('ar-EG'),
+        timestamp: new Date().toISOString()
+      };
 
       saveAppData();
       recalculateAllBalances();
@@ -2564,33 +2776,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       updateKPICards();
       closeWriteOffDebtModal();
 
-      alert(`تم بنجاح تسجيل الإسقاط والإعفاء بمبلغ ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum}!`);
-    }
-
-    function cancelMonthWaiver(mKey, row) {
-      if (!requireAdmin('إلغاء إعفاء الشهر')) return;
-
-      const m = APP_DATA.months[mKey];
-      const c = m?.collections.find(x => x.row === row);
-      const apt = APP_DATA.apartments.find(a => a.row === row);
-
-      if (!confirm(`هل أنت متأكد من إلغاء قرار إسقاط اشتراك ${m?.title || 'هذا الشهر'} عن شقة ${apt?.apt_num || ''} وإعادته كمستحق السداد؟`)) {
-        return;
-      }
-
-      if (c) {
-        c.waived = false;
-        delete c.waived_amount;
-        delete c.waived_reason;
-      }
-
-      saveAppData();
-      recalculateAllBalances();
-      renderArrearsTable();
-      renderSelectedMonth();
-      updateKPICards();
-
-      alert(`تم بنجاح إلغاء الإسقاط وإعادة اشتراك الشهر كمستحق.`);
+      alert(`تم بنجاح تسجيل إسقاط المتأخرات بمبلغ ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum}!`);
     }
 
     function cancelWriteOffDebt(aptNum) {
