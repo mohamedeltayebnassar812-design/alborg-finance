@@ -129,13 +129,13 @@
         <!-- Admin Auth Status Pill -->
         <div id="adminAuthContainer">
           <button id="btnHeaderAdminLogin" onclick="openAdminLoginModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30 transition-all hover:scale-105 active:scale-95">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            دخول الإدارة 🔐
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/></svg>
+            دخول المسؤول بالإيميل 🔐
           </button>
-          <div id="adminActiveBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+          <div id="adminActiveBadge" class="hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm">
             <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-            وضع المسؤول (إدارة كاملة) 👑
-            <button onclick="logoutAdmin()" class="text-muted hover:text-rose-400 mr-1 text-[11px] underline" title="تسجيل خروج">خروج</button>
+            <span id="adminActiveEmailDisplay" class="font-bold">👑 مسؤول البرج: mohamedeltayebnassar812@gmail.com</span>
+            <button onclick="logoutAdmin()" class="text-rose-400 hover:text-rose-300 mr-1 text-[11px] underline font-semibold transition-colors" title="تسجيل خروج">خروج</button>
           </div>
         </div>
 
@@ -2021,6 +2021,15 @@ grant usage, select on all sequences in schema public to anon;</pre>
           pullFromSupabase(true);
           // Subscribe to Realtime Updates
           subscribeToSupabaseRealtime();
+
+          // Listen to Supabase Auth State Changes (Email / Magic Link)
+          supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && session.user && session.user.email) {
+              setAdminAuthenticated(session.user.email);
+            } else if (event === 'SIGNED_OUT') {
+              logoutAdmin(false);
+            }
+          });
         }
       } catch (err) {
         console.error("Supabase init error:", err);
@@ -2168,6 +2177,15 @@ grant usage, select on all sequences in schema public to anon;</pre>
         // Sync initial data
         await pullFromSupabase(false);
         subscribeToSupabaseRealtime();
+
+          // Listen to Supabase Auth State Changes (Email / Magic Link)
+          supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && session.user && session.user.email) {
+              setAdminAuthenticated(session.user.email);
+            } else if (event === 'SIGNED_OUT') {
+              logoutAdmin(false);
+            }
+          });
 
         alert("تم بنجاح الاتصال بـ Supabase وتفعيل المزامنة السحابية اللحظية!");
         closeCloudModal();
@@ -2728,50 +2746,133 @@ grant usage, select on all sequences in schema public to anon;</pre>
     ${reportContent}
   </div>
 
-  <!-- ADMIN LOGIN MODAL -->
-  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+  <!-- ADMIN EMAIL LOGIN MODAL -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      
+      <!-- Modal Header -->
       <div class="flex items-center justify-between border-b border-main pb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">🔐</div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-base font-bold shadow-inner">
+            📧
+          </div>
           <div>
-            <h3 class="text-sm font-bold text-main">تسجيل دخول المسؤول / الإدارة</h3>
-            <p class="text-[10px] text-muted">أدخل رمز PIN لتفعيل صلاحيات التعديل والتحصيل</p>
+            <h3 class="text-sm font-bold text-main">بوابة أمان الإدارة - الدخول بالبريد الإلكتروني</h3>
+            <p class="text-[11px] text-muted">حماية مشفرة ومصادقة سحابية عبر Supabase Auth</p>
           </div>
         </div>
-        <button onclick="closeAdminLoginModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+        <button onclick="closeAdminLoginModal()" class="text-muted hover:text-main text-lg font-bold p-1">&times;</button>
       </div>
 
+      <!-- Auth Tabs -->
+      <div class="flex items-center gap-1.5 p-1 bg-subcard rounded-xl border border-main text-xs">
+        <button type="button" id="tabBtnPassword" onclick="switchAuthTab('password')" class="flex-1 py-1.5 rounded-lg font-bold text-center transition-all bg-card text-purple-400 shadow-sm border border-main">
+          كلمة المرور 🔑
+        </button>
+        <button type="button" id="tabBtnMagic" onclick="switchAuthTab('magic')" class="flex-1 py-1.5 rounded-lg font-medium text-center text-muted hover:text-main transition-all">
+          رابط للإيميل ✉️
+        </button>
+        <button type="button" id="tabBtnSignup" onclick="switchAuthTab('signup')" class="flex-1 py-1.5 rounded-lg font-medium text-center text-muted hover:text-main transition-all">
+          حساب جديد ➕
+        </button>
+      </div>
+
+      <!-- Alert / Status Box -->
+      <div id="authAlertBox" class="hidden p-3 rounded-xl text-xs flex items-center gap-2 border">
+        <span id="authAlertIcon" class="text-sm">ℹ️</span>
+        <span id="authAlertMsg" class="flex-1 leading-relaxed"></span>
+      </div>
+
+      <!-- Form Body -->
       <div class="space-y-3 pt-1">
+        
+        <!-- Common Email Input -->
         <div>
-          <label class="block text-xs font-semibold text-muted mb-1.5">رمز PIN للإدارة (الافتراضي: 2026):</label>
-          <input type="password" id="adminPinInput" maxlength="12" placeholder="••••" class="w-full bg-subcard border border-main rounded-xl px-4 py-2.5 text-center text-lg font-bold tracking-widest text-main focus:outline-none focus:border-purple-500">
+          <label class="block text-xs font-semibold text-muted mb-1">البريد الإلكتروني للمسؤول:</label>
+          <div class="relative">
+            <input type="email" id="adminEmailInput" placeholder="mohamedeltayebnassar812@gmail.com" value="mohamedeltayebnassar812@gmail.com" class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 placeholder:text-muted/50 text-left dir-ltr">
+            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/></svg>
+            </div>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between text-xs">
-          <label class="flex items-center gap-1.5 text-muted cursor-pointer">
-            <input type="checkbox" id="adminRememberMe" checked class="rounded border-main text-purple-600 focus:ring-purple-500">
-            تذكرني على هذا الجهاز
-          </label>
-          <button type="button" onclick="toggleChangePinSection()" class="text-purple-400 hover:underline text-[11px]">
-            تغيير رمز PIN
+        <!-- Tab 1: Password Fields -->
+        <div id="authPanelPassword" class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-muted">كلمة المرور:</label>
+              <button type="button" onclick="switchAuthTab('magic')" class="text-[11px] text-purple-400 hover:underline">نسيت كلمة المرور؟ ادخل برابط للإيميل</button>
+            </div>
+            <input type="password" id="adminPasswordInput" placeholder="••••••••" class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 text-left dir-ltr">
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center gap-1.5 text-muted cursor-pointer">
+              <input type="checkbox" id="adminRememberMe" checked class="rounded border-main text-purple-600 focus:ring-purple-500">
+              تذكر تسجيل الدخول
+            </label>
+            <button type="button" onclick="toggleEmergencyPinSection()" class="text-muted hover:text-purple-400 text-[11px] underline">
+              رمز طوارئ محلي
+            </button>
+          </div>
+
+          <button type="button" onclick="handleEmailPasswordSignIn()" id="btnSubmitPassword" class="w-full py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/30 transition-all flex items-center justify-center gap-2">
+            <span>تسجيل الدخول الآمن</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
 
-        <!-- Change PIN Accordion -->
-        <div id="changePinSection" class="hidden p-3 rounded-xl border border-main bg-subcard/50 space-y-2 text-xs">
-          <span class="font-bold text-main block text-[11px]">تغيير رمز PIN الإدارة:</span>
-          <input type="password" id="newPinInput" placeholder="أدخل رمز PIN الجديد..." class="w-full bg-card border border-main rounded-lg px-2.5 py-1.5 text-xs text-main">
-          <button type="button" onclick="confirmChangePin()" class="w-full py-1.5 rounded-lg text-xs font-bold bg-subcard text-purple-300 border border-main hover:bg-card">
-            حفظ الرمز الجديد
+        <!-- Tab 2: Magic Link Panel -->
+        <div id="authPanelMagic" class="hidden space-y-3">
+          <p class="text-xs text-muted leading-relaxed bg-subcard/50 p-3 rounded-xl border border-main">
+            📩 سنرسل لك رابطاً سحرياً مشفراً على بريدك الإلكتروني. بمجرد الضغط عليه من الهاتف أو الكمبيوتر سيتم تسجيل دخولك كمسؤول فوراً دون كتابة أي كلمة مرور!
+          </p>
+
+          <button type="button" onclick="handleMagicLinkSignIn()" id="btnSubmitMagic" class="w-full py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-2">
+            <span>إرسال رابط الدخول السريع للإيميل 🚀</span>
           </button>
         </div>
+
+        <!-- Tab 3: Sign Up Panel -->
+        <div id="authPanelSignup" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-muted mb-1">تعيين كلمة المرور للمسؤول:</label>
+            <input type="password" id="adminSignupPassword" placeholder="اختر كلمة مرور قوية (6 أحرف على الأقل)..." class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 text-left dir-ltr">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-muted mb-1">تأكيد كلمة المرور:</label>
+            <input type="password" id="adminSignupConfirm" placeholder="أعد كتابة كلمة المرور..." class="w-full bg-subcard border border-main rounded-xl px-3.5 py-2.5 text-xs font-medium text-main focus:outline-none focus:border-purple-500 text-left dir-ltr">
+          </div>
+
+          <button type="button" onclick="handleEmailSignUp()" id="btnSubmitSignup" class="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2">
+            <span>تسجيل حساب مسؤول جديد في Supabase 🛡️</span>
+          </button>
+        </div>
+
+        <!-- Emergency Offline PIN Accordion -->
+        <div id="emergencyPinSection" class="hidden p-3 rounded-xl border border-main bg-subcard/50 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-amber-400 block text-[11px]">رمز الطوارئ الاحتياطي (عند انقطاع الإنترنت):</span>
+            <span class="text-[10px] text-muted">الافتراضي: 2026</span>
+          </div>
+          <input type="password" id="adminEmergencyPin" placeholder="••••" maxlength="12" class="w-full bg-card border border-main rounded-lg px-2.5 py-1.5 text-xs text-center font-bold tracking-widest text-main">
+          <button type="button" onclick="handleEmergencyPinLogin()" class="w-full py-1.5 rounded-lg text-xs font-bold bg-amber-600/20 text-amber-300 border border-amber-500/30 hover:bg-amber-600/30">
+            تأكيد الدخول المحلي برمز الطوارئ
+          </button>
+        </div>
+
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-main">
-        <button onclick="closeAdminLoginModal()" class="px-4 py-2 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إلغاء</button>
-        <button onclick="verifyAdminPin()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30">دخول الإدارة</button>
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-2 border-t border-main text-xs text-muted">
+        <span class="text-[11px] flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          سكان البرج بوضع المشاهدة فقط
+        </span>
+        <button onclick="closeAdminLoginModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main transition-colors">إغلاق</button>
       </div>
+
     </div>
   </div>
 
@@ -2792,28 +2893,75 @@ grant usage, select on all sequences in schema public to anon;</pre>
     // ==========================================
     // ROLE-BASED ACCESS CONTROL (ADMIN VS RESIDENTS)
     // ==========================================
+    // ==========================================
+    // ADMIN AUTHENTICATION & EMAIL SECURITY
+    // ==========================================
     let IS_ADMIN = false;
+    let ADMIN_EMAIL = null;
+    const PRIMARY_ADMIN_EMAIL = "mohamedeltayebnassar812@gmail.com";
 
     function getAdminPin() {
       return localStorage.getItem('ALBORG_ADMIN_PIN') || '2026';
     }
 
-    function checkAdminSession() {
-      const isSession = sessionStorage.getItem('ALBORG_ADMIN_AUTH') === 'true';
-      const isRemembered = localStorage.getItem('ALBORG_ADMIN_REMEMBER') === 'true';
-      IS_ADMIN = isSession || isRemembered;
+    function setAdminAuthenticated(email) {
+      IS_ADMIN = true;
+      ADMIN_EMAIL = email || PRIMARY_ADMIN_EMAIL;
+      sessionStorage.setItem('ALBORG_ADMIN_AUTH', 'true');
+      sessionStorage.setItem('ALBORG_ADMIN_EMAIL', ADMIN_EMAIL);
+
+      const remember = document.getElementById('adminRememberMe');
+      if (remember && remember.checked) {
+        localStorage.setItem('ALBORG_ADMIN_REMEMBER', 'true');
+        localStorage.setItem('ALBORG_ADMIN_EMAIL', ADMIN_EMAIL);
+      }
+
       updateAdminUI();
+      closeAdminLoginModal();
+    }
+
+    async function checkAdminSession() {
+      // 1. Check Supabase Auth Session
+      if (supabaseClient) {
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session && session.user && session.user.email) {
+            setAdminAuthenticated(session.user.email);
+            return;
+          }
+        } catch (err) {
+          console.warn("Supabase auth session check:", err);
+        }
+      }
+
+      // 2. Check Local/Session Storage Cache
+      const cachedEmail = sessionStorage.getItem('ALBORG_ADMIN_EMAIL') || (localStorage.getItem('ALBORG_ADMIN_REMEMBER') === 'true' ? localStorage.getItem('ALBORG_ADMIN_EMAIL') : null);
+      const isAuthFlag = sessionStorage.getItem('ALBORG_ADMIN_AUTH') === 'true' || localStorage.getItem('ALBORG_ADMIN_REMEMBER') === 'true';
+
+      if (isAuthFlag && cachedEmail) {
+        setAdminAuthenticated(cachedEmail);
+      } else {
+        IS_ADMIN = false;
+        ADMIN_EMAIL = null;
+        updateAdminUI();
+      }
     }
 
     function updateAdminUI() {
       const banner = document.getElementById('viewerBanner');
       const btnLogin = document.getElementById('btnHeaderAdminLogin');
       const badgeActive = document.getElementById('adminActiveBadge');
+      const emailDisplay = document.getElementById('adminActiveEmailDisplay');
 
       if (IS_ADMIN) {
         if (banner) banner.classList.add('hidden');
         if (btnLogin) btnLogin.classList.add('hidden');
         if (badgeActive) badgeActive.classList.remove('hidden');
+        if (emailDisplay) {
+          const shortEmail = (ADMIN_EMAIL || PRIMARY_ADMIN_EMAIL);
+          emailDisplay.textContent = `👑 مسؤول البرج: ${shortEmail}`;
+          emailDisplay.title = shortEmail;
+        }
         document.body.classList.add('is-admin');
         document.body.classList.remove('is-viewer');
       } else {
@@ -2824,72 +2972,244 @@ grant usage, select on all sequences in schema public to anon;</pre>
         document.body.classList.remove('is-admin');
       }
 
-      // Re-render current month to show/hide admin buttons
+      // Re-render current month to show/hide admin actions
       renderSelectedMonth();
     }
 
     function openAdminLoginModal() {
-      document.getElementById('adminPinInput').value = '';
-      document.getElementById('changePinSection').classList.add('hidden');
-      document.getElementById('adminLoginModal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('adminPinInput').focus(), 150);
+      switchAuthTab('password');
+      hideAuthAlert();
+      const modal = document.getElementById('adminLoginModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          const passInput = document.getElementById('adminPasswordInput');
+          if (passInput) passInput.focus();
+        }, 150);
+      }
     }
 
     function closeAdminLoginModal() {
-      document.getElementById('adminLoginModal').classList.add('hidden');
+      const modal = document.getElementById('adminLoginModal');
+      if (modal) modal.classList.add('hidden');
+      hideAuthAlert();
     }
 
-    function verifyAdminPin() {
-      const input = document.getElementById('adminPinInput').value.trim();
-      const actualPin = getAdminPin();
+    function switchAuthTab(tab) {
+      hideAuthAlert();
+      const btnPass = document.getElementById('tabBtnPassword');
+      const btnMagic = document.getElementById('tabBtnMagic');
+      const btnSign = document.getElementById('tabBtnSignup');
 
-      if (input === actualPin) {
-        IS_ADMIN = true;
-        sessionStorage.setItem('ALBORG_ADMIN_AUTH', 'true');
-        if (document.getElementById('adminRememberMe').checked) {
-          localStorage.setItem('ALBORG_ADMIN_REMEMBER', 'true');
-        } else {
-          localStorage.removeItem('ALBORG_ADMIN_REMEMBER');
+      const panelPass = document.getElementById('authPanelPassword');
+      const panelMagic = document.getElementById('authPanelMagic');
+      const panelSign = document.getElementById('authPanelSignup');
+
+      // Reset tabs
+      [btnPass, btnMagic, btnSign].forEach(b => {
+        if (b) {
+          b.className = "flex-1 py-1.5 rounded-lg font-medium text-center text-muted hover:text-main transition-all";
         }
-        updateAdminUI();
-        closeAdminLoginModal();
-        showSyncToast("تم تسجيل دخول الإدارة بنجاح! تم فتح كافة صلاحيات التعديل 👑");
+      });
+      [panelPass, panelMagic, panelSign].forEach(p => {
+        if (p) p.classList.add('hidden');
+      });
+
+      if (tab === 'magic') {
+        if (btnMagic) btnMagic.className = "flex-1 py-1.5 rounded-lg font-bold text-center transition-all bg-card text-blue-400 shadow-sm border border-main";
+        if (panelMagic) panelMagic.classList.remove('hidden');
+      } else if (tab === 'signup') {
+        if (btnSign) btnSign.className = "flex-1 py-1.5 rounded-lg font-bold text-center transition-all bg-card text-emerald-400 shadow-sm border border-main";
+        if (panelSign) panelSign.classList.remove('hidden');
       } else {
-        alert("رمز PIN غير صحيح. يرجى المحاولة مرة أخرى.");
-        document.getElementById('adminPinInput').value = '';
+        if (btnPass) btnPass.className = "flex-1 py-1.5 rounded-lg font-bold text-center transition-all bg-card text-purple-400 shadow-sm border border-main";
+        if (panelPass) panelPass.classList.remove('hidden');
       }
     }
 
-    function logoutAdmin() {
-      if (confirm("هل تريد تسجيل الخروج من وضع الإدارة والعودة لوضع المشاهدة؟")) {
-        IS_ADMIN = false;
-        sessionStorage.removeItem('ALBORG_ADMIN_AUTH');
-        localStorage.removeItem('ALBORG_ADMIN_REMEMBER');
-        updateAdminUI();
-        showSyncToast("تم تسجيل الخروج والعودة لوضع المشاهدة (خاص بالسكان) 👁️");
+    function showAuthAlert(msg, type = 'info') {
+      const box = document.getElementById('authAlertBox');
+      const icon = document.getElementById('authAlertIcon');
+      const text = document.getElementById('authAlertMsg');
+      if (!box || !text) return;
+
+      text.textContent = msg;
+      box.classList.remove('hidden');
+
+      if (type === 'error') {
+        box.className = "p-3 rounded-xl text-xs flex items-center gap-2 border bg-rose-500/10 border-rose-500/30 text-rose-300";
+        if (icon) icon.textContent = "⚠️";
+      } else if (type === 'success') {
+        box.className = "p-3 rounded-xl text-xs flex items-center gap-2 border bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+        if (icon) icon.textContent = "✅";
+      } else if (type === 'loading') {
+        box.className = "p-3 rounded-xl text-xs flex items-center gap-2 border bg-amber-500/10 border-amber-500/30 text-amber-300 animate-pulse";
+        if (icon) icon.textContent = "⏳";
+      } else {
+        box.className = "p-3 rounded-xl text-xs flex items-center gap-2 border bg-purple-500/10 border-purple-500/30 text-purple-300";
+        if (icon) icon.textContent = "ℹ️";
       }
     }
 
-    function toggleChangePinSection() {
-      document.getElementById('changePinSection').classList.toggle('hidden');
+    function hideAuthAlert() {
+      const box = document.getElementById('authAlertBox');
+      if (box) box.classList.add('hidden');
     }
 
-    function confirmChangePin() {
-      const currentInput = document.getElementById('adminPinInput').value.trim();
+    function toggleEmergencyPinSection() {
+      const sec = document.getElementById('emergencyPinSection');
+      if (sec) sec.classList.toggle('hidden');
+    }
+
+    async function handleEmailPasswordSignIn() {
+      const email = (document.getElementById('adminEmailInput')?.value || '').trim();
+      const password = document.getElementById('adminPasswordInput')?.value || '';
+
+      if (!email || !email.includes('@')) {
+        showAuthAlert("يرجى إدخال بريد إلكتروني صحيح.", "error");
+        return;
+      }
+      if (!password) {
+        showAuthAlert("يرجى إدخال كلمة المرور.", "error");
+        return;
+      }
+
+      showAuthAlert("جاري التحقق من الحساب ومطابقة بيانات الاعتماد مع السحابة...", "loading");
+
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            console.error("Sign in error:", error);
+            if (error.message.includes('Invalid login credentials')) {
+              showAuthAlert("بيانات الدخول غير صحيحة. إذا كنت لم تنشئ حساباً بعد على Supabase، يمكنك التبديل لتبويب 'حساب جديد' أو استخدام 'رابط للإيميل'.", "error");
+            } else if (error.message.includes('Email not confirmed')) {
+              showAuthAlert("تم إنشاء الحساب ولكن يتطلب تأكيد البريد أولاً عبر الرابط المرسل إليك.", "error");
+            } else {
+              showAuthAlert(`خطأ في الدخول: ${error.message}`, "error");
+            }
+            return;
+          }
+
+          if (data && data.user) {
+            setAdminAuthenticated(data.user.email);
+            showSyncToast(`مرحباً بك! تم تسجيل دخول المسؤول (${data.user.email}) بنجاح 👑`);
+          }
+        } catch (err) {
+          console.error("Auth exception:", err);
+          showAuthAlert("تعذر الاتصال بخدمة التحقق السحابية. يمكنك استخدام رمز الطوارئ المحلي بالأسفل.", "error");
+        }
+      } else {
+        // Fallback when Supabase is not ready
+        showAuthAlert("خدمة Supabase غير متصلة حالياً. يمكنك استخدام رمز الطوارئ الاحتياطي.", "error");
+      }
+    }
+
+    async function handleMagicLinkSignIn() {
+      const email = (document.getElementById('adminEmailInput')?.value || '').trim();
+      if (!email || !email.includes('@')) {
+        showAuthAlert("يرجى إدخال بريد إلكتروني صحيح لاستقبال الرابط.", "error");
+        return;
+      }
+
+      showAuthAlert("جاري إرسال رابط الدخول السريع المشفر إلى بريدك الإلكتروني...", "loading");
+
+      if (supabaseClient) {
+        try {
+          const redirectUrl = window.location.origin + window.location.pathname;
+          const { error } = await supabaseClient.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: redirectUrl }
+          });
+
+          if (error) {
+            showAuthAlert(`تعذر إرسال الرابط: ${error.message}`, "error");
+          } else {
+            showAuthAlert(`تم إرسال رابط تسجيل الدخول بنجاح إلى (${email})! تفقد صندوق الوارد أو رسائل الترويج/Spam واضغط على الرابط للدخول فوراً بنقرة واحدة ✉️`, "success");
+          }
+        } catch (err) {
+          showAuthAlert("حدث خطأ أثناء محاولة إرسال الرابط.", "error");
+        }
+      } else {
+        showAuthAlert("يرجى التأكد من اتصال خدمة Supabase لإرسال الرسائل.", "error");
+      }
+    }
+
+    async function handleEmailSignUp() {
+      const email = (document.getElementById('adminEmailInput')?.value || '').trim();
+      const password = document.getElementById('adminSignupPassword')?.value || '';
+      const confirm = document.getElementById('adminSignupConfirm')?.value || '';
+
+      if (!email || !email.includes('@')) {
+        showAuthAlert("يرجى إدخال بريد إلكتروني صالح.", "error");
+        return;
+      }
+      if (!password || password.length < 6) {
+        showAuthAlert("كلمة المرور يجب أن لا تقل عن 6 أحرف.", "error");
+        return;
+      }
+      if (password !== confirm) {
+        showAuthAlert("كلمتا المرور غير متطابقتين.", "error");
+        return;
+      }
+
+      showAuthAlert("جاري تسجيل حساب مسؤول جديد في Supabase Auth...", "loading");
+
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          if (error) {
+            showAuthAlert(`فشل التسجيل: ${error.message}`, "error");
+            return;
+          }
+
+          if (data && data.session) {
+            setAdminAuthenticated(data.user.email);
+            showSyncToast("تم إنشاء حساب المسؤول وتسجيل الدخول بنجاح! 👑");
+          } else {
+            showAuthAlert(`تم إنشاء الحساب بنجاح! تم إرسال رسالة تأكيد إلى (${email}). تفقد بريدك واضغط على رابط التفعيل ثم سجل دخولك 📧`, "success");
+          }
+        } catch (err) {
+          showAuthAlert("تعذر إنشاء الحساب السحابي. يرجى مراجعة إعدادات الاتصال.", "error");
+        }
+      }
+    }
+
+    function handleEmergencyPinLogin() {
+      const pin = (document.getElementById('adminEmergencyPin')?.value || '').trim();
       const actualPin = getAdminPin();
-      if (currentInput !== actualPin) {
-        alert("يرجى إدخال رمز PIN الحالي أولاً في خانة الرمز بالأعلى.");
+
+      if (pin === actualPin) {
+        const email = (document.getElementById('adminEmailInput')?.value || '').trim() || PRIMARY_ADMIN_EMAIL;
+        setAdminAuthenticated(email);
+        showSyncToast(`تم الدخول بنجاح كمسؤول بنظام الطوارئ المحلي (${email}) 🛡️`);
+      } else {
+        showAuthAlert("رمز الطوارئ الاحتياطي غير صحيح.", "error");
+        const pinInp = document.getElementById('adminEmergencyPin');
+        if (pinInp) pinInp.value = '';
+      }
+    }
+
+    async function logoutAdmin(promptUser = true) {
+      if (promptUser && !confirm("هل تريد بالتأكيد تسجيل الخروج من حساب المسؤول والعودة لوضع المشاهدة؟")) {
         return;
       }
-      const newPin = document.getElementById('newPinInput').value.trim();
-      if (!newPin || newPin.length < 4) {
-        alert("يرجى إدخال رمز PIN جديد مكون من 4 أرقام أو حروف على الأقل.");
-        return;
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch(e) {}
       }
-      localStorage.setItem('ALBORG_ADMIN_PIN', newPin);
-      alert(`تم بنجاح تغيير رمز PIN للإدارة إلى: ${newPin}\nيرجى حفظه جيداً.`);
-      document.getElementById('changePinSection').classList.add('hidden');
-      document.getElementById('newPinInput').value = '';
+
+      IS_ADMIN = false;
+      ADMIN_EMAIL = null;
+      sessionStorage.removeItem('ALBORG_ADMIN_AUTH');
+      sessionStorage.removeItem('ALBORG_ADMIN_EMAIL');
+      localStorage.removeItem('ALBORG_ADMIN_REMEMBER');
+      localStorage.removeItem('ALBORG_ADMIN_EMAIL');
+
+      updateAdminUI();
+      showSyncToast("تم تسجيل الخروج بنجاح والعودة لوضع المشاهدة (للسكان) 👁️");
     }
 
     // Permission Guard Helper
