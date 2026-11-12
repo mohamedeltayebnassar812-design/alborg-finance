@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- PWA & Web App Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1120">
@@ -88,6 +88,30 @@
       .bg-card, .bg-subcard { background: white !important; border: 1px solid #ccc !important; }
       .text-main, .text-muted { color: black !important; }
     }
+  
+    /* Mobile App Responsive Styling */
+    @media (max-width: 640px) {
+      /* Prevent iOS auto-zoom on inputs */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+      .overflow-x-auto, .overflow-y-auto {
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .safe-area-bottom {
+      padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
   </style>
 </head>
 <body class="bg-main text-main min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200">
@@ -103,7 +127,7 @@
 
   <!-- TOP HEADER -->
   <header class="bg-card border-b border-main sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
       <!-- Title & Branding -->
       <div class="flex items-center space-x-3 space-x-reverse">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
@@ -124,7 +148,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2 no-print">
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto -mx-1 px-1 no-print">
 
         <!-- Admin Auth Status Pill -->
         <div id="adminAuthContainer">
@@ -185,13 +209,13 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 md:pb-6 flex-1 w-full space-y-6">
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 sm:pb-6 flex-1 w-full space-y-4 sm:space-y-6">
 
     <!-- 4 TOP KPI CARDS (CLICKABLE & 100% AUDITED) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       
       <!-- Card 1: Treasury Balance (Clickable -> Treasury Flow) -->
-      <div onclick="switchTab('flow')" class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-emerald-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض جدول التدفق المالي وحسابات الخزينة">
+      <div onclick="switchTab('flow')" class="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-main shadow-sm relative overflow-hidden group hover:border-emerald-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض جدول التدفق المالي وحسابات الخزينة">
         <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform"></div>
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-muted group-hover:text-emerald-400 transition-colors flex items-center gap-1">
@@ -203,7 +227,7 @@
           </div>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span id="kpiBalance" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">3,685</span>
+          <span id="kpiBalance" class="text-xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">3,685</span>
           <span class="text-xs font-normal text-muted">ج.م (فائض متاح)</span>
         </div>
         <div class="mt-2 text-xs text-muted flex items-center justify-between">
@@ -213,7 +237,7 @@
       </div>
 
       <!-- Card 2: Total Revenue (Clickable -> Month Collections) -->
-      <div onclick="switchTab('month')" class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض دفتر تحصيلات الشهور">
+      <div onclick="switchTab('month')" class="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-main shadow-sm relative overflow-hidden group hover:border-blue-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض دفتر تحصيلات الشهور">
         <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform"></div>
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-muted group-hover:text-blue-400 transition-colors flex items-center gap-1">
@@ -225,7 +249,7 @@
           </div>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span id="kpiRevenue" class="text-2xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">60,350</span>
+          <span id="kpiRevenue" class="text-xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">60,350</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
         <div class="mt-2 text-xs text-muted flex items-center justify-between">
@@ -235,7 +259,7 @@
       </div>
 
       <!-- Card 3: Total Expenses (Clickable -> All Expenses Log) -->
-      <div onclick="switchTab('expenses')" class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-amber-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض سجل بنود المصروفات التراكمية">
+      <div onclick="switchTab('expenses')" class="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-main shadow-sm relative overflow-hidden group hover:border-amber-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض سجل بنود المصروفات التراكمية">
         <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform"></div>
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-muted group-hover:text-amber-400 transition-colors flex items-center gap-1">
@@ -247,7 +271,7 @@
           </div>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span id="kpiExpenses" class="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">56,815</span>
+          <span id="kpiExpenses" class="text-xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">56,815</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
         <div class="mt-2 text-xs text-muted flex items-center justify-between">
@@ -257,7 +281,7 @@
       </div>
 
       <!-- Card 4: Cumulative Arrears (Clickable -> Arrears Table Debtors) -->
-      <div onclick="switchTab('arrears'); setArrearsFilter('debtors');" class="bg-card rounded-2xl p-5 border border-main shadow-sm relative overflow-hidden group hover:border-rose-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض كشف حساب المديونيات والمتأخرات الدقيقة">
+      <div onclick="switchTab('arrears'); setArrearsFilter('debtors');" class="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-main shadow-sm relative overflow-hidden group hover:border-rose-500/50 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95" title="اضغط لعرض كشف حساب المديونيات والمتأخرات الدقيقة">
         <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-rose-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform"></div>
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-muted group-hover:text-rose-400 transition-colors flex items-center gap-1">
@@ -269,7 +293,7 @@
           </div>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span id="kpiArrears" class="text-2xl sm:text-3xl font-extrabold text-rose-400 tracking-tight">1,700</span>
+          <span id="kpiArrears" class="text-xl sm:text-3xl font-extrabold text-rose-400 tracking-tight">1,700</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
         <div class="mt-2 text-xs text-muted flex items-center justify-between">
@@ -317,38 +341,38 @@
     <div id="tabContentMonth" class="space-y-6">
 
       <!-- Month Selector Bar -->
-      <div class="bg-card rounded-2xl p-4 border border-main flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <label for="monthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر المعروض:</label>
-          <select id="monthSelect" onchange="renderSelectedMonth()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+      <div class="bg-card rounded-2xl p-3.5 sm:p-4 border border-main flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+          <label for="monthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر:</label>
+          <select id="monthSelect" onchange="renderSelectedMonth()" class="flex-1 md:flex-none bg-subcard text-main border border-main rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer">
             <!-- Populated via JS -->
           </select>
-          <button onclick="openNewMonthModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all hover:scale-105 active:scale-95" title="ترحيل وإضافة شهر جديد">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span>إضافة شهر جديد</span>
+          <button onclick="openNewMonthModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all active:scale-95 whitespace-nowrap" title="ترحيل وإضافة شهر جديد">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>+ شهر جديد</span>
           </button>
         </div>
 
         <!-- Month Balances Strip -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-medium">
-          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
-            <span class="text-muted text-[11px]">رصيد أول الشهر (L2): </span>
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-medium w-full md:w-auto">
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main text-center sm:text-right">
+            <span class="text-muted text-[10px] sm:text-[11px] block sm:inline">أول الشهر (L2): </span>
             <span id="mStripOpening" class="font-bold text-main">0 ج.م</span>
           </div>
-          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
-            <span class="text-muted text-[11px]">إيراد الشهر (L1): </span>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main text-center sm:text-right">
+            <span class="text-muted text-[10px] sm:text-[11px] block sm:inline">إيراد الشهر (L1): </span>
             <span id="mStripRevenue" class="font-bold text-blue-400">0 ج.م</span>
           </div>
-          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
-            <span class="text-muted text-[11px]">إجمالي المتاح (L3): </span>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main text-center sm:text-right">
+            <span class="text-muted text-[10px] sm:text-[11px] block sm:inline">إجمالي المتاح (L3): </span>
             <span id="mStripAvailable" class="font-bold text-emerald-400">0 ج.م</span>
           </div>
-          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
-            <span class="text-muted text-[11px]">المصروفات (L4): </span>
+          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main text-center sm:text-right">
+            <span class="text-muted text-[10px] sm:text-[11px] block sm:inline">المصروفات (L4): </span>
             <span id="mStripExpenses" class="font-bold text-amber-400">0 ج.م</span>
           </div>
-          <div class="bg-subcard px-2.5 py-1.5 rounded-xl border border-main">
-            <span class="text-muted text-[11px]">الباقي للشهر الجديد (L5): </span>
+          <div class="col-span-2 sm:col-span-1 bg-subcard px-2.5 py-1.5 rounded-xl border border-main text-center sm:text-right">
+            <span class="text-muted text-[10px] sm:text-[11px] block sm:inline">الباقي للشهر الجديد (L5): </span>
             <span id="mStripClosing" class="font-bold text-emerald-400">0 ج.م</span>
           </div>
         </div>
@@ -377,11 +401,19 @@
           </div>
 
           <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
-            <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <!-- Mobile Horizontal Swipe Helper -->
+            <div class="sm:hidden flex items-center justify-between text-[11px] text-muted bg-subcard/80 px-3 py-1.5 border-b border-main/50">
+              <span class="flex items-center gap-1">
+                <span>📱</span>
+                <span>اسحب أفقياً لعرض السداد والإجراءات</span>
+              </span>
+              <span class="text-emerald-400 font-bold">↔️ سحب</span>
+            </div>
+            <div class="overflow-x-auto max-h-[500px] sm:max-h-[600px] overflow-y-auto">
               <table class="w-full text-right text-xs min-w-[740px]">
-                <thead class="bg-subcard text-muted sticky top-0 z-10 border-b border-main">
+                <thead class="bg-subcard text-muted sticky top-0 z-20 border-b border-main">
                   <tr>
-                    <th class="py-2.5 px-3">الدور / الشقة</th>
+                    <th class="py-2.5 px-3 sticky right-0 z-30 bg-subcard border-l border-main/40 shadow-sm">الدور / الشقة</th>
                     <th class="py-2.5 px-3">الساكن / المالك</th>
                     <th class="py-2.5 px-3 text-center">الاشتراك</th>
                     <th class="py-2.5 px-3 text-center">متأخرات سابقة</th>
@@ -419,7 +451,7 @@
             </button>
           </div>
 
-          <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm flex flex-col h-[600px]">
+          <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm flex flex-col min-h-[350px] lg:h-[600px]">
             <div class="p-3 border-b border-main bg-subcard flex items-center justify-between">
               <span class="text-xs font-semibold text-muted">البند</span>
               <span class="text-xs font-semibold text-muted">التكلفة</span>
@@ -624,8 +656,8 @@
   <!-- MODALS -->
 
   <!-- MODAL 1: ADD NEW MONTH -->
-  <div id="newMonthModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="newMonthModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <h3 class="text-base font-bold text-main flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -679,8 +711,8 @@
   </div>
 
   <!-- MODAL 2: EDIT PAYMENT / CUSTOM PAY -->
-  <div id="editPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="editPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <h3 class="text-base font-bold text-main flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -738,8 +770,8 @@
   </div>
 
   <!-- MODAL 3: EDIT RESIDENT DATA -->
-  <div id="editResidentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="editResidentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <h3 class="text-base font-bold text-main flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-purple-500"></span>
@@ -896,8 +928,8 @@
   </div>
 
   <!-- MODAL 6: ADD EXPENSE TO MONTH -->
-  <div id="addExpenseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="addExpenseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <h3 class="text-base font-bold text-main flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -985,8 +1017,8 @@
   </div>
 
   <!-- MODAL: WRITE OFF DEBT (إسقاط وإعفاء المديونية) -->
-  <div id="writeOffDebtModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="writeOffDebtModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-main pb-3">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg font-bold">⚖️</div>
@@ -1671,7 +1703,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
 
     // Tab Switching
     function switchTab(tabId) {
-      const tabs = ['month', 'arrears', 'expenses', 'flow'];
+      const tabs = ['month', 'arrears', 'expenses', 'flow', 'report'];
       tabs.forEach(t => {
         const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
         const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
@@ -1680,12 +1712,12 @@ grant usage, select on all sequences in schema public to anon;</pre>
           content?.classList.remove('hidden');
           btn?.classList.add('border-emerald-500', 'text-emerald-400');
           btn?.classList.remove('border-transparent', 'text-muted');
-          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400";
+          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400 min-w-[55px] py-1 transition-all active:scale-95";
         } else {
           content?.classList.add('hidden');
           btn?.classList.remove('border-emerald-500', 'text-emerald-400');
           btn?.classList.add('border-transparent', 'text-muted');
-          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main";
+          if (mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main min-w-[55px] py-1 transition-all active:scale-95";
         }
       });
 
@@ -1693,6 +1725,11 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (tabId === 'expenses') renderAllExpensesTable();
       if (tabId === 'flow') renderTreasuryFlow();
       if (tabId === 'report') renderMonthlyReport();
+
+      // On mobile, scroll smoothly to top of main content
+      if (window.innerWidth < 640) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     // Month Selector Initialization
@@ -1772,7 +1809,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
         const tr = document.createElement('tr');
         tr.className = "hover:bg-subcard/50 transition-colors";
         tr.innerHTML = `
-          <td class="py-2.5 px-3 whitespace-nowrap">
+          <td class="py-2.5 px-3 whitespace-nowrap sticky right-0 z-10 bg-card group-hover:bg-subcard border-l border-main/40 shadow-sm">
             <div class="font-extrabold text-sm text-main flex items-center gap-1.5">
               <span>الدور ${apt.floor || 1}</span>
               <span class="text-xs font-semibold text-purple-400">(${apt.position})</span>
@@ -2570,7 +2607,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
         const tr = document.createElement('tr');
         tr.className = "hover:bg-subcard/50 transition-colors";
         tr.innerHTML = `
-          <td class="py-3 px-3 whitespace-nowrap">
+          <td class="py-3 px-3 whitespace-nowrap sticky right-0 z-10 bg-card group-hover:bg-subcard border-l border-main/40 shadow-sm">
             <div class="font-extrabold text-xs text-main flex items-center gap-1.5">
               <span>الدور ${apt.floor || 1}</span>
               <span class="text-xs font-semibold text-purple-400">(${apt.position})</span>
@@ -4076,6 +4113,30 @@ grant usage, select on all sequences in schema public to anon;</pre>
   <div class="bg-card">
     ${reportContent}
   </div>
+  <!-- MOBILE BOTTOM NAVIGATION BAR (FIXED ON SMARTPHONES) -->
+  <nav id="mobileBottomNav" class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-main px-2 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom no-print">
+    <button id="mobileNavMonth" onclick="switchTab('month')" class="flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400 min-w-[55px] py-1 transition-all active:scale-95">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span>الشهور</span>
+    </button>
+    <button id="mobileNavArrears" onclick="switchTab('arrears')" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main min-w-[55px] py-1 transition-all active:scale-95">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <span>المتأخرات</span>
+    </button>
+    <button id="mobileNavExpenses" onclick="switchTab('expenses')" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main min-w-[55px] py-1 transition-all active:scale-95">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <span>المصروفات</span>
+    </button>
+    <button id="mobileNavFlow" onclick="switchTab('flow')" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main min-w-[55px] py-1 transition-all active:scale-95">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+      <span>الخزينة</span>
+    </button>
+    <button id="mobileNavReport" onclick="switchTab('report')" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main min-w-[55px] py-1 transition-all active:scale-95">
+      <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <span>التقرير PDF</span>
+    </button>
+  </nav>
+
 </body>
 </html>`;
 
@@ -4575,8 +4636,8 @@ grant usage, select on all sequences in schema public to anon;</pre>
 
 
     <!-- ADMIN EMAIL LOGIN MODAL -->
-  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
-    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-2.5 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] flex flex-col overflow-y-auto">
       
       <!-- Modal Header -->
       <div class="flex items-center justify-between border-b border-main pb-3">
