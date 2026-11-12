@@ -1811,6 +1811,454 @@ alter publication supabase_realtime add table building_finance;</pre>
     let supabaseClient = null;
     let isSyncingToCloud = false;
 
+    // PRE-CONFIGURED SUPABASE CREDENTIALS PROVIDED BY USER
+    const DEFAULT_SUPABASE_URL = "https://nmdghpfxapawmhbcalcj.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "sb_publishable_eU4zMGY01fDHzYESVFFIiA_KeOwpHTh";
+
+    function showSyncToast(msg) {
+      const toast = document.getElementById('syncToast');
+      const text = document.getElementById('syncToastText');
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      }, 3500);
+    }
+
+    function initSupabase() {
+      let cfg = null;
+      const rawCfg = localStorage.getItem('SUPABASE_CONFIG');
+      if (rawCfg) {
+        try { cfg = JSON.parse(rawCfg); } catch(e) {}
+      }
+      if (!cfg || !cfg.url || !cfg.key) {
+        cfg = { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_KEY };
+      }
+
+      const urlInput = document.getElementById('supabaseUrlInput');
+      const keyInput = document.getElementById('supabaseKeyInput');
+      if (urlInput) urlInput.value = cfg.url;
+      if (keyInput) keyInput.value = cfg.key;
+
+      if (!cfg.url || !cfg.key) {
+        updateSupabaseUIState('disconnected');
+        return;
+      }
+
+      try {
+        if (window.supabase) {
+          supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
+          pullFromSupabase(true, cfg.url);
+          subscribeToSupabaseRealtime();
+        }
+      } catch (err) {
+        console.error("Supabase init error:", err);
+        updateSupabaseUIState('error', err.message);
+      }
+    }
+
+    function updateSupabaseUIState(status, extra = '') {
+      const badge = document.getElementById('supabaseStatusBadge');
+      const dot = document.getElementById('supabaseStatusDot');
+      const text = document.getElementById('supabaseStatusText');
+      const modalText = document.getElementById('modalCloudStatusText');
+      const btnSync = document.getElementById('btnSyncNow');
+      const btnDisc = document.getElementById('btnDisconnectSupabase');
+
+      if (status === 'connected') {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400 ml-1.5 animate-pulse";
+        if (text) text.textContent = "متصل سحابياً (Supabase Live)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.textContent = "متصل بنجاح مع سحابة Supabase ومفعل المزامنة اللحظية 🟢";
+          modalText.className = "font-bold text-sm text-emerald-400";
+        }
+        if (btnSync) btnSync.classList.remove('hidden');
+        if (btnDisc) btnDisc.classList.remove('hidden');
+      } else if (status === 'table_missing') {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400 ml-1.5 animate-ping";
+        if (text) text.textContent = "متصل بـ Supabase (مطلوب تشغيل كود SQL لإنشاء الجدول ⚠️)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.textContent = "متصل بمشروعك في Supabase بنجاح! يرجى تشغيل كود SQL الموضح بالأسفل لإنشاء الجدول ثم الضغط على 'مزامنة الآن' ⚠️";
+          modalText.className = "font-bold text-sm text-amber-300";
+        }
+        // Expand SQL block
+        document.getElementById('sqlSetupDetails')?.classList.remove('hidden');
+        if (btnSync) btnSync.classList.remove('hidden');
+        if (btnDisc) btnDisc.classList.remove('hidden');
+      } else {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-zinc-400 ml-1.5";
+        if (text) text.textContent = "حفظ محلي (اضغط للربط بـ Supabase)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-500/10 text-zinc-300 border border-zinc-500/30 hover:bg-zinc-500/20 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.textContent = "غير متصل بالسحابة (الحفظ محلي فقط في هذا المتصفح)";
+          modalText.className = "font-bold text-sm text-zinc-400";
+        }
+        if (btnSync) btnSync.classList.add('hidden');
+        if (btnDisc) btnDisc.classList.add('hidden');
+      }
+    }
+
+    async function pullFromSupabase(isInitial = false, projectUrl = '') {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('building_finance')
+          .select('data, updated_at')
+          .eq('id', 'main')
+          .maybeSingle();
+
+        if (error) {
+          if (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table')) || error.code === '42P01') {
+            console.warn("Table building_finance not found in Supabase yet. User needs to run SQL script.");
+            updateSupabaseUIState('table_missing', projectUrl);
+            return;
+          }
+          console.warn("Could not pull from Supabase:", error.message);
+          updateSupabaseUIState('error', error.message);
+          return;
+        }
+
+        updateSupabaseUIState('connected', projectUrl);
+
+        if (data && data.data) {
+          console.log("Supabase data pulled successfully:", data.updated_at);
+          APP_DATA = data.data;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+          recalculateAllBalances();
+          renderSelectedMonth();
+          renderArrearsTable();
+          if (!isInitial) showSyncToast("تم تحديث البيانات من السحابة بنجاح ⚡");
+        } else {
+          // Table is empty, push initial data
+          console.log("Table exists in Supabase but empty. Seeding initial data...");
+          pushToSupabase();
+        }
+      } catch (err) {
+        console.error("Pull from Supabase failed:", err);
+        updateSupabaseUIState('error', err.message);
+      }
+    }
+
+    async function pushToSupabase() {
+      if (!supabaseClient || isSyncingToCloud) return;
+      isSyncingToCloud = true;
+      try {
+        const { error } = await supabaseClient
+          .from('building_finance')
+          .upsert({
+            id: 'main',
+            data: APP_DATA,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error("Push to Supabase error:", error);
+          if (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table'))) {
+            updateSupabaseUIState('table_missing');
+          }
+        } else {
+          updateSupabaseUIState('connected');
+          showSyncToast("تمت المزامنة السحابية بنجاح ☁️");
+        }
+      } catch (err) {
+        console.error("Failed to push to Supabase:", err);
+      } finally {
+        isSyncingToCloud = false;
+      }
+    }
+
+    function subscribeToSupabaseRealtime() {
+      if (!supabaseClient) return;
+      try {
+        supabaseClient
+          .channel('public:building_finance')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'building_finance' }, payload => {
+            if (payload.new && payload.new.data) {
+              console.log("Realtime event received from other client!");
+              APP_DATA = payload.new.data;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+              recalculateAllBalances();
+              renderSelectedMonth();
+              renderArrearsTable();
+              showSyncToast("⚡ تم استلام تحديث جديد لحظياً من جهاز آخر!");
+            }
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime subscription failed:", err);
+      }
+    }
+
+    async function testAndSaveSupabaseConfig() {
+      const url = document.getElementById('supabaseUrlInput').value.trim();
+      const key = document.getElementById('supabaseKeyInput').value.trim();
+
+      if (!url || !key) {
+        alert("يرجى إدخال كل من Project URL و Anon Key.");
+        return;
+      }
+
+      try {
+        const testClient = window.supabase.createClient(url, key);
+        const { data, error } = await testClient.from('building_finance').select('id').limit(1);
+        if (error && (error.code === 'PGRST205' || error.code === '42P01' || error.message.includes('Could not find the table'))) {
+          localStorage.setItem('SUPABASE_CONFIG', JSON.stringify({ url, key }));
+          supabaseClient = testClient;
+          updateSupabaseUIState('table_missing', url);
+          alert("تم الاتصال بمشروعك في Supabase بنجاح!\n\nملاحظة هامة: متبقي فقط تشغيل كود SQL لإنشاء الجدول 'building_finance' في لوحة Supabase SQL Editor لتبدأ المزامنة.");
+          return;
+        }
+
+        localStorage.setItem('SUPABASE_CONFIG', JSON.stringify({ url, key }));
+        supabaseClient = testClient;
+        await pullFromSupabase(false, url);
+        subscribeToSupabaseRealtime();
+
+        alert("تم بنجاح الاتصال بـ Supabase وتفعيل المزامنة السحابية اللحظية!");
+        closeCloudModal();
+      } catch (err) {
+        alert(`فشل الاتصال بـ Supabase: ${err.message || err}`);
+      }
+    }
+
+    function disconnectSupabase() {
+      if (confirm("هل تريد قطع الاتصال بسحابة Supabase والرجوع إلى الحفظ المحلي فقط؟")) {
+        localStorage.removeItem('SUPABASE_CONFIG');
+        supabaseClient = null;
+        updateSupabaseUIState('disconnected');
+        alert("تم فصل الاتصال السحابي.");
+      }
+    }
+
+    function syncWithSupabaseNow() {
+      if (!supabaseClient) {
+        initSupabase();
+      }
+      pullFromSupabase(false);
+      pushToSupabase();
+    }
+
+    function copySqlCode() {
+      const code = document.getElementById('sqlCodeBlock').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("تم نسخ كود SQL بنجاح! الصقه في SQL Editor في لوحة Supabase واضغط Run.");
+      });
+    }
+
+    function importJsonBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && parsed.apartments && parsed.months) {
+            APP_DATA = parsed;
+            recalculateAllBalances();
+            renderSelectedMonth();
+            renderArrearsTable();
+            if (supabaseClient) pushToSupabase();
+            alert("تم استيراد النسخة الاحتياطية بنجاح!");
+            closeCloudModal();
+          } else {
+            alert("ملف JSON غير صالح لهيكل بيانات البرج.");
+          }
+        } catch (err) {
+          alert("خطأ في قراءة ملف JSON: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // TAB 2: Arrears Table
+    function renderArrearsTable() {
+      const audits = calculateApartmentAudits();
+      const tbody = document.getElementById('arrearsTableBody');
+      const searchQuery = (document.getElementById('arrearsSearch')?.value || '').trim().toLowerCase();
+      tbody.innerHTML = '';
+
+      let totalDisplayed = 0;
+      audits.forEach(apt => {
+        if (currentFilter === 'debtors' && !apt.hasDebt) return;
+        if (currentFilter === 'paid' && apt.hasDebt) return;
+
+        const searchStr = `${apt.apt_num} ${apt.owner_name} ${apt.floor} ${apt.position} ${apt.phone}`.toLowerCase();
+        if (searchQuery && !searchStr.includes(searchQuery)) return;
+
+        totalDisplayed += apt.totalPastArrears;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-main whitespace-nowrap">شقة ${apt.apt_num}</td>
+          <td class="py-3 px-3 text-muted whitespace-nowrap">${apt.floor} ${apt.position}</td>
+          <td class="py-3 px-3 font-semibold text-main whitespace-nowrap">${apt.owner_name}</td>
+          <td class="py-3 px-3 text-muted whitespace-nowrap">${apt.phone || '—'}</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-bold ${apt.pastUnpaidSubs > 0 ? 'text-rose-400' : 'text-muted'}">
+            ${apt.pastUnpaidSubs > 0 ? apt.pastUnpaidSubs.toLocaleString() + ' ج' : '—'}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-bold ${apt.specialOldDebt > 0 ? 'text-amber-400' : 'text-muted'}">
+            ${apt.specialOldDebt > 0 ? apt.specialOldDebt.toLocaleString() + ' ج' : '—'}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-extrabold ${apt.totalPastArrears > 0 ? 'text-rose-400' : 'text-emerald-400'}">
+            ${apt.totalPastArrears > 0 ? apt.totalPastArrears.toLocaleString() + ' ج' : '0 ج (خالص)'}
+          </td>
+          <td class="py-3 px-3 text-center text-muted whitespace-nowrap">${apt.currentMonthFee} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${apt.hasDebt 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">عليه متأخرات</span>` 
+              : (apt.isWrittenOff 
+                  ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30" title="${apt.writtenOffReason}">خالص (إسقاط معدومة ${apt.writtenOffAmount} ج)</span>`
+                  : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">خالص تماماً ✓</span>`)}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${apt.hasDebt ? `
+              <button onclick="switchTab('month'); openEditPaymentModal(document.getElementById('monthSelect').value, ${apt.row})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600/20 text-blue-300 hover:bg-blue-600/30">
+                تسجيل سداد
+              </button>
+            ` : '—'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('arrTotalDisplayed').textContent = `${totalDisplayed.toLocaleString()} ج.م`;
+    }
+
+    function filterArrearsTable() {
+      renderArrearsTable();
+    }
+
+    function setArrearsFilter(filter) {
+      currentFilter = filter;
+      document.getElementById('arrFilterAll').className = filter === 'all' ? 'px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      document.getElementById('arrFilterDebtors').className = filter === 'debtors' ? 'px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold shadow-sm shadow-rose-600/30' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      document.getElementById('arrFilterPaid').className = filter === 'paid' ? 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30' : 'px-3 py-1.5 rounded-xl bg-subcard text-muted hover:text-main font-semibold border border-main';
+      renderArrearsTable();
+    }
+
+    // TAB 3: All Expenses Table
+    function renderAllExpensesTable() {
+      const tbody = document.getElementById('allExpensesTableBody');
+      tbody.innerHTML = '';
+
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m || !m.expenses) return;
+
+        m.expenses.forEach(e => {
+          if (currentCategory !== 'all' && e.category !== currentCategory) return;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-subcard/50 transition-colors";
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-semibold text-main whitespace-nowrap">${m.title}</td>
+            <td class="py-2.5 px-3 font-medium text-main">${e.item}</td>
+            <td class="py-2.5 px-3 text-muted whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-subcard border border-main">${e.category || 'عام'}</span>
+            </td>
+            <td class="py-2.5 px-3 text-center font-bold text-amber-400 whitespace-nowrap">${e.cost.toLocaleString()} ج.م</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function filterExpensesByCategory() {
+      currentCategory = document.getElementById('expenseCategoryFilter').value;
+      renderAllExpensesTable();
+    }
+
+    // TAB 4: Treasury Flow
+    function renderTreasuryFlow() {
+      const tbody = document.getElementById('treasuryFlowTableBody');
+      tbody.innerHTML = '';
+
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m) return;
+
+        const isPositive = m.closing_balance >= 0;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-subcard/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-main whitespace-nowrap">${m.title}</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-semibold ${m.opening_balance >= 0 ? 'text-main' : 'text-rose-400'}">${m.opening_balance.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-blue-400 font-semibold">${m.subscriptions_collected.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-emerald-400 font-semibold">${(m.extra_revenue || 0).toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-main font-bold">${m.total_revenue.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-main font-semibold">${m.total_income.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap text-amber-400 font-semibold">${m.total_expenses.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap font-extrabold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}">${m.closing_balance.toLocaleString()} ج</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${isPositive 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">فائض متاح</span>` 
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400">عجز مؤقت</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Cloud Modal & Backup
+    function openCloudModal() {
+      document.getElementById('cloudModal').classList.remove('hidden');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.add('hidden');
+    }
+
+    function downloadJsonBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(APP_DATA, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `حسابات_برج_العمارة_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function exportToCSV() {
+      const mKey = document.getElementById('monthSelect').value;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+
+      let csv = "\uFEFFالشقة,الدور,الموقع,الساكن,الهاتف,الاشتراك,المدفوع,المتبقي\n";
+      m.collections.forEach(c => {
+        const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+        csv += `"${apt.apt_num}","${apt.floor}","${apt.position}","${c.name || apt.owner_name}","${apt.phone || ''}",${c.monthly_fee || 0},${c.paid || 0},${c.remaining || 0}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `كشف_تحصيل_${m.title.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      document.getElementById('themeIconSun').classList.toggle('hidden', isDark);
+      document.getElementById('themeIconMoon').classList.toggle('hidden', !isDark);
+      localStorage.setItem('ALBORG_THEME', isDark ? 'dark' : 'light');
+    }
+
+    // Initialize on DOM load
+    
+    // ==========================================
+    // SUPABASE CLOUD INTEGRATION & REALTIME SYNC
+    // ==========================================
+    let supabaseClient = null;
+    let isSyncingToCloud = false;
+
     function showSyncToast(msg) {
       const toast = document.getElementById('syncToast');
       const text = document.getElementById('syncToastText');
