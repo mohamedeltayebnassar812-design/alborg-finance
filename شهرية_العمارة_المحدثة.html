@@ -273,6 +273,12 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
           تحليل الخزينة والميزانية
         </button>
+
+        <button id="tabBtnReport" onclick="switchTab('report')" class="py-3 px-1 border-b-2 border-transparent text-muted hover:text-main flex items-center gap-2 whitespace-nowrap transition-colors">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          التقرير الشهري المعتمد
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300">PDF بالصور 📷</span>
+        </button>
       </nav>
     </div>
 
@@ -534,6 +540,39 @@
           </table>
         </div>
       </div>
+    
+    <!-- TAB 5: OFFICIAL MONTHLY REPORT WITH RECEIPT PHOTOS -->
+    <div id="tabContentReport" class="space-y-6 hidden">
+      <!-- Report Top Controls Bar (No Print) -->
+      <div class="bg-card rounded-2xl p-5 border border-main flex flex-wrap items-center justify-between gap-4 no-print shadow-sm">
+        <div class="flex items-center gap-3">
+          <label for="reportMonthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر المالي للتقرير:</label>
+          <select id="reportMonthSelect" onchange="renderMonthlyReport()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-purple-500 cursor-pointer">
+            <!-- Populated via JS -->
+          </select>
+          <label class="flex items-center gap-1.5 text-xs text-main font-semibold cursor-pointer">
+            <input type="checkbox" id="includeImagesInReport" checked onchange="renderMonthlyReport()" class="rounded border-main text-purple-600 focus:ring-purple-500">
+            تضمين صور الفواتير والإيصالات 📷
+          </label>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="printMonthlyReport()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/30 transition-all hover:scale-105 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            طباعة / حفظ PDF
+          </button>
+          <button onclick="exportStandaloneHtmlReport()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            تصدير ملف ويب بالصور 📥
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Report Body Container -->
+      <div id="printableReportCard" class="bg-card rounded-2xl p-6 border border-main shadow-lg space-y-6">
+        <!-- Injected via renderMonthlyReport() -->
+      </div>
     </div>
 
   </main>
@@ -628,6 +667,22 @@
           <button type="button" onclick="setPresetPayment('full_month')" class="px-2.5 py-1 rounded-lg text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/30">سداد اشتراك الشهر فقط</button>
           <button type="button" onclick="setPresetPayment('full_total')" id="btnPayFullTotal" class="px-2.5 py-1 rounded-lg text-xs bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/30">سداد الإجمالي مع المتأخرات</button>
           <button type="button" onclick="setPresetPayment('zero')" class="px-2.5 py-1 rounded-lg text-xs bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600/30">إلغاء السداد (0 ج)</button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">صورة إيصال التحويل / السداد (اختياري 📷):</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="payModalImageInput" accept="image/*" onchange="handlePaymentImageSelect(event)" class="hidden">
+            <button type="button" onclick="document.getElementById('payModalImageInput').click()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-subcard border border-main text-main hover:bg-card flex items-center gap-1.5 transition-colors">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              إرفاق صورة إيصال (فودافون كاش / إنستاباي)
+            </button>
+            <span id="paymentImagePreviewStatus" class="text-[11px] text-muted">لا توجد صورة</span>
+          </div>
+          <div id="paymentImagePreviewContainer" class="mt-2 hidden relative w-20 h-20 border border-main rounded-xl overflow-hidden group shadow-md">
+            <img id="paymentImagePreviewImg" src="" class="w-full h-full object-cover">
+            <button type="button" onclick="removePaymentImage()" class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black/80 hover:bg-rose-600 text-white rounded-full text-xs font-bold" title="حذف الصورة">&times;</button>
+          </div>
         </div>
       </div>
 
@@ -782,6 +837,22 @@
             <option value="نقاشة ودهانات">نقاشة وبويات</option>
             <option value="أخرى">أخرى / عامة</option>
           </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted mb-1">صورة الفاتورة أو الإيصال (اختياري 📷):</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="newExpenseImageInput" accept="image/*" onchange="handleExpenseImageSelect(event)" class="hidden">
+            <button type="button" onclick="document.getElementById('newExpenseImageInput').click()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-subcard border border-main text-main hover:bg-card flex items-center gap-1.5 transition-colors">
+              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              اختر صورة الفاتورة
+            </button>
+            <span id="expenseImagePreviewStatus" class="text-[11px] text-muted">لا توجد صورة</span>
+          </div>
+          <div id="expenseImagePreviewContainer" class="mt-2 hidden relative w-20 h-20 border border-main rounded-xl overflow-hidden group shadow-md">
+            <img id="expenseImagePreviewImg" src="" class="w-full h-full object-cover">
+            <button type="button" onclick="removeExpenseImage()" class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black/80 hover:bg-rose-600 text-white rounded-full text-xs font-bold" title="حذف الصورة">&times;</button>
+          </div>
         </div>
       </div>
 
@@ -957,6 +1028,7 @@ alter publication supabase_realtime add table building_finance;</pre>
         APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
         recalculateAllBalances();
         initMonthSelector();
+      initReportMonthSelector();
         renderSelectedMonth();
         renderArrearsTable();
         renderAllExpensesTable();
@@ -1144,6 +1216,7 @@ alter publication supabase_realtime add table building_finance;</pre>
       if (tabId === 'arrears') renderArrearsTable();
       if (tabId === 'expenses') renderAllExpensesTable();
       if (tabId === 'flow') renderTreasuryFlow();
+      if (tabId === 'report') renderMonthlyReport();
     }
 
     // Month Selector Initialization
@@ -1223,9 +1296,14 @@ alter publication supabase_realtime add table building_finance;</pre>
           <td class="py-2.5 px-3 text-center font-bold text-main whitespace-nowrap">${totalDue.toLocaleString()} ج</td>
           <td class="py-2.5 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
-            ${isPaid 
-              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
-              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`}
+            <div class="inline-flex items-center gap-1">
+              ${isPaid 
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">تم السداد ✓</span>` 
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">لم يسدد بعد ✕</span>`}
+              ${c.receipt_image ? `
+                <button type="button" onclick="openLightbox('${c.receipt_image}', 'إيصال سداد شقة ${apt.apt_num} - ${c.paid} ج.م', 'إيصال سداد شقة ${apt.apt_num}')" class="text-emerald-400 hover:text-emerald-300 p-0.5 text-xs" title="عرض إيصال التحويل">📷</button>
+              ` : ''}
+            </div>
           </td>
           <td class="py-2.5 px-3 text-center whitespace-nowrap">
             <div class="inline-flex items-center gap-1.5">
@@ -1259,6 +1337,9 @@ alter publication supabase_realtime add table building_finance;</pre>
               <button onclick="deleteExpense('${mKey}', ${idx})" class="text-rose-400/50 hover:text-rose-400 p-1" title="حذف">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
+              ${e.receipt_image ? `
+                <img src="${e.receipt_image}" onclick="openLightbox('${e.receipt_image}', '${e.item} - ${e.cost} ج.م', 'فاتورة مصروف: ${e.item}')" class="w-8 h-8 rounded-lg object-cover cursor-pointer border border-amber-500/30 hover:opacity-80 transition-opacity" title="اضغط لعرض الفاتورة">
+              ` : ''}
               <div>
                 <span class="text-xs font-semibold text-main block">${e.item}</span>
                 <span class="text-[10px] text-muted">${e.category || 'عام'}</span>
@@ -1310,6 +1391,14 @@ alter publication supabase_realtime add table building_finance;</pre>
       const fullTotal = (c?.monthly_fee || 0) + (audit?.totalPastArrears || 0);
       document.getElementById('btnPayFullTotal').textContent = `سداد الإجمالي مع المتأخرات (${fullTotal} ج)`;
 
+      if (c?.receipt_image) {
+        currentPaymentBase64 = c.receipt_image;
+        document.getElementById('paymentImagePreviewImg').src = c.receipt_image;
+        document.getElementById('paymentImagePreviewContainer').classList.remove('hidden');
+        document.getElementById('paymentImagePreviewStatus').textContent = "إيصال محفوظ مسبقاً ✓";
+      } else {
+        removePaymentImage();
+      }
       document.getElementById('editPaymentModal').classList.remove('hidden');
     }
 
@@ -1344,7 +1433,11 @@ alter publication supabase_realtime add table building_finance;</pre>
       const c = m?.collections.find(x => x.row === row);
       if (c) {
         c.paid = amount;
+        if (currentPaymentBase64) {
+          c.receipt_image = currentPaymentBase64;
+        }
       }
+      removePaymentImage();
 
       recalculateAllBalances();
       renderSelectedMonth();
@@ -1527,8 +1620,10 @@ alter publication supabase_realtime add table building_finance;</pre>
         id: `${mKey}_${Date.now()}`,
         item: item,
         cost: cost,
-        category: category
+        category: category,
+        receipt_image: currentExpenseBase64 || null
       });
+      removeExpenseImage();
 
       // Auto-add to catalog if new
       if (!APP_DATA.expense_catalog.some(c => c.name.toLowerCase() === item.toLowerCase())) {
@@ -1618,6 +1713,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
       recalculateAllBalances();
       initMonthSelector();
+      initReportMonthSelector();
       document.getElementById('monthSelect').value = monthKey;
       renderSelectedMonth();
       closeNewMonthModal();
@@ -2542,6 +2638,474 @@ alter publication supabase_realtime add table building_finance;</pre>
       }
     }
 
+    
+    // ==========================================
+    // IMAGE COMPRESSION & RECEIPT ATTACHMENTS
+    // ==========================================
+    let currentExpenseBase64 = null;
+    let currentPaymentBase64 = null;
+
+    function compressAndReadImage(file, maxWidth = 1000, quality = 0.75) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) {
+          reject(new Error('الملف المختار ليس صورة.'));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(dataUrl);
+          };
+          img.onerror = () => reject(new Error('فشل معالجة الصورة'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('فشل قراءة الملف'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleExpenseImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('expenseImagePreviewStatus').textContent = "جاري ضغط ومعالجة الصورة...";
+      try {
+        const compressedBase64 = await compressAndReadImage(file);
+        currentExpenseBase64 = compressedBase64;
+        document.getElementById('expenseImagePreviewImg').src = compressedBase64;
+        document.getElementById('expenseImagePreviewContainer').classList.remove('hidden');
+        document.getElementById('expenseImagePreviewStatus').textContent = `تم إرفاق صورة (${Math.round(compressedBase64.length / 1024)} ك.ب) ✓`;
+      } catch (err) {
+        alert("خطأ في رفع الصورة: " + err.message);
+        document.getElementById('expenseImagePreviewStatus').textContent = "فشل الرفع";
+      }
+    }
+
+    function removeExpenseImage() {
+      currentExpenseBase64 = null;
+      document.getElementById('newExpenseImageInput').value = '';
+      document.getElementById('expenseImagePreviewContainer').classList.add('hidden');
+      document.getElementById('expenseImagePreviewStatus').textContent = "لا توجد صورة";
+    }
+
+    async function handlePaymentImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('paymentImagePreviewStatus').textContent = "جاري معالجة الإيصال...";
+      try {
+        const compressedBase64 = await compressAndReadImage(file);
+        currentPaymentBase64 = compressedBase64;
+        document.getElementById('paymentImagePreviewImg').src = compressedBase64;
+        document.getElementById('paymentImagePreviewContainer').classList.remove('hidden');
+        document.getElementById('paymentImagePreviewStatus').textContent = `تم إرفاق الإيصال (${Math.round(compressedBase64.length / 1024)} ك.ب) ✓`;
+      } catch (err) {
+        alert("خطأ في إرفاق الإيصال: " + err.message);
+        document.getElementById('paymentImagePreviewStatus').textContent = "فشل الرفع";
+      }
+    }
+
+    function removePaymentImage() {
+      currentPaymentBase64 = null;
+      document.getElementById('payModalImageInput').value = '';
+      document.getElementById('paymentImagePreviewContainer').classList.add('hidden');
+      document.getElementById('paymentImagePreviewStatus').textContent = "لا توجد صورة";
+    }
+
+    // Lightbox
+    function openLightbox(src, caption = '', title = 'معاينة صورة الإيصال / الفاتورة') {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightboxCaption').textContent = caption;
+      document.getElementById('lightboxTitle').textContent = title;
+      document.getElementById('lightboxDownloadBtn').href = src;
+      document.getElementById('lightboxDownloadBtn').download = `ايصال_${Date.now()}.jpg`;
+      document.getElementById('imageLightboxModal').classList.remove('hidden');
+    }
+
+    function closeLightboxModal() {
+      document.getElementById('imageLightboxModal').classList.add('hidden');
+    }
+
+    // ==========================================
+    // OFFICIAL MONTHLY REPORT WITH RECEIPT PHOTOS
+    // ==========================================
+    function initReportMonthSelector() {
+      const select = document.getElementById('reportMonthSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      APP_DATA.chronological_order.forEach(mKey => {
+        const m = APP_DATA.months[mKey];
+        if (!m) return;
+        const opt = document.createElement('option');
+        opt.value = mKey;
+        opt.textContent = m.title;
+        select.appendChild(opt);
+      });
+      // select latest month by default
+      select.value = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+    }
+
+    function renderMonthlyReport() {
+      const select = document.getElementById('reportMonthSelect');
+      if (!select) return;
+      const mKey = select.value;
+      const m = APP_DATA.months[mKey];
+      if (!m) return;
+
+      const includeImages = document.getElementById('includeImagesInReport')?.checked ?? true;
+      const container = document.getElementById('printableReportCard');
+      if (!container) return;
+
+      const audits = calculateApartmentAudits();
+      const auditsMap = {};
+      audits.forEach(a => auditsMap[a.row] = a);
+
+      let paidCount = 0;
+      let totalSubsOwed = 0;
+      let totalSubsPaid = 0;
+      m.collections.forEach(c => {
+        totalSubsOwed += (c.monthly_fee || 0);
+        totalSubsPaid += (c.paid || 0);
+        if ((c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0) paidCount++;
+      });
+
+      const netCashChange = (m.total_revenue || 0) - (m.total_expenses || 0);
+
+      // Collect all receipts for the gallery
+      const expenseReceipts = (m.expenses || []).filter(e => e.receipt_image);
+      const paymentReceipts = (m.collections || []).filter(c => c.receipt_image);
+      const totalReceiptsCount = expenseReceipts.length + paymentReceipts.length;
+
+      let html = `
+        <!-- REPORT HEADER -->
+        <div class="border-b-2 border-emerald-500 pb-5 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white text-xl font-bold shadow-md">
+              🏢
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-main tracking-tight">برج العمارة السكني</h2>
+              <p class="text-sm font-bold text-emerald-400">التقرير المالي الرسمي المعتمد</p>
+            </div>
+          </div>
+          <div class="text-left">
+            <div class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-subcard border border-main text-main">
+              الفترة المالية: ${m.title}
+            </div>
+            <p class="text-[11px] text-muted mt-1">تاريخ إصدار التقرير: ${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+        </div>
+
+        <!-- EXECUTIVE KPI SUMMARY (5 KEY INDICATORS) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div class="bg-subcard p-3.5 rounded-xl border border-main">
+            <span class="text-[11px] text-muted block">رصيد أول الشهر (L2):</span>
+            <span class="text-base sm:text-lg font-bold text-main block mt-1">${m.opening_balance.toLocaleString()} ج.م</span>
+          </div>
+          <div class="bg-subcard p-3.5 rounded-xl border border-main">
+            <span class="text-[11px] text-muted block">إيراد الشهر المحصل (L1):</span>
+            <span class="text-base sm:text-lg font-bold text-blue-400 block mt-1">${m.total_revenue.toLocaleString()} ج.م</span>
+            <span class="text-[10px] text-muted">${m.subscriptions_collected.toLocaleString()} اشتراكات + ${(m.extra_revenue || 0).toLocaleString()} ديون</span>
+          </div>
+          <div class="bg-subcard p-3.5 rounded-xl border border-main">
+            <span class="text-[11px] text-muted block">مصروفات الشهر (L4):</span>
+            <span class="text-base sm:text-lg font-bold text-amber-400 block mt-1">${m.total_expenses.toLocaleString()} ج.م</span>
+            <span class="text-[10px] text-muted">${(m.expenses || []).length} بنود إنفاق</span>
+          </div>
+          <div class="bg-subcard p-3.5 rounded-xl border border-main">
+            <span class="text-[11px] text-muted block">صافي حركة الشهر:</span>
+            <span class="text-base sm:text-lg font-bold ${netCashChange >= 0 ? 'text-emerald-400' : 'text-rose-400'} block mt-1">
+              ${netCashChange >= 0 ? '+' : ''}${netCashChange.toLocaleString()} ج.م
+            </span>
+            <span class="text-[10px] ${netCashChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${netCashChange >= 0 ? 'فائض شهري' : 'عجز شهري'}</span>
+          </div>
+          <div class="bg-subcard p-3.5 rounded-xl border border-main">
+            <span class="text-[11px] text-muted block">رصيد آخر الشهر (L5):</span>
+            <span class="text-base sm:text-lg font-extrabold ${m.closing_balance >= 0 ? 'text-emerald-400' : 'text-rose-400'} block mt-1">
+              ${m.closing_balance.toLocaleString()} ج.م
+            </span>
+            <span class="text-[10px] text-muted">نسبة التحصيل: ${Math.round((paidCount/24)*100)}% (${paidCount} من 24)</span>
+          </div>
+        </div>
+
+        <!-- SECTION 1: EXPENSES & INVOICES TABLE -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between border-b border-main pb-2">
+            <h3 class="text-sm font-bold text-main flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              أولاً: بيان المصروفات وفواتير الصيانة للشهر (${(m.expenses || []).length} بند - إجمالي ${m.total_expenses.toLocaleString()} ج.م)
+            </h3>
+            <span class="text-xs text-muted font-medium">${expenseReceipts.length} فواتير مرفقة 📷</span>
+          </div>
+          <div class="overflow-x-auto border border-main rounded-xl">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-subcard text-muted border-b border-main">
+                <tr>
+                  <th class="py-2.5 px-3">#</th>
+                  <th class="py-2.5 px-3">بند المصروف</th>
+                  <th class="py-2.5 px-3">التصنيف</th>
+                  <th class="py-2.5 px-3 text-center">المبلغ</th>
+                  ${includeImages ? `<th class="py-2.5 px-3 text-center">الفاتورة / الإيصال</th>` : ''}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-main">
+      `;
+
+      if (!m.expenses || m.expenses.length === 0) {
+        html += `<tr><td colspan="${includeImages ? 5 : 4}" class="p-4 text-center text-muted">لا توجد مصروفات مسجلة لهذا الشهر</td></tr>`;
+      } else {
+        m.expenses.forEach((e, idx) => {
+          html += `
+            <tr class="hover:bg-subcard/40 transition-colors">
+              <td class="py-2 px-3 text-muted">${idx + 1}</td>
+              <td class="py-2 px-3 font-semibold text-main">${e.item}</td>
+              <td class="py-2 px-3 text-muted"><span class="px-2 py-0.5 rounded-lg text-[10px] bg-subcard border border-main">${e.category || 'عام'}</span></td>
+              <td class="py-2 px-3 text-center font-bold text-amber-400 whitespace-nowrap">${e.cost.toLocaleString()} ج.م</td>
+              ${includeImages ? `
+                <td class="py-2 px-3 text-center whitespace-nowrap">
+                  ${e.receipt_image ? `
+                    <button onclick="openLightbox('${e.receipt_image}', '${e.item} - ${e.cost} ج.م', 'فاتورة مصروف: ${e.item}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20">
+                      <img src="${e.receipt_image}" class="w-4 h-4 rounded object-cover">
+                      عرض الفاتورة 📷
+                    </button>
+                  ` : `<span class="text-muted text-[10px]">لا توجد صورة</span>`}
+                </td>
+              ` : ''}
+            </tr>
+          `;
+        });
+      }
+
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 2: COLLECTIONS & APARTMENTS STATUS TABLE -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between border-b border-main pb-2">
+            <h3 class="text-sm font-bold text-main flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              ثانياً: بيان تحصيلات اشتراكات السكان للشهر (${paidCount} سددوا / ${24 - paidCount} متبقي)
+            </h3>
+            <span class="text-xs text-muted font-medium">${paymentReceipts.length} إيصالات سداد مرفقة 📷</span>
+          </div>
+          <div class="overflow-x-auto border border-main rounded-xl">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-subcard text-muted border-b border-main">
+                <tr>
+                  <th class="py-2.5 px-3">الشقة</th>
+                  <th class="py-2.5 px-3">الساكن / المالك</th>
+                  <th class="py-2.5 px-3 text-center">الاشتراك</th>
+                  <th class="py-2.5 px-3 text-center">متأخرات سابقة</th>
+                  <th class="py-2.5 px-3 text-center">المدفوع</th>
+                  <th class="py-2.5 px-3 text-center">المتبقي</th>
+                  <th class="py-2.5 px-3 text-center">الحالة</th>
+                  ${includeImages ? `<th class="py-2.5 px-3 text-center">إيصال التحويل</th>` : ''}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-main">
+      `;
+
+      m.collections.forEach(c => {
+        const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+        const audit = auditsMap[c.row] || {};
+        const isPaid = (c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0;
+        const pastDebt = audit.totalPastArrears || 0;
+        const rem = (c.paid || 0) - (c.monthly_fee || 0);
+
+        html += `
+          <tr class="hover:bg-subcard/40 transition-colors">
+            <td class="py-2 px-3 font-bold text-main whitespace-nowrap">شقة ${apt.apt_num} <span class="text-[10px] text-muted font-normal">${apt.floor} ${apt.position}</span></td>
+            <td class="py-2 px-3 font-semibold text-main whitespace-nowrap">${c.name || apt.owner_name}</td>
+            <td class="py-2 px-3 text-center font-bold text-main whitespace-nowrap">${c.monthly_fee || 0} ج</td>
+            <td class="py-2 px-3 text-center text-muted whitespace-nowrap">${pastDebt > 0 ? `<span class="text-rose-400 font-bold">${pastDebt} ج</span>` : 'خالص'}</td>
+            <td class="py-2 px-3 text-center font-bold ${c.paid > 0 ? 'text-emerald-400' : 'text-muted'} whitespace-nowrap">${c.paid || 0} ج</td>
+            <td class="py-2 px-3 text-center whitespace-nowrap ${rem < 0 ? 'text-rose-400 font-bold' : 'text-muted'}">${rem < 0 ? rem + ' ج' : '0 ج'}</td>
+            <td class="py-2 px-3 text-center whitespace-nowrap">
+              ${isPaid 
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">تم السداد ✓</span>` 
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400">لم يسدد ✕</span>`}
+            </td>
+            ${includeImages ? `
+              <td class="py-2 px-3 text-center whitespace-nowrap">
+                ${c.receipt_image ? `
+                  <button onclick="openLightbox('${c.receipt_image}', 'إيصال سداد شقة ${apt.apt_num} (${c.name || apt.owner_name}) - ${c.paid} ج.م', 'إيصال تحويل: شقة ${apt.apt_num}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20">
+                    <img src="${c.receipt_image}" class="w-4 h-4 rounded object-cover">
+                    عرض الإيصال 📷
+                  </button>
+                ` : `<span class="text-muted text-[10px]">لا يوجد</span>`}
+              </td>
+            ` : ''}
+          </tr>
+        `;
+      });
+
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // SECTION 3: PHOTO RECEIPTS & INVOICES GALLERY (If enabled and receipts exist)
+      if (includeImages && totalReceiptsCount > 0) {
+        html += `
+          <!-- SECTION 3: ATTACHED RECEIPTS & INVOICES GALLERY -->
+          <div class="space-y-4 pt-4 border-t-2 border-dashed border-main">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-main flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                ثالثاً: ملحق صور الفواتير وإيصالات السداد المعتمدة (${totalReceiptsCount} مستند)
+              </h3>
+              <span class="text-[11px] text-muted">اضغط على أي صورة لتكبيرها وتحميلها</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        `;
+
+        // Add expense receipts
+        expenseReceipts.forEach((e, idx) => {
+          html += `
+            <div class="bg-subcard border border-main rounded-xl overflow-hidden shadow-sm group hover:border-amber-500/50 transition-all cursor-pointer" onclick="openLightbox('${e.receipt_image}', '${e.item} - ${e.cost} ج.م', 'فاتورة مصروف: ${e.item}')">
+              <div class="h-32 bg-black/60 overflow-hidden flex items-center justify-center">
+                <img src="${e.receipt_image}" alt="${e.item}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+              </div>
+              <div class="p-2.5 text-right">
+                <span class="text-amber-400 text-[10px] font-bold block">فاتورة مصروف</span>
+                <span class="text-xs font-bold text-main block truncate">${e.item}</span>
+                <span class="text-xs font-semibold text-muted">${e.cost.toLocaleString()} ج.م</span>
+              </div>
+            </div>
+          `;
+        });
+
+        // Add payment receipts
+        paymentReceipts.forEach((c, idx) => {
+          const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+          html += `
+            <div class="bg-subcard border border-main rounded-xl overflow-hidden shadow-sm group hover:border-emerald-500/50 transition-all cursor-pointer" onclick="openLightbox('${c.receipt_image}', 'إيصال سداد شقة ${apt.apt_num} (${c.name || apt.owner_name}) - ${c.paid} ج.م', 'إيصال تحويل: شقة ${apt.apt_num}')">
+              <div class="h-32 bg-black/60 overflow-hidden flex items-center justify-center">
+                <img src="${c.receipt_image}" alt="إيصال شقة ${apt.apt_num}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+              </div>
+              <div class="p-2.5 text-right">
+                <span class="text-emerald-400 text-[10px] font-bold block">إيصال تحويل / سداد</span>
+                <span class="text-xs font-bold text-main block truncate">شقة ${apt.apt_num} - ${c.name || apt.owner_name}</span>
+                <span class="text-xs font-semibold text-muted">${c.paid.toLocaleString()} ج.م</span>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      // REPORT FOOTER & SIGNATURES
+      html += `
+        <div class="border-t border-main pt-6 mt-6 flex flex-wrap items-center justify-between text-xs text-muted gap-4">
+          <div>
+            <p class="font-bold text-main">منظومة إدارة وحسابات برج العمارة</p>
+            <p class="text-[10px]">تم استخراج التقرير آلياً ومطابق لكافة الأرصدة المصرفية والخزينة.</p>
+          </div>
+          <div class="flex items-center gap-8 text-center">
+            <div>
+              <span class="text-[10px] text-muted block">أمين الخزينة</span>
+              <span class="text-xs font-bold text-main">________________</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-muted block">رئيس اتحاد الشاغلين</span>
+              <span class="text-xs font-bold text-main">________________</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function printMonthlyReport() {
+      renderMonthlyReport();
+      window.print();
+    }
+
+    function exportStandaloneHtmlReport() {
+      const select = document.getElementById('reportMonthSelect');
+      const mKey = select ? select.value : '8';
+      const m = APP_DATA.months[mKey];
+      const title = m ? m.title : 'شهر';
+
+      renderMonthlyReport();
+      const reportContent = document.getElementById('printableReportCard').innerHTML;
+
+      const fullHtml = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير مالي رسمي - ${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #0b1120; color: #f8fafc; padding: 24px; margin: 0; }
+    .bg-card { background: #1e293b; }
+    .bg-subcard { background: #0f172a; }
+    .border-main { border-color: #334155; }
+    .text-main { color: #f8fafc; }
+    .text-muted { color: #94a3b8; }
+    .text-emerald-400 { color: #34d399; }
+    .text-blue-400 { color: #60a5fa; }
+    .text-amber-400 { color: #fbbf24; }
+    .text-rose-400 { color: #f87171; }
+    .text-purple-400 { color: #c084fc; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; text-align: right; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #334155; }
+    th { background: #0f172a; color: #94a3b8; }
+    .grid { display: grid; gap: 12px; }
+    .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    img { max-width: 100%; border-radius: 8px; }
+    @media print {
+      body { background: white !important; color: black !important; padding: 0 !important; }
+      .bg-card, .bg-subcard { background: white !important; border: 1px solid #ddd !important; }
+      .text-main, .text-muted { color: black !important; }
+    }
+  </style>
+</head>
+<body>
+  <div style="max-width: 1000px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155;">
+    ${reportContent}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `التقرير_المالي_المعتمد_${title.replace(/\s+/g, '_')}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showSyncToast("تم تصدير ملف التقرير المستقل بنجاح! 📥");
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Theme init
       const savedTheme = localStorage.getItem('ALBORG_THEME');
@@ -2553,6 +3117,7 @@ alter publication supabase_realtime add table building_finance;</pre>
 
       loadAppData();
       initMonthSelector();
+      initReportMonthSelector();
       renderSelectedMonth();
       updateKPICards();
       initSupabase();
@@ -2580,6 +3145,10 @@ alter publication supabase_realtime add table building_finance;</pre>
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
       المصروفات
     </button>
+    <button onclick="switchTab('report')" id="mobileNavReport" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
+      <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      التقرير
+    </button>
     <button onclick="switchTab('flow')" id="mobileNavFlow" class="flex flex-col items-center gap-1 text-[10px] font-medium text-muted hover:text-main">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
       الخزينة
@@ -2588,6 +3157,30 @@ alter publication supabase_realtime add table building_finance;</pre>
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
       السحابة
     </button>
+  </div>
+
+
+  <!-- IMAGE LIGHTBOX MODAL -->
+  <div id="imageLightboxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4" onclick="closeLightboxModal()">
+    <div class="relative max-w-2xl w-full bg-card border border-main rounded-2xl p-5 shadow-2xl space-y-3" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-main pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-400 text-sm">📷</span>
+          <h4 id="lightboxTitle" class="text-xs font-bold text-main">معاينة صورة الإيصال / الفاتورة</h4>
+        </div>
+        <button onclick="closeLightboxModal()" class="text-muted hover:text-main text-lg font-bold">&times;</button>
+      </div>
+      <div class="max-h-[65vh] flex items-center justify-center overflow-hidden rounded-xl bg-black/60 p-2">
+        <img id="lightboxImg" src="" alt="صورة الإيصال" class="max-h-[60vh] max-w-full object-contain rounded-lg shadow-lg">
+      </div>
+      <div class="flex items-center justify-between pt-1 text-xs">
+        <span id="lightboxCaption" class="text-muted font-medium"></span>
+        <a id="lightboxDownloadBtn" href="" download="ايصال.jpg" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          تحميل الصورة
+        </a>
+      </div>
+    </div>
   </div>
 
 </body>
