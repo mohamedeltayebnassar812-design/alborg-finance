@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <!-- PWA & Web App Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1120">
@@ -43,6 +43,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden !important;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    img, table, svg {
+      max-width: 100%;
+    }
+    .safe-area-bottom {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    }
+    .safe-area-top {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
     body {
       font-family: 'Cairo', sans-serif;
     }
@@ -141,10 +160,10 @@
 
   </style>
 </head>
-<body class="bg-main text-main min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200">
+<body class="bg-main text-main min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden max-w-full">
 
   <!-- VIEWER MODE NOTICE BANNER (FOR RESIDENTS) -->
-  <div id="viewerBanner" class="bg-blue-900/40 border-b border-blue-500/20 px-4 py-1.5 text-center text-xs text-blue-200 flex items-center justify-center gap-2 no-print">
+  <div id="viewerBanner" class="bg-blue-900/40 border-b border-blue-500/20 px-3 py-1.5 text-center text-[11px] sm:text-xs text-blue-200 flex flex-wrap items-center justify-center gap-1.5 no-print">
     <span>👁️ أنت تتصفح الآن في <strong class="text-white">وضع المشاهدة (خاص بالسكان)</strong> — لا يمكن تعديل أو حذف البيانات.</span>
     <button onclick="openAdminLoginModal()" class="underline font-bold text-emerald-400 hover:text-emerald-300 mr-2 flex items-center gap-1">
       <span>🔐</span> تسجيل دخول الإدارة
@@ -285,7 +304,7 @@
           <span id="kpiBalance" class="text-xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">3,685</span>
           <span class="text-xs font-normal text-muted">ج.م (فائض متاح)</span>
         </div>
-        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+        <div class="mt-2 text-[10px] sm:text-xs text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-0.5">
           <span id="kpiBalanceSub">حتى نهاية أغسطس 2026 (شهر 8)</span>
           <span class="text-emerald-400 text-[10px] font-bold group-hover:underline">عرض الخزينة ↗</span>
         </div>
@@ -307,7 +326,7 @@
           <span id="kpiRevenue" class="text-xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">60,350</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
-        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+        <div class="mt-2 text-[10px] sm:text-xs text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-0.5">
           <span id="kpiRevenueSub">46,200 اشتراكات + 14,150 ديون وصيانة</span>
           <span class="text-blue-400 text-[10px] font-bold group-hover:underline">دفتر الشهور ↗</span>
         </div>
@@ -329,7 +348,7 @@
           <span id="kpiExpenses" class="text-xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">56,815</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
-        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+        <div class="mt-2 text-[10px] sm:text-xs text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-0.5">
           <span>المنفق الفعلي على البرج (10 شهور)</span>
           <span class="text-amber-400 text-[10px] font-bold group-hover:underline">سجل المصروفات ↗</span>
         </div>
@@ -351,7 +370,7 @@
           <span id="kpiArrears" class="text-xl sm:text-3xl font-extrabold text-rose-400 tracking-tight">1,700</span>
           <span class="text-xs font-normal text-muted">ج.م</span>
         </div>
-        <div class="mt-2 text-xs text-muted flex items-center justify-between">
+        <div class="mt-2 text-[10px] sm:text-xs text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-0.5">
           <span id="kpiArrearsSub">5 شقق فقط (19 شقة خالصة 100%)</span>
           <span class="text-rose-400 text-[10px] font-bold group-hover:underline">عرض المتأخرات ↗</span>
         </div>
@@ -397,16 +416,16 @@
 
       <!-- Month Selector Bar -->
       <div class="bg-card rounded-2xl p-3.5 sm:p-4 border border-main flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
-        <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-3 w-full md:w-auto">
           <label for="monthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر:</label>
           <select id="monthSelect" onchange="renderSelectedMonth()" class="flex-1 md:flex-none bg-subcard text-main border border-main rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer">
             <!-- Populated via JS -->
           </select>
-          <button onclick="openNewMonthModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all active:scale-95 whitespace-nowrap" title="ترحيل وإضافة شهر جديد">
+          <button onclick="openNewMonthModal()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/30 transition-all active:scale-95 whitespace-nowrap" title="ترحيل وإضافة شهر جديد">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>+ شهر جديد</span>
           </button>
-          <button onclick="downloadMonthPDF()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="معاينة وطباعة كشف الحساب وتنزيل PDF">
+          <button onclick="downloadMonthPDF()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="معاينة وطباعة كشف الحساب وتنزيل PDF">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span>📄 كشف PDF للشهر</span>
           </button>
@@ -457,7 +476,7 @@
 
         <!-- Left 2 Cols: Apartments Subscriptions & Quick Pay -->
         <div class="lg:col-span-2 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-2.5">
             <div class="flex items-center gap-2">
               <h2 class="text-sm font-bold text-main flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -598,7 +617,7 @@
 
       <!-- Arrears Table -->
       <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
-        <div class="p-3 bg-subcard border-b border-main flex items-center justify-between gap-3">
+        <div class="p-3 bg-subcard border-b border-main flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div class="relative w-full max-w-xs">
             <input type="text" id="arrearsSearch" oninput="filterArrearsTable()" placeholder="بحث برقم الشقة أو اسم الساكن..." class="w-full bg-card border border-main rounded-xl pl-3 pr-8 py-1.5 text-xs text-main placeholder-muted focus:outline-none focus:border-emerald-500">
             <svg class="w-4 h-4 text-muted absolute right-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -608,6 +627,11 @@
           </div>
         </div>
 
+        <!-- Mobile Swipe Hint -->
+        <div class="sm:hidden flex items-center justify-between text-[11px] text-muted bg-subcard/80 px-3 py-1.5 border-b border-main/50">
+          <span>📱 اسحب الجدول أفقياً لعرض كافة الأعمدة والإجراءات</span>
+          <span>⟷</span>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-right text-xs">
             <thead class="bg-subcard text-muted border-b border-main">
@@ -643,7 +667,7 @@
           <p class="text-xs text-muted mt-1">تتبع كافة بنود الإنفاق والصيانة والمرافق عبر تاريخ البرج</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <select id="expenseCategoryFilter" onchange="filterExpensesByCategory()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500">
             <option value="all">كل الفئات</option>
             <option value="كهرباء">كهرباء ومرافق</option>
@@ -712,12 +736,13 @@
           </table>
         </div>
       </div>
+    </div>
     
     <!-- TAB 5: OFFICIAL MONTHLY REPORT WITH RECEIPT PHOTOS -->
     <div id="tabContentReport" class="space-y-6 hidden">
       <!-- Report Top Controls Bar (No Print) -->
       <div class="bg-card rounded-2xl p-5 border border-main flex flex-wrap items-center justify-between gap-4 no-print shadow-sm">
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto">
           <label for="reportMonthSelect" class="text-xs font-bold text-muted whitespace-nowrap">الشهر المالي للتقرير:</label>
           <select id="reportMonthSelect" onchange="renderMonthlyReport()" class="bg-subcard text-main border border-main rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-purple-500 cursor-pointer">
             <!-- Populated via JS -->
@@ -913,7 +938,7 @@
 
       <p class="text-xs text-muted">يمكنك تعديل بيانات أي ساكن أو رقم هاتفه أو قيمة اشتراكه بسهولة بالضغط على زر التعديل أمام الشقة.</p>
 
-      <div class="overflow-y-auto flex-1 border border-main rounded-xl">
+      <div class="overflow-x-auto overflow-y-auto flex-1 border border-main rounded-xl">
         <table class="w-full text-right text-xs">
           <thead class="bg-subcard text-muted sticky top-0 border-b border-main">
             <tr>
@@ -1325,7 +1350,7 @@
       </div>
 
       <!-- Registry Table -->
-      <div class="overflow-y-auto flex-1 border border-main rounded-xl">
+      <div class="overflow-x-auto overflow-y-auto flex-1 border border-main rounded-xl">
         <table class="w-full text-right text-xs">
           <thead class="bg-subcard text-muted sticky top-0 border-b border-main text-[11px]">
             <tr>
@@ -1353,7 +1378,7 @@
   </div>
 
       <!-- PWA INSTALL FLOATING BANNER (FOR CHROME & MOBILE) -->
-  <div id="pwaFloatingBanner" class="hidden fixed bottom-16 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-50 bg-card/95 backdrop-blur-xl border border-emerald-500/50 rounded-2xl p-3.5 shadow-2xl shadow-black/80 flex items-center justify-between gap-3 transition-all duration-300 no-print">
+  <div id="pwaFloatingBanner" class="hidden fixed bottom-20 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-50 bg-card/95 backdrop-blur-xl border border-emerald-500/50 rounded-2xl p-3.5 shadow-2xl shadow-black/80 flex items-center justify-between gap-3 transition-all duration-300 no-print">
     <div class="flex items-center gap-3 min-w-0">
       <img src="icon-192.png" alt="أيقونة التطبيق" class="w-11 h-11 rounded-xl shadow-md border border-emerald-500/30 object-cover flex-shrink-0">
       <div class="min-w-0">
@@ -1428,7 +1453,7 @@
   <div id="monthPdfModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-2 sm:p-4">
     <div class="bg-card border border-main rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[94vh] flex flex-col">
       <!-- Modal Header Bar (No Print) -->
-      <div class="flex items-center justify-between border-b border-main pb-3 no-print">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-main pb-3 no-print">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-base">📄</div>
           <div>
@@ -5558,7 +5583,7 @@ end $$;</pre>
 
 
   <!-- MOBILE BOTTOM NAVIGATION BAR (PWA NATIVE FEEL) -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-main py-2 px-3 flex items-center justify-around no-print shadow-2xl">
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-main pt-1.5 pb-2 px-1 flex items-center justify-around no-print shadow-2xl safe-area-bottom">
     <button onclick="switchTab('month')" id="mobileNavMonth" class="flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       الشهور
