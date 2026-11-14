@@ -1639,6 +1639,7 @@ end $$;</pre>
     function saveAppData() {
       try {
         APP_DATA._last_saved = new Date().toISOString();
+        APP_DATA._client_id = LOCAL_CLIENT_ID;
         const jsonStr = JSON.stringify(APP_DATA);
         localStorage.setItem(STORAGE_KEY, jsonStr);
         localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', jsonStr);
@@ -1647,7 +1648,10 @@ end $$;</pre>
       }
 
       if (supabaseClient) {
-        pushToSupabase();
+        if (_cloudPushDebounceTimer) clearTimeout(_cloudPushDebounceTimer);
+        _cloudPushDebounceTimer = setTimeout(() => {
+          pushToSupabase();
+        }, 400);
       }
     }
 
@@ -1711,7 +1715,6 @@ end $$;</pre>
       });
 
       updateKPICards();
-      saveAppData();
     }
 
     // Calculate Accurate Past Arrears (With Written-off Bad Debts)
@@ -3556,6 +3559,8 @@ end $$;</pre>
     // ==========================================
     let supabaseClient = null;
     let isSyncingToCloud = false;
+    const LOCAL_CLIENT_ID = 'client_' + Math.random().toString(36).substring(2, 10);
+    let _cloudPushDebounceTimer = null;
 
     // PRE-CONFIGURED SUPABASE CREDENTIALS PROVIDED BY USER
     const DEFAULT_SUPABASE_URL = "https://nmdghpfxapawmhbcalcj.supabase.co";
@@ -3731,7 +3736,7 @@ end $$;</pre>
           }
         } else {
           updateSupabaseUIState(true);
-          showSyncToast("تم الحفظ والمزامنة السحابية بنجاح ☁️ ✓");
+          // Quiet background sync without annoying popup loop
         }
       } catch (err) {
         console.error("Failed to push to Supabase:", err);
@@ -3747,13 +3752,19 @@ end $$;</pre>
           .channel('public:building_finance')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'building_finance' }, payload => {
             if (payload.new && payload.new.data) {
-              console.log("Realtime event received from other client!");
+              // Ignore our own client echo!
+              if (payload.new.data._client_id === LOCAL_CLIENT_ID) {
+                return;
+              }
+              console.log("Realtime event received from external device!");
               APP_DATA = payload.new.data;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+              } catch(e) {}
               recalculateAllBalances();
               renderSelectedMonth();
               renderArrearsTable();
-              showSyncToast("⚡ تم استلام تحديث جديد لحظياً من جهاز آخر!");
+              showSyncToast("⚡ تم استلام تحديث لحظي من جهاز آخر!");
             }
           })
           .subscribe();
