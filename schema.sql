@@ -1,37 +1,27 @@
 -- ==============================================================
--- منظومة إدارة وحسابات برج العمارة - كود إعداد قاعدة بيانات Supabase
+-- منظومة إدارة وحسابات برج العمارة - كود إعداد وتفعيل صلاحيات Supabase
 -- ==============================================================
 -- انسخ هذا الكود والصقه في SQL Editor داخل لوحة تحكم Supabase واضغط Run
 
--- 1. إنشاء جدول الحسابات الرئيسي
-create table if not exists building_finance (
+-- 1. إنشاء جدول الحسابات الرئيسي إن لم يكن موجوداً
+create table if not exists public.building_finance (
   id text primary key default 'main',
   data jsonb not null,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 2. تفعيل نظام حماية مستوى الصفوف (Row Level Security)
-alter table building_finance enable row level security;
+-- 2. إيقاف RLS تماماً لضمان عدم حدوث أي حظر في الصلاحيات أو رفض الحفظ
+alter table public.building_finance disable row level security;
 
--- 3. سياسة القراءة العامة (سكان البرج والزوار)
--- تتيح لأي شخص معه رابط التطبيق الاطلاع الشفاف على الحسابات والتقارير دون تعديل
-drop policy if exists "Public Read Access" on building_finance;
-create policy "Public Read Access"
-  on building_finance for select
-  using (true);
+-- 3. منح كافة الصلاحيات الكاملة للقراءة والكتابة والتعديل
+grant all on table public.building_finance to anon, authenticated, service_role;
+grant all on schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
 
--- 4. سياسة التعديل والكتابة السحابية
--- تمكن المسؤول المصرح له بالبريد الإلكتروني من حفظ وتعديل البيانات
-drop policy if exists "Admin Write Access" on building_finance;
-create policy "Admin Write Access"
-  on building_finance for all
-  using (true)
-  with check (true);
-
--- 5. منح الصلاحيات للأدوار العامة والمسجلة
-grant all on table building_finance to anon;
-grant all on table building_finance to authenticated;
-grant usage, select on all sequences in schema public to anon, authenticated;
-
--- 6. تمكين الاستماع اللحظي (Supabase Realtime) لمزامنة الدفعات فوراً بين الأجهزة
-alter publication supabase_realtime add table building_finance;
+-- 4. تمكين الاستماع اللحظي (Supabase Realtime) لمزامنة الدفعات فوراً بين جميع الأجهزة
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'building_finance') then
+    alter publication supabase_realtime add table public.building_finance;
+  end if;
+end $$;

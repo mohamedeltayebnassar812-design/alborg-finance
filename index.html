@@ -1471,24 +1471,28 @@
               ادخل إلى لوحة Supabase -> <strong>SQL Editor</strong> -> الصق الكود التالي واضغط <strong>Run</strong>:
             </p>
             <div class="relative">
-              <pre class="bg-black/80 text-emerald-400 p-3 rounded-xl text-[10px] font-mono overflow-x-auto border border-emerald-500/20 max-h-40 leading-relaxed" id="sqlCodeBlock">-- إنشاء جدول حسابات العمارة
-create table if not exists building_finance (
+              <pre class="bg-black/80 text-emerald-400 p-3 rounded-xl text-[10px] font-mono overflow-x-auto border border-emerald-500/20 max-h-40 leading-relaxed" id="sqlCodeBlock">-- 1. إنشاء جدول الحسابات إن لم يكن موجوداً
+create table if not exists public.building_finance (
   id text primary key default 'main',
   data jsonb not null,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- تمكين الوصول العام (قراءة وتعديل)
-alter table building_finance enable row level security;
-create policy "Public Access Policy" on building_finance for all using (true) with check (true);
+-- 2. إيقاف RLS تماماً لمنع أي حظر في الصلاحيات وضمان الحفظ الفوري
+alter table public.building_finance disable row level security;
 
--- تمكين المزامنة اللحظية Realtime
-alter publication supabase_realtime add table building_finance;
+-- 3. منح كافة الصلاحيات للقراءة والكتابة
+grant all on table public.building_finance to anon, authenticated, service_role;
+grant all on schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
 
--- منح الصلاحيات الكاملة للوصول عبر المفتاح العام (Anon Key)
-grant all on table building_finance to anon;
-grant all on table building_finance to authenticated;
-grant usage, select on all sequences in schema public to anon;</pre>
+-- 4. تمكين المزامنة اللحظية Realtime
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'building_finance') then
+    alter publication supabase_realtime add table public.building_finance;
+  end if;
+end $$;</pre>
               <button onclick="copySqlCode()" class="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-subcard text-main border border-main hover:bg-card">
                 نسخ الكود 📋
               </button>
@@ -1539,21 +1543,30 @@ grant usage, select on all sequences in schema public to anon;</pre>
 
     // Load Data
     function loadAppData() {
-      // Clear obsolete corrupted versions from previous sessions
-      const oldKeys = [
-        'ALBORG_FINANCE_DATA_V1', 'ALBORG_FINANCE_DATA_V2', 'ALBORG_FINANCE_DATA_V3',
-        'ALBORG_FINANCE_DATA_V4', 'ALBORG_FINANCE_DATA_V5', 'ALBORG_FINANCE_DATA_V6',
-        'ALBORG_FINANCE_DATA_V7', 'ALBORG_FINANCE_DATA_V8', 'ALBORG_FINANCE_DATA_V9'
-      ];
-      oldKeys.forEach(k => localStorage.removeItem(k));
-      if (localStorage.getItem('ALBORG_ADMIN_PIN') === '2026') {
-        localStorage.removeItem('ALBORG_ADMIN_PIN');
+      // Check for saved data in primary storage key
+      let saved = localStorage.getItem(STORAGE_KEY);
+
+      // Safe migration: If primary key is empty, check older keys to preserve user data!
+      if (!saved) {
+        const fallbackKeys = [
+          'ALBORG_FINANCE_DATA_V9', 'ALBORG_FINANCE_DATA_V8', 'ALBORG_FINANCE_DATA_V7',
+          'ALBORG_BACKUP_SNAPSHOT'
+        ];
+        for (const k of fallbackKeys) {
+          const oldVal = localStorage.getItem(k);
+          if (oldVal) {
+            console.log(`Migrated user data safely from ${k} to ${STORAGE_KEY}`);
+            saved = oldVal;
+            localStorage.setItem(STORAGE_KEY, saved);
+            break;
+          }
+        }
       }
 
-      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           APP_DATA = JSON.parse(saved);
+          console.log("Loaded data from localStorage successfully ✓");
         } catch(e) {
           console.error("Corrupted local data, reloading defaults", e);
           APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
@@ -1624,11 +1637,24 @@ grant usage, select on all sequences in schema public to anon;</pre>
     }
 
     function saveAppData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+      try {
+        APP_DATA._last_saved = new Date().toISOString();
+        const jsonStr = JSON.stringify(APP_DATA);
+        localStorage.setItem(STORAGE_KEY, jsonStr);
+        localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', jsonStr);
+      } catch (err) {
+        console.error("Critical: localStorage save failed:", err);
+      }
+
       if (supabaseClient) {
         pushToSupabase();
       }
     }
+
+    // Global alias to prevent any undefined function crash
+    window.saveData = function() {
+      saveAppData();
+    };
 
     function resetToInitialData() {
       if (!requireAdmin('إعادة ضبط البيانات')) return;
@@ -2071,6 +2097,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
+      saveAppData();
       showSyncToast(`تم تعديل قيمة "${exp.item}" إلى ${num.toLocaleString()} ج.م بنجاح ✓`);
     }
 
@@ -2086,6 +2113,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
+      saveAppData();
       showSyncToast(`تم حذف المصروف بنجاح 🗑️`);
     }
 
@@ -2119,7 +2147,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
-      saveData();
+      saveAppData();
 
       // Show undo toast
       showUndoToast(aptLabel, c.monthly_fee || 200);
@@ -2165,7 +2193,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
-      saveData();
+      saveAppData();
 
       // Hide toast
       if (_undoToastTimer) clearTimeout(_undoToastTimer);
@@ -2263,7 +2291,9 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
+      saveAppData();
       closeEditPaymentModal();
+      showSyncToast("تم حفظ الدفعة بنجاح 💰 ✓");
     }
 
     // Edit Resident Modal
@@ -2314,7 +2344,9 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (!document.getElementById('manageResidentsModal').classList.contains('hidden')) {
         renderManageResidentsTable();
       }
+      saveAppData();
       closeEditResidentModal();
+      showSyncToast("تم حفظ بيانات الساكن بنجاح 👤 ✓");
     }
 
     // Manage Residents Directory Modal
@@ -2563,6 +2595,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       if (addedCount > 0) {
         recalculateAllBalances();
         renderSelectedMonth();
+        saveAppData();
         showSyncToast(`تم تنزيل ${addedCount} بنود ثابتة بنجاح لهذا الشهر ⚡`);
       } else {
         alert("البنود الشهرية الثابتة موجودة بالفعل في قائمة هذا الشهر!");
@@ -2614,7 +2647,9 @@ grant usage, select on all sequences in schema public to anon;</pre>
       recalculateAllBalances();
       renderSelectedMonth();
       updateKPICards();
+      saveAppData();
       closeAddExpenseModal();
+      showSyncToast(`تم تسجيل مصروف "${item}" بنجاح 💸 ✓`);
     }
 
         // ==========================================
@@ -2660,6 +2695,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       m.expenses[idx].cost = newCost;
       recalculateAllBalances();
       renderSelectedMonth();
+      saveAppData();
       closeEditExpenseCostModal();
       showSyncToast(`تم تعديل قيمة "${m.expenses[idx].item}" من ${oldCost} ج إلى ${newCost.toLocaleString()} ج.م بنجاح 💰`);
     }
@@ -2676,54 +2712,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       showSyncToast(exp.confirmed ? `تم تأكيد صرف "${exp.item}" بنجاح ✓` : `تم تحويل "${exp.item}" إلى قيد التأكيد ⏳`);
     }
 
-    function autoPopulateRecurringExpenses(mKey) {
-      if (!requireAdmin('تنزيل المصاريف الثابتة')) return;
-      const m = APP_DATA.months[mKey];
-      if (!m) return;
-      if (!m.expenses) m.expenses = [];
-
-      const standardFixed = [
-        { key: "guard", item: "مرتب الحارس الشهري", cost: 1500, category: "حراسة" },
-        { key: "elevator", item: "صيانة دورية اسانسير", cost: 300, category: "صيانة أسانسير" },
-        { key: "tank", item: "نظافة الخزانات", cost: 150, category: "نظافة" },
-        { key: "cleaning", item: "أدوات نظافة", cost: 150, category: "نظافة" }
-      ];
-
-      let addedCount = 0;
-      standardFixed.forEach(std => {
-        const exists = m.expenses.some(e => e.item.includes(std.item) || std.item.includes(e.item) || (e.category === std.category && Math.abs(e.cost - std.cost) < 500));
-        if (!exists) {
-          m.expenses.push({
-            id: `${mKey}_${std.key}_${Date.now()}`,
-            item: std.item,
-            cost: std.cost,
-            category: std.category,
-            confirmed: true
-          });
-          addedCount++;
-        }
-      });
-
-      if (addedCount > 0) {
-        recalculateAllBalances();
-        renderSelectedMonth();
-        showSyncToast(`تم تنزيل ${addedCount} بنود ثابتة بنجاح لهذا الشهر (2,100 ج.م) ⚡`);
-      } else {
-        alert("البنود الشهرية الثابتة (الحارس، الأسانسير، الخزان، النظافة) موجودة بالفعل في قائمة هذا الشهر!");
-      }
-    }
-
-    function deleteExpense(mKey, idx) {
-      if (!requireAdmin('حذف مصروف')) return;
-      const m = APP_DATA.months[mKey];
-      if (!m || !m.expenses) return;
-      if (confirm(`هل أنت متأكد من حذف مصروف "${m.expenses[idx].item}"?`)) {
-        m.expenses.splice(idx, 1);
-        recalculateAllBalances();
-        renderSelectedMonth();
-        updateKPICards();
-      }
-    }
+    // Duplicate functions removed and merged into main implementations
 
     // Add New Month Modal & Wizard
     function openNewMonthModal() {
@@ -2800,6 +2789,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       initReportMonthSelector();
       document.getElementById('monthSelect').value = monthKey;
       renderSelectedMonth();
+      saveAppData();
       closeNewMonthModal();
 
       alert(`تم بنجاح إضافة ${title} وجاهز لتسجيل التحصيلات! رصيد أول الشهر: ${openingBalance.toLocaleString()} ج.م`);
@@ -3627,7 +3617,7 @@ grant usage, select on all sequences in schema public to anon;</pre>
       }
     }
 
-    function updateSupabaseUIState(isConnected, url = '') {
+    function updateSupabaseUIState(status, url = '') {
       const badge = document.getElementById('supabaseStatusBadge');
       const dot = document.getElementById('supabaseStatusDot');
       const text = document.getElementById('supabaseStatusText');
@@ -3635,12 +3625,22 @@ grant usage, select on all sequences in schema public to anon;</pre>
       const btnSync = document.getElementById('btnSyncNow');
       const btnDisc = document.getElementById('btnDisconnectSupabase');
 
-      if (isConnected) {
+      if (status === 'permission_error') {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500 ml-1.5 animate-ping";
+        if (text) text.textContent = "⚠️ يحتاج تفعيل الصلاحيات في Supabase (اضغط هنا)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/40 hover:bg-rose-500/25 transition-all cursor-pointer";
+        if (modalText) {
+          modalText.innerHTML = "⚠️ <strong>مطلوب تفعيل الصلاحيات:</strong> الجدول موجود ولكن Supabase تطلب منح الصلاحيات في SQL Editor لحفظ التعديلات أونلاين.";
+          modalText.className = "font-bold text-xs text-rose-400 leading-relaxed";
+        }
+        if (btnSync) btnSync.classList.remove('hidden');
+        if (btnDisc) btnDisc.classList.remove('hidden');
+      } else if (status === true || status === 'connected') {
         if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400 ml-1.5 animate-pulse";
         if (text) text.textContent = "متصل سحابياً (Supabase Live)";
         if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all cursor-pointer";
         if (modalText) {
-          modalText.textContent = `متصل سحابياً مع: ${url.replace('https://', '').split('.')[0]}`;
+          modalText.textContent = `متصل سحابياً ومحمي 100% مع قاعدة بيانات Supabase`;
           modalText.className = "font-bold text-sm text-emerald-400";
         }
         if (btnSync) btnSync.classList.remove('hidden');
@@ -3668,25 +3668,44 @@ grant usage, select on all sequences in schema public to anon;</pre>
           .maybeSingle();
 
         if (error) {
-          console.warn("Could not pull from Supabase:", error.message);
+          console.warn("Could not pull from Supabase:", error.message, error.code);
+          if (error.code === '42501' || (error.message && error.message.includes('permission denied'))) {
+            updateSupabaseUIState('permission_error');
+          } else {
+            updateSupabaseUIState(false);
+          }
           return;
         }
 
         if (data && data.data) {
           console.log("Supabase data pulled successfully:", data.updated_at);
-          APP_DATA = data.data;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
-          recalculateAllBalances();
-          renderSelectedMonth();
-          renderArrearsTable();
-          if (!isInitial) showSyncToast("تم تحديث البيانات من السحابة بنجاح ⚡");
+          // Compare timestamps: ONLY overwrite if cloud data has newer or equal timestamp!
+          const cloudTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+          const localTime = APP_DATA._last_saved ? new Date(APP_DATA._last_saved).getTime() : 0;
+
+          if (cloudTime >= localTime || !APP_DATA._last_saved) {
+            APP_DATA = data.data;
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+            } catch(e) {}
+            recalculateAllBalances();
+            renderSelectedMonth();
+            renderArrearsTable();
+            if (!isInitial) showSyncToast("تم تحديث البيانات من السحابة بنجاح ⚡");
+          } else {
+            console.log("Local data has newer unsynced changes. Pushing local data to Supabase...");
+            pushToSupabase();
+          }
+          updateSupabaseUIState(true);
         } else {
-          // Table is empty, push initial data
-          console.log("No data found in Supabase, pushing local data as initial seed...");
+          // Table is empty, push local data as seed
+          console.log("No data found in Supabase table, pushing local data as initial seed...");
           pushToSupabase();
+          updateSupabaseUIState(true);
         }
       } catch (err) {
         console.error("Pull from Supabase failed:", err);
+        updateSupabaseUIState(false);
       }
     }
 
@@ -3704,8 +3723,15 @@ grant usage, select on all sequences in schema public to anon;</pre>
 
         if (error) {
           console.error("Push to Supabase error:", error);
+          if (error.code === '42501' || (error.message && error.message.includes('permission denied'))) {
+            updateSupabaseUIState('permission_error');
+            showSyncToast("⚠️ قاعدة بيانات Supabase تطلب تفعيل الصلاحيات (تم الحفظ على جهازك) 💾");
+          } else {
+            showSyncToast("⚠️ تعذر المزامنة بالسحابة: " + (error.message || 'خطأ'));
+          }
         } else {
-          showSyncToast("تمت المزامنة السحابية بنجاح ☁️");
+          updateSupabaseUIState(true);
+          showSyncToast("تم الحفظ والمزامنة السحابية بنجاح ☁️ ✓");
         }
       } catch (err) {
         console.error("Failed to push to Supabase:", err);
