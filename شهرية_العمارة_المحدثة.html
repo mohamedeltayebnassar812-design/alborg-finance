@@ -1641,17 +1641,16 @@ end $$;</pre>
         APP_DATA._last_saved = new Date().toISOString();
         APP_DATA._client_id = LOCAL_CLIENT_ID;
         const jsonStr = JSON.stringify(APP_DATA);
+        // 1. Instant local persistence (0ms)
         localStorage.setItem(STORAGE_KEY, jsonStr);
         localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', jsonStr);
       } catch (err) {
         console.error("Critical: localStorage save failed:", err);
       }
 
+      // 2. Instant cloud push with concurrency queue protection
       if (supabaseClient) {
-        if (_cloudPushDebounceTimer) clearTimeout(_cloudPushDebounceTimer);
-        _cloudPushDebounceTimer = setTimeout(() => {
-          pushToSupabase();
-        }, 400);
+        pushToSupabase();
       }
     }
 
@@ -2140,6 +2139,11 @@ end $$;</pre>
       const c = m.collections.find(x => x.row === row);
       if (!c) return;
 
+      // Duplicate prevention: if already fully paid, prevent double action
+      if ((c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0) {
+        return;
+      }
+
       // Save previous state for undo
       _undoPayState = { mKey, row, prevPaid: c.paid || 0 };
 
@@ -2257,6 +2261,7 @@ end $$;</pre>
     function closeEditPaymentModal() {
       document.getElementById('editPaymentModal').classList.add('hidden');
       editingPaymentTarget = null;
+      window._isSubmittingPayment = false;
     }
 
     function setPresetPayment(type) {
@@ -2277,7 +2282,8 @@ end $$;</pre>
     }
 
     function confirmEditPayment() {
-      if (!editingPaymentTarget) return;
+      if (!editingPaymentTarget || window._isSubmittingPayment) return;
+      window._isSubmittingPayment = true;
       const { mKey, row } = editingPaymentTarget;
       const amount = parseFloat(document.getElementById('payModalAmount').value) || 0;
 
@@ -2616,9 +2622,11 @@ end $$;</pre>
 
     function closeAddExpenseModal() {
       document.getElementById('addExpenseModal').classList.add('hidden');
+      window._isSubmittingExpense = false;
     }
 
     function confirmAddExpense() {
+      if (window._isSubmittingExpense) return;
       const mKey = document.getElementById('monthSelect').value;
       const m = APP_DATA.months[mKey];
       if (!m) return;
@@ -2730,9 +2738,12 @@ end $$;</pre>
 
     function closeNewMonthModal() {
       document.getElementById('newMonthModal').classList.add('hidden');
+      window._isSubmittingMonth = false;
     }
 
     function confirmAddNewMonth() {
+      if (window._isSubmittingMonth) return;
+      window._isSubmittingMonth = true;
       const monthNum = document.getElementById('newMonthNum').value;
       const year = document.getElementById('newMonthYear').value;
       const monthKey = `${monthNum}_${year}`;
@@ -2797,6 +2808,20 @@ end $$;</pre>
 
       alert(`تم بنجاح إضافة ${title} وجاهز لتسجيل التحصيلات! رصيد أول الشهر: ${openingBalance.toLocaleString()} ج.م`);
     }
+
+    // Network Online/Offline Listeners for Safe Cloud Sync
+    window.addEventListener('online', () => {
+      console.log("[Network] Reconnected online. Triggering cloud reconciliation...");
+      updateSupabaseUIState(true);
+      showSyncToast("⚡ عاد الاتصال بالإنترنت - تم تحديث المزامنة السحابية تلقائياً ✓");
+      if (supabaseClient) pushToSupabase();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log("[Network] Disconnected offline.");
+      updateSupabaseUIState('offline');
+      showSyncToast("انقطع الاتصال بالإنترنت - يتم الحفظ محلياً على جهازك بأمان 💾");
+    });
 
     // TAB 2: Arrears Table
     function renderArrearsTable() {
@@ -3559,8 +3584,8 @@ end $$;</pre>
     // ==========================================
     let supabaseClient = null;
     let isSyncingToCloud = false;
+    let hasPendingCloudPush = false;
     const LOCAL_CLIENT_ID = 'client_' + Math.random().toString(36).substring(2, 10);
-    let _cloudPushDebounceTimer = null;
 
     // PRE-CONFIGURED SUPABASE CREDENTIALS PROVIDED BY USER
     const DEFAULT_SUPABASE_URL = "https://nmdghpfxapawmhbcalcj.supabase.co";
@@ -3630,7 +3655,11 @@ end $$;</pre>
       const btnSync = document.getElementById('btnSyncNow');
       const btnDisc = document.getElementById('btnDisconnectSupabase');
 
-      if (status === 'permission_error') {
+      if (status === 'offline') {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-slate-400 ml-1.5";
+        if (text) text.textContent = "📴 غير متصل بالإنترنت (الحفظ محلي آمن)";
+        if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-500/10 text-slate-300 border border-slate-500/30";
+      } else if (status === 'permission_error') {
         if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500 ml-1.5 animate-ping";
         if (text) text.textContent = "⚠️ يحتاج تفعيل الصلاحيات في Supabase (اضغط هنا)";
         if (badge) badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/40 hover:bg-rose-500/25 transition-all cursor-pointer";
@@ -3715,16 +3744,34 @@ end $$;</pre>
     }
 
     async function pushToSupabase() {
-      if (!supabaseClient || isSyncingToCloud) return;
+      if (!supabaseClient) return;
+
+      // Offline safety: do not attempt push if browser is offline
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        console.log("[PWA] Device is offline. Saved locally. Cloud push will resume upon reconnect.");
+        updateSupabaseUIState('offline');
+        return;
+      }
+
+      // Concurrency Queue: If already pushing, queue next push so no changes are ever dropped
+      if (isSyncingToCloud) {
+        hasPendingCloudPush = true;
+        return;
+      }
+
       isSyncingToCloud = true;
+      hasPendingCloudPush = false;
+
       try {
+        const payload = {
+          id: 'main',
+          data: APP_DATA,
+          updated_at: new Date().toISOString()
+        };
+
         const { error } = await supabaseClient
           .from('building_finance')
-          .upsert({
-            id: 'main',
-            data: APP_DATA,
-            updated_at: new Date().toISOString()
-          });
+          .upsert(payload);
 
         if (error) {
           console.error("Push to Supabase error:", error);
@@ -3732,16 +3779,20 @@ end $$;</pre>
             updateSupabaseUIState('permission_error');
             showSyncToast("⚠️ قاعدة بيانات Supabase تطلب تفعيل الصلاحيات (تم الحفظ على جهازك) 💾");
           } else {
-            showSyncToast("⚠️ تعذر المزامنة بالسحابة: " + (error.message || 'خطأ'));
+            console.warn("Cloud push warning:", error.message);
           }
         } else {
           updateSupabaseUIState(true);
-          // Quiet background sync without annoying popup loop
         }
       } catch (err) {
         console.error("Failed to push to Supabase:", err);
       } finally {
         isSyncingToCloud = false;
+        // If an update occurred while the network request was in-flight, push latest state immediately
+        if (hasPendingCloudPush) {
+          hasPendingCloudPush = false;
+          pushToSupabase();
+        }
       }
     }
 
