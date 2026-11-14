@@ -1,33 +1,48 @@
 {
+  "id": "./index.html",
   "name": "منظومة إدارة وحسابات برج العمارة",
   "short_name": "حسابات البرج",
-  "description": "تطبيق إدارة اشتراكات السكان، تسجيل المصروفات، ومتابعة الخزينة والتحصيل السريع",
+  "description": "تطبيق متكامل لإدارة اشتراكات السكان، تسجيل المصروفات، ومتابعة الخزينة والتحصيل السريع للبرج",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "background_color": "#0b1120",
   "theme_color": "#0b1120",
   "lang": "ar",
   "dir": "rtl",
-  "categories": ["finance", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "categories": ["finance", "productivity", "business", "utilities"],
   "icons": [
     {
       "src": "favicon.png",
       "sizes": "64x64",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

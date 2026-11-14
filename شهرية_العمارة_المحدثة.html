@@ -10,7 +10,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="حسابات البرج">
+  <meta name="application-name" content="حسابات البرج">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="icon" type="image/png" href="favicon.png">
   <title>منظومة إدارة وحسابات برج العمارة - النسخة المحدثة الدقيقة</title>
   <!-- Supabase Client CDN -->
@@ -1284,7 +1287,79 @@
     </div>
   </div>
 
-    <!-- MODAL: MONTH PDF REPORT PREVIEW & PRINT -->
+      <!-- PWA INSTALL FLOATING BANNER (FOR CHROME & MOBILE) -->
+  <div id="pwaFloatingBanner" class="hidden fixed bottom-16 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-50 bg-card/95 backdrop-blur-xl border border-emerald-500/50 rounded-2xl p-3.5 shadow-2xl shadow-black/80 flex items-center justify-between gap-3 transition-all duration-300 no-print">
+    <div class="flex items-center gap-3 min-w-0">
+      <img src="icon-192.png" alt="أيقونة التطبيق" class="w-11 h-11 rounded-xl shadow-md border border-emerald-500/30 object-cover flex-shrink-0">
+      <div class="min-w-0">
+        <h4 class="text-xs font-black text-main flex items-center gap-1.5 truncate">
+          <span>تطبيق برج العمارة</span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-400 font-bold">PWA</span>
+        </h4>
+        <p class="text-[10px] text-muted truncate">ثبّته على هاتفك للفتح السريع والعمل أوفلاين</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button onclick="installPwaApp()" class="px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-md shadow-emerald-600/30 active:scale-95 transition-all whitespace-nowrap">
+        تثبيت 📲
+      </button>
+      <button onclick="dismissPwaBanner()" class="p-1.5 text-muted hover:text-main text-sm font-bold leading-none" title="إغلاق">&times;</button>
+    </div>
+  </div>
+
+  <!-- MODAL: PWA INSTALLATION GUIDE FOR CHROME & MOBILE -->
+  <div id="pwaGuideModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4 no-print">
+    <div class="bg-card border border-main rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-bold">📲</div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-main">تثبيت التطبيق على هاتفك</h3>
+            <span class="text-[11px] text-muted">خطوات التثبيت السهل من متصفح جوجل كروم</span>
+          </div>
+        </div>
+        <button onclick="closePwaGuideModal()" class="text-muted hover:text-main text-lg font-bold p-1">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs overflow-y-auto pr-1">
+        <div class="p-3 rounded-xl bg-subcard border border-main flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">1</div>
+          <div>
+            <p class="font-bold text-main">اضغط على زر القائمة (⋮) أعلى متصفح جوجل كروم</p>
+            <p class="text-[11px] text-muted mt-0.5">ستجده في الزاوية العلوية بجوار شريط العنوان.</p>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-subcard border border-main flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">2</div>
+          <div>
+            <p class="font-bold text-main">اضغط على خيار «تثبيت التطبيق» (Install app)</p>
+            <p class="text-[11px] text-muted mt-0.5">أو خيار «إضافة إلى الشاشة الرئيسية» (Add to Home screen).</p>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-subcard border border-main flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">3</div>
+          <div>
+            <p class="font-bold text-main">اضغط «تثبيت» وسينزل التطبيق فوراً</p>
+            <p class="text-[11px] text-muted mt-0.5">سيظهر رمز التطبيق 🏢 على شاشة هاتفك مع باقي البرامج ويعمل بشاشة كاملة وبدون متصفح!</p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="tryDirectInstallAgain()" class="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all">
+            <span>إعادة محاولة التثبيت الفوري الآن 📲</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-main flex items-center justify-end">
+        <button onclick="closePwaGuideModal()" class="px-4 py-1.5 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MONTH PDF REPORT PREVIEW & PRINT -->
   <div id="monthPdfModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-2 sm:p-4">
     <div class="bg-card border border-main rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[94vh] flex flex-col">
       <!-- Modal Header Bar (No Print) -->
@@ -3761,28 +3836,79 @@ grant usage, select on all sequences in schema public to anon;</pre>
     // PWA WEB APP INSTALL & SERVICE WORKER LOGIC
     // ==========================================
     let deferredPrompt = null;
+    let pwaBannerDismissed = sessionStorage.getItem('pwa_banner_dismissed') === 'true';
+
+    function isPwaStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || 
+             window.navigator.standalone === true || 
+             document.referrer.includes('android-app://');
+    }
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('[PWA] ServiceWorker registered with scope:', reg.scope))
+          .then(reg => {
+            console.log('[PWA] ServiceWorker registered with scope:', reg.scope);
+            // Check for updates
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    showSuccessToast('تم تحديث التطبيق إلى أحدث إصدار 🚀');
+                  }
+                };
+              }
+            };
+          })
           .catch(err => console.log('[PWA] ServiceWorker registration failed:', err));
       });
     }
 
     window.addEventListener('beforeinstallprompt', e => {
+      // Prevent the default browser mini-infobar so our custom prompt controls the UX
       e.preventDefault();
       deferredPrompt = e;
+      console.log('[PWA] beforeinstallprompt captured successfully');
+
       const btn = document.getElementById('btnInstallPwa');
-      if (btn) btn.classList.remove('hidden');
+      if (btn && !isPwaStandalone()) btn.classList.remove('hidden');
+
+      // Show floating prompt banner on mobile if not in standalone and not dismissed
+      if (!isPwaStandalone() && !pwaBannerDismissed) {
+        showPwaFloatingBanner();
+      }
     });
 
     window.addEventListener('appinstalled', () => {
       deferredPrompt = null;
+      hidePwaFloatingBanner();
       const btn = document.getElementById('btnInstallPwa');
       if (btn) btn.classList.add('hidden');
-      showSyncToast("تم تثبيت التطبيق بنجاح على جهازك! 🎉");
+      closePwaGuideModal();
+      showSuccessToast("تم تثبيت التطبيق بنجاح على شاشة هاتفك! 🎉");
     });
+
+    function showPwaFloatingBanner() {
+      if (isPwaStandalone() || pwaBannerDismissed) return;
+      const banner = document.getElementById('pwaFloatingBanner');
+      if (banner) {
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function hidePwaFloatingBanner() {
+      const banner = document.getElementById('pwaFloatingBanner');
+      if (banner) {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function dismissPwaBanner() {
+      pwaBannerDismissed = true;
+      sessionStorage.setItem('pwa_banner_dismissed', 'true');
+      hidePwaFloatingBanner();
+    }
 
     function installPwaApp() {
       if (deferredPrompt) {
@@ -3790,20 +3916,54 @@ grant usage, select on all sequences in schema public to anon;</pre>
         deferredPrompt.userChoice.then(choiceResult => {
           if (choiceResult.outcome === 'accepted') {
             console.log('[PWA] User accepted install prompt');
+            hidePwaFloatingBanner();
           }
           deferredPrompt = null;
-          const btn = document.getElementById('btnInstallPwa');
-          if (btn) btn.classList.add('hidden');
         });
       } else {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIOS) {
-          alert("لتثبيت التطبيق على شاشة الآيفون الرئيسية:\n\n1. اضغط على زر المشاركة (Share) ⎋ في أسفل سفاري.\n2. مرر للأسفل واختر 'إضافة إلى الصفحة الرئيسية' (Add to Home Screen) ➕.\n3. اضغط إضافة (Add).");
-        } else {
-          alert("يمكنك تثبيت هذا التطبيق عبر الضغط على خيارات المتصفح (⋮) ثم اختيار 'تثبيت التطبيق' أو 'Install App'.");
-        }
+        // If deferredPrompt is not available (e.g. Chrome hasn't fired it yet or user is on iOS)
+        openPwaGuideModal();
       }
     }
+
+    function tryDirectInstallAgain() {
+      if (deferredPrompt) {
+        closePwaGuideModal();
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choiceResult => {
+          if (choiceResult.outcome === 'accepted') {
+            hidePwaFloatingBanner();
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("يرجى الضغط على الثلاث نقاط (⋮) في أعلى متصفح كروم ثم اختيار «تثبيت التطبيق» مباشرة.");
+      }
+    }
+
+    function openPwaGuideModal() {
+      const modal = document.getElementById('pwaGuideModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePwaGuideModal() {
+      const modal = document.getElementById('pwaGuideModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // Auto-check on mobile after 2.5 seconds to surface banner if suitable
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!isPwaStandalone() && !pwaBannerDismissed) {
+        setTimeout(() => {
+          showPwaFloatingBanner();
+        }, 2000);
+      } else if (isPwaStandalone()) {
+        // Running inside installed PWA - hide install buttons
+        const btn = document.getElementById('btnInstallPwa');
+        if (btn) btn.classList.add('hidden');
+        hidePwaFloatingBanner();
+      }
+    });
 
     
     // ==========================================
