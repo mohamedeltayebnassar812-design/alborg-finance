@@ -164,7 +164,7 @@
 
   <!-- VIEWER MODE NOTICE BANNER (FOR RESIDENTS) -->
   <div id="viewerBanner" class="bg-blue-900/40 border-b border-blue-500/20 px-3 py-1.5 text-center text-[11px] sm:text-xs text-blue-200 flex flex-wrap items-center justify-center gap-1.5 no-print">
-    <span>👁️ أنت تتصفح الآن في <strong class="text-white">وضع المشاهدة (خاص بالسكان)</strong> — لا يمكن تعديل أو حذف البيانات.</span>
+    <span>👁️ أنت تتصفح الآن في <strong class="text-white">وضع المشاهدة (خاص بالسكان)</strong> — معروض بيانات الشهر الحالي والشهر السابق فقط.</span>
     <button onclick="openAdminLoginModal()" class="underline font-bold text-emerald-400 hover:text-emerald-300 mr-2 flex items-center gap-1">
       <span>🔐</span> تسجيل دخول الإدارة
     </button>
@@ -1994,10 +1994,26 @@ end $$;</pre>
     }
 
     // Month Selector Initialization
+    
+    // ==========================================
+    // VISIBLE MONTHS FILTER (RESIDENTS VS ADMIN)
+    // ==========================================
+    function getVisibleMonths() {
+      const order = APP_DATA.chronological_order || [];
+      if (IS_ADMIN) {
+        return order; // Admin sees all historical months
+      }
+      // Residents (Viewers) only see the current month and the previous month
+      return order.length <= 2 ? order : order.slice(-2);
+    }
+
     function initMonthSelector() {
       const select = document.getElementById('monthSelect');
+      if (!select) return;
+      const currentVal = select.value;
       select.innerHTML = '';
-      APP_DATA.chronological_order.forEach(mKey => {
+      const visible = getVisibleMonths();
+      visible.forEach(mKey => {
         const m = APP_DATA.months[mKey];
         if (!m) return;
         const opt = document.createElement('option');
@@ -2005,8 +2021,12 @@ end $$;</pre>
         opt.textContent = m.title;
         select.appendChild(opt);
       });
-      // select latest month
-      select.value = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+      // Preserve selection if still visible, else select latest
+      if (visible.includes(currentVal)) {
+        select.value = currentVal;
+      } else {
+        select.value = visible[visible.length - 1];
+      }
     }
 
     // Render Month View
@@ -3740,9 +3760,10 @@ end $$;</pre>
     // TAB 3: All Expenses Table
     function renderAllExpensesTable() {
       const tbody = document.getElementById('allExpensesTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
-      APP_DATA.chronological_order.forEach(mKey => {
+      getVisibleMonths().forEach(mKey => {
         const m = APP_DATA.months[mKey];
         if (!m || !m.expenses) return;
 
@@ -3772,9 +3793,10 @@ end $$;</pre>
     // TAB 4: Treasury Flow
     function renderTreasuryFlow() {
       const tbody = document.getElementById('treasuryFlowTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
-      APP_DATA.chronological_order.forEach(mKey => {
+      getVisibleMonths().forEach(mKey => {
         const m = APP_DATA.months[mKey];
         if (!m) return;
 
@@ -4437,8 +4459,10 @@ end $$;</pre>
     function initReportMonthSelector() {
       const select = document.getElementById('reportMonthSelect');
       if (!select) return;
+      const currentVal = select.value;
       select.innerHTML = '';
-      APP_DATA.chronological_order.forEach(mKey => {
+      const visible = getVisibleMonths();
+      visible.forEach(mKey => {
         const m = APP_DATA.months[mKey];
         if (!m) return;
         const opt = document.createElement('option');
@@ -4446,8 +4470,12 @@ end $$;</pre>
         opt.textContent = m.title;
         select.appendChild(opt);
       });
-      // select latest month by default
-      select.value = APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1];
+      // Preserve selection if still visible, else select latest
+      if (visible.includes(currentVal)) {
+        select.value = currentVal;
+      } else {
+        select.value = visible[visible.length - 1];
+      }
     }
 
     function renderMonthlyReport() {
@@ -5226,6 +5254,15 @@ end $$;</pre>
         }
         document.body.classList.add('is-admin');
         document.body.classList.remove('is-viewer');
+        // Refresh selectors & views to unlock all months for Admin
+        if (typeof initMonthSelector === 'function') {
+          initMonthSelector();
+          initReportMonthSelector();
+          renderSelectedMonth();
+          renderMonthlyReport();
+          renderAllExpensesTable();
+          renderTreasuryFlow();
+        }
         if (mobBadge) {
           mobBadge.innerHTML = `
             <div class="flex items-center gap-2">
@@ -5239,6 +5276,15 @@ end $$;</pre>
         if (btnLogin) btnLogin.classList.remove('hidden');
         if (badgeActive) badgeActive.classList.add('hidden');
         document.body.classList.add('is-viewer');
+        // Refresh selectors & views to restrict to latest 2 months for Residents
+        if (typeof initMonthSelector === 'function') {
+          initMonthSelector();
+          initReportMonthSelector();
+          renderSelectedMonth();
+          renderMonthlyReport();
+          renderAllExpensesTable();
+          renderTreasuryFlow();
+        }
         document.body.classList.remove('is-admin');
       }
 
