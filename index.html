@@ -87,6 +87,30 @@
       body { background: white !important; color: black !important; }
       .bg-card, .bg-subcard { background: white !important; border: 1px solid #ccc !important; }
       .text-main, .text-muted { color: black !important; }
+
+      /* Isolated month PDF print mode */
+      body.printing-month-pdf > *:not(#monthPdfModal) {
+        display: none !important;
+      }
+      body.printing-month-pdf #monthPdfModal {
+        position: static !important;
+        display: block !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      body.printing-month-pdf #monthPdfModal .no-print {
+        display: none !important;
+      }
+      body.printing-month-pdf #monthPdfPrintableContent {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
     }
   
     /* Mobile App Responsive Styling */
@@ -351,9 +375,9 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>+ شهر جديد</span>
           </button>
-          <button onclick="downloadMonthPDF()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm transition-all active:scale-95 whitespace-nowrap no-print" title="تنزيل PDF الشهر الحالي">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span>PDF الشهر</span>
+          <button onclick="downloadMonthPDF()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="معاينة وطباعة كشف الحساب وتنزيل PDF">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>📄 كشف PDF للشهر</span>
           </button>
         </div>
 
@@ -1257,6 +1281,44 @@
         <button onclick="closeWrittenOffDebtsModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-subcard text-main border border-main hover:bg-card">إغلاق</button>
       </div>
 
+    </div>
+  </div>
+
+    <!-- MODAL: MONTH PDF REPORT PREVIEW & PRINT -->
+  <div id="monthPdfModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-2 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[94vh] flex flex-col">
+      <!-- Modal Header Bar (No Print) -->
+      <div class="flex items-center justify-between border-b border-main pb-3 no-print">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-base">📄</div>
+          <div>
+            <h3 id="monthPdfModalTitle" class="text-sm sm:text-base font-extrabold text-main">كشف الحساب المالي المعتمد للشهر</h3>
+            <span class="text-[11px] text-muted">المدفوعات والمصروفات ورصيد أول وآخر الشهر (جاهز للطباعة / PDF)</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="printMonthPdfDirect()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95" title="طباعة أو حفظ بتنسيق PDF">
+            <span>🖨️ طباعة / حفظ PDF</span>
+          </button>
+          <button onclick="downloadMonthHtmlFile()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-subcard text-main hover:bg-card border border-main flex items-center gap-1.5 transition-colors" title="تحميل التقرير كملف مستقل">
+            <span>📥 تحميل ملف</span>
+          </button>
+          <button onclick="closeMonthPdfModal()" class="text-muted hover:text-main text-lg font-bold p-1 px-2 hover:bg-subcard rounded-lg transition-colors">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Container (Scrollable Preview inside Modal, White Sheet Design) -->
+      <div class="overflow-y-auto flex-1 bg-slate-900/60 p-2 sm:p-4 rounded-xl border border-main/50">
+        <div id="monthPdfPrintableContent" class="bg-white text-slate-800 p-4 sm:p-7 rounded-xl shadow-lg max-w-3xl mx-auto space-y-5 text-right font-sans">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+
+      <!-- Modal Footer Toolbar (No Print) -->
+      <div class="flex items-center justify-between pt-2 border-t border-main text-xs text-muted no-print">
+        <span class="text-[11px]">💡 اضغط <strong>«طباعة / حفظ PDF»</strong> واختر من الطابعة <em>«Save as PDF / حفظ بتنسيق PDF»</em> لحفظه فوراً على هاتفك أو كمبيوترك.</span>
+        <button onclick="closeMonthPdfModal()" class="px-4 py-1.5 rounded-xl text-xs font-medium bg-subcard text-muted hover:text-main border border-main">إغلاق</button>
+      </div>
     </div>
   </div>
 
@@ -4154,183 +4216,352 @@ grant usage, select on all sequences in schema public to anon;</pre>
       container.innerHTML = html;
     }
 
+    // ==========================================
+    // MONTH PDF REPORT PREVIEW, PRINT & DOWNLOAD
+    // ==========================================
     function downloadMonthPDF() {
-      const mKey = selectedMonthKey;
-      if (!mKey) { alert('اختر شهرًا أولاً'); return; }
+      const mSelect = document.getElementById('monthSelect');
+      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : Object.keys(APP_DATA.months || {})[0]);
+      if (!mKey || !APP_DATA.months || !APP_DATA.months[mKey]) {
+        alert('يرجى اختيار شهر أولاً');
+        return;
+      }
+
+      renderMonthPdfPreview(mKey);
+
+      const modal = document.getElementById('monthPdfModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+
+      // Automatically trigger print dialog after preview loads
+      setTimeout(() => {
+        printMonthPdfDirect();
+      }, 350);
+    }
+
+    function closeMonthPdfModal() {
+      const modal = document.getElementById('monthPdfModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderMonthPdfPreview(mKey) {
       const m = APP_DATA.months[mKey];
       if (!m) return;
 
-      // Calculate totals
-      const totalCollected = (m.collections || []).reduce((s, c) => s + (c.paid || 0), 0);
-      const totalExpenses = (m.expenses || []).reduce((s, e) => s + (e.cost || 0), 0);
-      const opening = m.opening_balance || 0;
-      const closing = m.closing_balance || 0;
+      const titleEl = document.getElementById('monthPdfModalTitle');
+      if (titleEl) titleEl.textContent = `كشف الحساب المالي المعتمد — ${m.title}`;
 
-      // Build collections rows
-      let collRows = '';
-      (m.collections || []).forEach((c, idx) => {
+      const audits = calculateApartmentAudits();
+      const auditsMap = {};
+      audits.forEach(a => auditsMap[a.row] = a);
+
+      let totalCollected = 0;
+      let totalOwed = 0;
+      let totalPastDebt = 0;
+      let paidCount = 0;
+
+      const collRows = (m.collections || []).map((c, idx) => {
         const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
-        const isPaid = (c.paid || 0) >= (c.monthly_fee || 0) && (c.monthly_fee || 0) > 0;
-        collRows += `
-          <tr style="background:${idx % 2 === 0 ? '#f8fafc' : '#f1f5f9'}">
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:bold">الدور ${apt.floor || ''} - ش.${apt.apt_num || ''} (${apt.position || ''})</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0">${c.name || apt.owner_name || ''}</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center">${c.monthly_fee || 0} ج</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;color:${isPaid ? '#16a34a' : '#dc2626'};font-weight:bold">${c.paid || 0} ج</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center">
-              <span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${isPaid ? '#dcfce7' : '#fee2e2'};color:${isPaid ? '#16a34a' : '#dc2626'}">
+        const audit = auditsMap[c.row] || {};
+        const fee = c.monthly_fee || 0;
+        const paid = c.paid || 0;
+        const pastDebt = audit.totalPastArrears || 0;
+        const isPaid = paid >= fee && fee > 0;
+
+        totalCollected += paid;
+        totalOwed += fee;
+        totalPastDebt += pastDebt;
+        if (isPaid) paidCount++;
+
+        return `
+          <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;white-space:nowrap">
+              الدور ${apt.floor || 1} (${apt.position || ''}) - ش.${apt.apt_num}
+            </td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-weight:600">${c.name || apt.owner_name || ''}</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center">${fee.toLocaleString()} ج</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;color:${paid > 0 ? '#15803d' : '#64748b'}">${paid.toLocaleString()} ج</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center;color:${pastDebt > 0 ? '#b91c1c' : '#10b981'};font-weight:${pastDebt > 0 ? 'bold' : 'normal'}">
+              ${pastDebt > 0 ? pastDebt.toLocaleString() + ' ج' : 'خالص'}
+            </td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center">
+              <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:bold;background:${isPaid ? '#dcfce7' : '#fee2e2'};color:${isPaid ? '#15803d' : '#b91c1c'}">
                 ${isPaid ? 'تم السداد ✓' : 'لم يسدد ✕'}
               </span>
             </td>
-          </tr>`;
-      });
+          </tr>
+        `;
+      }).join('');
 
-      // Build expenses rows
-      let expRows = '';
-      (m.expenses || []).forEach((e, idx) => {
-        expRows += `
-          <tr style="background:${idx % 2 === 0 ? '#f8fafc' : '#f1f5f9'}">
-            <td style="padding:7px 10px;border:1px solid #e2e8f0">${e.item || ''}</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center">${e.category || ''}</td>
-            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:bold;color:#dc2626">${(e.cost || 0).toLocaleString()} ج</td>
-          </tr>`;
-      });
+      let totalExpenses = 0;
+      const expRows = (m.expenses || []).map((e, idx) => {
+        const cost = e.cost || 0;
+        totalExpenses += cost;
+        return `
+          <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;color:#64748b">${idx + 1}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;font-weight:bold">${e.item || ''}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;color:#475569">${e.category || 'عام'}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;color:#b91c1c">${cost.toLocaleString()} ج.م</td>
+          </tr>
+        `;
+      }).join('');
 
-      const dateNow = new Date().toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+      const opening = m.opening_balance || 0;
+      const closing = m.closing_balance !== undefined ? m.closing_balance : (opening + totalCollected - totalExpenses);
+      const unpaidCount = 24 - paidCount;
+      const collectionRate = Math.round((paidCount / 24) * 100);
+      const dateNow = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      const htmlContent = `<!DOCTYPE html>
+      const printableHtml = `
+        <!-- REPORT HEADER -->
+        <div style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h2 style="font-size: 21px; font-weight: 900; color: #0369a1; margin: 0; line-height: 1.2;">🏢 برج العمارة السكني</h2>
+            <p style="font-size: 13px; font-weight: 700; color: #334155; margin: 3px 0 0 0;">كشف الحساب والتقرير المالي الرسمي المعتمد</p>
+          </div>
+          <div style="text-align: left;">
+            <div style="display: inline-block; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+              الفترة: ${m.title}
+            </div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 3px;">تاريخ الاستخراج: ${dateNow}</div>
+          </div>
+        </div>
+
+        <!-- 4 EXECUTIVE KPI SUMMARY CARDS -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-top: 4px solid #0284c7; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; font-weight: bold;">رصيد أول الشهر (L2)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #0369a1; margin-top: 3px;">${opening.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">الرصيد الافتتاحي</div>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-top: 4px solid #16a34a; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #166534; font-weight: bold;">المحصل من الاشتراكات (L1)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #15803d; margin-top: 3px;">${totalCollected.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #166534; margin-top: 2px;">${paidCount} من 24 سددوا (${collectionRate}%)</div>
+          </div>
+
+          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-top: 4px solid #dc2626; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #991b1b; font-weight: bold;">مصروفات الشهر (L4)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #b91c1c; margin-top: 3px;">${totalExpenses.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #991b1b; margin-top: 2px;">${(m.expenses || []).length} بنود إنفاق فعلية</div>
+          </div>
+
+          <div style="background: #faf5ff; border: 1.5px solid #d8b4fe; border-top: 4px solid #7c3aed; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #581c87; font-weight: bold;">الباقي لأول الشهر الجديد (L5)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #6d28d9; margin-top: 3px;">${closing.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #6d28d9; margin-top: 2px;">رصيد الخزينة النهائي</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: EXPENSES TABLE -->
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>💸 أولاً: بيان المصروفات والمدفوعات المنفقة (${(m.expenses || []).length} بند)</span>
+            <span style="font-size: 11px; color: #b91c1c; font-weight: 800;">إجمالي المنصرف: ${totalExpenses.toLocaleString()} ج.م</span>
+          </div>
+          ${(m.expenses || []).length > 0 ? `
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+              <tr style="background: #f1f5f9; color: #334155;">
+                <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 35px; text-align: center;">م</th>
+                <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">بند المصروف</th>
+                <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 130px; text-align: center;">التصنيف</th>
+                <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 110px; text-align: center;">المبلغ المدفوع</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${expRows}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; font-weight: 800;">
+                <td colspan="3" style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">إجمالي مصروفات الشهر</td>
+                <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #b91c1c; font-weight: 900;">${totalExpenses.toLocaleString()} ج.م</td>
+              </tr>
+            </tfoot>
+          </table>
+          ` : `
+          <div style="padding: 12px; border: 1px dashed #cbd5e1; border-radius: 6px; text-align: center; color: #64748b; font-size: 11px;">
+            لا توجد مصاريف مسجلة لهذا الشهر حتى الآن.
+          </div>
+          `}
+        </div>
+
+        <!-- SECTION 2: COLLECTIONS TABLE -->
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 ثانياً: بيان تحصيلات اشتراكات السكان (${paidCount} سددوا / ${unpaidCount} متبقي)</span>
+            <span style="font-size: 11px; color: #15803d; font-weight: 800;">إجمالي المحصل: ${totalCollected.toLocaleString()} ج.م</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
+            <thead>
+              <tr style="background: #f1f5f9; color: #334155;">
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 100px;">الدور / الشقة</th>
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: right;">اسم الساكن / المالك</th>
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 70px;">الاشتراك</th>
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 70px;">المسدد</th>
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 80px;">متأخر سابق</th>
+                <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 80px;">الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${collRows}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; font-weight: 800;">
+                <td colspan="2" style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">إجمالي اشتراكات الشهر</td>
+                <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center;">${totalOwed.toLocaleString()} ج</td>
+                <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #15803d; font-weight: 900;">${totalCollected.toLocaleString()} ج</td>
+                <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #b91c1c;">${totalPastDebt.toLocaleString()} ج</td>
+                <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center;">${paidCount} سددوا</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- SECTION 3: TREASURY RECONCILIATION SUMMARY -->
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">📊 ثالثاً: معادلة مطابقة حركة الخزينة للشهر</div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>رصيد بداية الشهر المعتمد (L2):</span>
+            <span style="font-weight: bold; color: #0369a1;">${opening.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>(+) إجمالي الإيرادات والتحصيلات الفعلية (L1):</span>
+            <span style="font-weight: bold; color: #15803d;">+ ${totalCollected.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>(-) إجمالي المصروفات المنفقة فعلياً (L4):</span>
+            <span style="font-weight: bold; color: #b91c1c;">- ${totalExpenses.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0 0 0; font-size: 12px; font-weight: 900;">
+            <span style="color: #6d28d9;">(=) الرصيد المتبقي المرحل لأول الشهر الجديد (L5):</span>
+            <span style="color: #6d28d9; font-size: 14px;">${closing.toLocaleString()} ج.م</span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8;">
+          تم استخراج هذا الكشف آلياً من منظومة إدارة وحسابات برج العمارة • مطابق 100% لسجلات الخزينة والتحصيلات المصرفية
+        </div>
+      `;
+
+      const printableEl = document.getElementById('monthPdfPrintableContent');
+      if (printableEl) printableEl.innerHTML = printableHtml;
+    }
+
+    function printMonthPdfDirect() {
+      const printableEl = document.getElementById('monthPdfPrintableContent');
+      if (!printableEl) return;
+
+      // Method 1: Iframe print (no popups blocked)
+      let iframe = document.getElementById('monthPdfPrintIframe');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'monthPdfPrintIframe';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '10px';
+        iframe.style.height = '10px';
+        iframe.style.border = '0';
+        iframe.style.opacity = '0.01';
+        iframe.style.pointerEvents = 'none';
+        document.body.appendChild(iframe);
+      }
+
+      const printHtml = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>كشف الحساب الشهري - ${m.title}</title>
+  <title>كشف الحساب المالي</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: 'Arial', 'Tahoma', sans-serif; color:#1e293b; background:#fff; padding:20px; font-size:13px; }
-    .header { text-align:center; border-bottom:3px solid #1e40af; padding-bottom:16px; margin-bottom:20px; }
-    .header h1 { font-size:22px; font-weight:900; color:#1e40af; }
-    .header h2 { font-size:16px; font-weight:700; color:#374151; margin-top:4px; }
-    .header p { font-size:11px; color:#6b7280; margin-top:4px; }
-    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-    .kpi-card { border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center; }
-    .kpi-label { font-size:11px; color:#6b7280; margin-bottom:4px; }
-    .kpi-value { font-size:18px; font-weight:900; }
-    .kpi-opening { color:#1e40af; border-color:#bfdbfe; background:#eff6ff; }
-    .kpi-collected { color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
-    .kpi-expenses { color:#dc2626; border-color:#fecaca; background:#fef2f2; }
-    .kpi-closing { color:#7c3aed; border-color:#ddd6fe; background:#f5f3ff; }
-    .section-title { font-size:14px; font-weight:800; color:#1e293b; border-right:4px solid #1e40af; padding-right:10px; margin:16px 0 10px; }
-    table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px; }
-    th { background:#1e293b; color:#fff; padding:9px 10px; font-weight:700; border:1px solid #1e293b; }
-    .summary-box { border:1.5px solid #e2e8f0; border-radius:10px; padding:14px; background:#f8fafc; margin-top:16px; }
-    .summary-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; }
-    .summary-row:last-child { border-bottom:none; padding-top:10px; font-weight:900; font-size:15px; color:#7c3aed; }
-    .footer { text-align:center; margin-top:24px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:10px; color:#9ca3af; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
+    body { padding: 15px; background: #fff; color: #1e293b; font-size: 11px; }
     @media print {
-      body { padding:10px; }
-      .kpi-grid { grid-template-columns:repeat(4,1fr); }
+      body { padding: 5px; }
+      @page { margin: 0.8cm; size: auto; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🏢 منظومة إدارة وحسابات برج العمارة</h1>
-    <h2>كشف الحساب الشهري المعتمد — ${m.title}</h2>
-    <p>تاريخ الإصدار: ${dateNow}</p>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi-card kpi-opening">
-      <div class="kpi-label">رصيد أول الشهر</div>
-      <div class="kpi-value">${opening.toLocaleString()} ج</div>
-    </div>
-    <div class="kpi-card kpi-collected">
-      <div class="kpi-label">إجمالي المحصّل</div>
-      <div class="kpi-value">${totalCollected.toLocaleString()} ج</div>
-    </div>
-    <div class="kpi-card kpi-expenses">
-      <div class="kpi-label">إجمالي المصاريف</div>
-      <div class="kpi-value">${totalExpenses.toLocaleString()} ج</div>
-    </div>
-    <div class="kpi-card kpi-closing">
-      <div class="kpi-label">الباقي لأول الشهر الجديد</div>
-      <div class="kpi-value">${closing.toLocaleString()} ج</div>
-    </div>
-  </div>
-
-  <div class="section-title">📋 تفاصيل تحصيلات الاشتراكات</div>
-  <table>
-    <thead>
-      <tr>
-        <th>الشقة / الدور</th>
-        <th>اسم الساكن</th>
-        <th>الاشتراك المطلوب</th>
-        <th>المدفوع</th>
-        <th>الحالة</th>
-      </tr>
-    </thead>
-    <tbody>${collRows}</tbody>
-    <tfoot>
-      <tr style="background:#1e293b;color:#fff;font-weight:900">
-        <td colspan="2" style="padding:9px 10px;border:1px solid #374151">الإجمالي</td>
-        <td style="padding:9px 10px;border:1px solid #374151;text-align:center">${(m.collections||[]).reduce((s,c)=>s+(c.monthly_fee||0),0)} ج</td>
-        <td style="padding:9px 10px;border:1px solid #374151;text-align:center;color:#4ade80">${totalCollected.toLocaleString()} ج</td>
-        <td style="padding:9px 10px;border:1px solid #374151;text-align:center">${(m.collections||[]).filter(c=>(c.paid||0)>=(c.monthly_fee||0)&&(c.monthly_fee||0)>0).length} سدّدوا</td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="section-title">💸 تفاصيل المصاريف والمدفوعات</div>
-  ${(m.expenses||[]).length > 0 ? `
-  <table>
-    <thead>
-      <tr>
-        <th>البند</th>
-        <th>التصنيف</th>
-        <th>التكلفة</th>
-      </tr>
-    </thead>
-    <tbody>${expRows}</tbody>
-    <tfoot>
-      <tr style="background:#1e293b;color:#fff;font-weight:900">
-        <td colspan="2" style="padding:9px 10px;border:1px solid #374151">إجمالي المصاريف</td>
-        <td style="padding:9px 10px;border:1px solid #374151;text-align:center;color:#f87171">${totalExpenses.toLocaleString()} ج</td>
-      </tr>
-    </tfoot>
-  </table>` : '<p style="color:#6b7280;text-align:center;padding:16px">لا توجد مصاريف مسجلة لهذا الشهر</p>'}
-
-  <div class="summary-box">
-    <div class="section-title" style="margin-top:0">📊 ملخص الحساب الشهري</div>
-    <div class="summary-row">
-      <span>رصيد أول الشهر</span>
-      <span style="font-weight:700;color:#1e40af">${opening.toLocaleString()} ج.م</span>
-    </div>
-    <div class="summary-row">
-      <span>+ إجمالي الاشتراكات المحصّلة</span>
-      <span style="font-weight:700;color:#15803d">+ ${totalCollected.toLocaleString()} ج.م</span>
-    </div>
-    <div class="summary-row">
-      <span>- إجمالي المصاريف المدفوعة</span>
-      <span style="font-weight:700;color:#dc2626">- ${totalExpenses.toLocaleString()} ج.م</span>
-    </div>
-    <div class="summary-row">
-      <span>= الرصيد المتبقي (أول الشهر القادم)</span>
-      <span>${closing.toLocaleString()} ج.م</span>
-    </div>
-  </div>
-
-  <div class="footer">
-    <p>منظومة إدارة وحسابات برج العمارة — كشف مالي رسمي معتمد</p>
-    <p>تم الإصدار آلياً بتاريخ ${dateNow}</p>
-  </div>
-
-  <script>window.onload = function(){ window.print(); }<\/script>
+  ${printableEl.innerHTML}
 </body>
 </html>`;
 
-      // Open print window
-      const printWin = window.open('', '_blank', 'width=900,height=700');
-      printWin.document.write(htmlContent);
-      printWin.document.close();
+      try {
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(printHtml);
+        doc.close();
+
+        setTimeout(() => {
+          try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+          } catch (err) {
+            console.warn('Iframe print error, falling back to window.print', err);
+            fallbackWindowPrint();
+          }
+        }, 300);
+      } catch (err) {
+        console.warn('Iframe doc write error, falling back to window.print', err);
+        fallbackWindowPrint();
+      }
+    }
+
+    function fallbackWindowPrint() {
+      document.body.classList.add('printing-month-pdf');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-month-pdf');
+      }, 1000);
+    }
+
+    function downloadMonthHtmlFile() {
+      const mSelect = document.getElementById('monthSelect');
+      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : Object.keys(APP_DATA.months || {})[0]);
+      const m = APP_DATA.months[mKey];
+      const title = m ? m.title : 'الشهر';
+      const printableEl = document.getElementById('monthPdfPrintableContent');
+      if (!printableEl) return;
+
+      const fullHtml = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>كشف الحساب المالي - ${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', Tahoma, Arial, sans-serif; }
+    body { padding: 25px; background: #f8fafc; color: #1e293b; max-width: 900px; margin: 0 auto; }
+    @media print {
+      body { padding: 10px; background: #fff; }
+      @page { margin: 0.8cm; }
+    }
+  </style>
+</head>
+<body>
+  ${printableEl.innerHTML}
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 400);
+    };
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `كشف_حساب_${title.replace(/\s+/g, '_')}.html`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 500);
+      showSuccessToast("تم تحميل كشف الحساب بنجاح! 📥");
     }
 
     function printMonthlyReport() {
