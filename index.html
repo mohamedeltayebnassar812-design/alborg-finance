@@ -282,9 +282,9 @@
             <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           </button>
 
-          <!-- Reset Button -->
-          <button onclick="resetToInitialData()" class="p-2 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors" title="إعادة ضبط البيانات الأصلية من الإكسيل">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <!-- Undo / Restore Button -->
+          <button onclick="undoLastReset()" class="p-2 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors" title="استعادة النسخة السابقة / تراجع عن أي مسح (Undo)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
           </button>
         </div>
       </div>
@@ -1764,27 +1764,64 @@ end $$;</pre>
       saveAppData();
     };
 
+    async function undoLastReset() {
+      if (!requireAdmin('استعادة البيانات السابقة')) return;
+      showSyncToast("جاري التراجع واستعادة النسخة السابقة... ⏳");
+      // 1. Try local backup snapshot
+      const snapshot = localStorage.getItem('ALBORG_BACKUP_SNAPSHOT');
+      if (snapshot) {
+        try {
+          const snapData = JSON.parse(snapshot);
+          if (snapData && snapData.months && (snapData.months['9_2026'] || snapData.months['10_2026'] || snapData.months['11_2026'])) {
+            APP_DATA = snapData;
+            APP_DATA._last_saved = Date.now();
+            saveAppData();
+            pushToSupabase();
+            recalculateAllBalances();
+            if (typeof initMonthSelector === 'function') initMonthSelector();
+            if (typeof initReportMonthSelector === 'function') initReportMonthSelector();
+            renderSelectedMonth();
+            renderArrearsTable();
+            renderAllExpensesTable();
+            renderTreasuryFlow();
+            showSyncToast("تم التراجع واستعادة كافة البيانات والشهور بنجاح! ✓");
+            alert("تم التراجع بنجاح! تم استرجاع كافة الشهور والتحصيلات والمصروفات المسجلة.");
+            return;
+          }
+        } catch(e) {}
+      }
+      // 2. Fallback to Supabase cloud restore
+      if (typeof restoreFromCloud === 'function') {
+        await restoreFromCloud();
+      } else {
+        await pullFromSupabase(true);
+      }
+    }
+
     function resetToInitialData() {
       if (!requireAdmin('إعادة ضبط البيانات')) return;
-      if (confirm("تحذير: هل أنت متأكد من إعادة ضبط البيانات إلى نسخة الإكسيل الأولية؟\n\n(يمكنك التراجع أو استعادة بياناتك من السحابة في أي وقت).")) {
-        // Save emergency snapshot in localStorage before resetting
-        try {
-          localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', JSON.stringify(APP_DATA));
-        } catch(e) {}
-
-        localStorage.removeItem(STORAGE_KEY);
-        APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
-        recalculateAllBalances();
-        initMonthSelector();
-        initReportMonthSelector();
-        setAptViewMode(currentAptViewMode);
-        switchMobileSubTab(currentMobileSubTab);
-        renderSelectedMonth();
-        renderArrearsTable();
-        renderAllExpensesTable();
-        renderTreasuryFlow();
-        showSyncToast("تمت إعادة الضبط للإكسيل. لاستعادة بياناتك: اضغط 'تحديث 🔄' أو ادخل على 'ربط أونلاين' واضغط 'استعادة من السحابة ☁️'");
+      const confirmWord = prompt("⚠️ تحذير أمان صارم:\n\nهذه العملية ستقوم بحذف جميع الشهور والمصروفات الجديدة والعودة لإكسيل البداية فقط!\n\nإذا كنت متأكداً وتريد ذلك فعلاً، اكتب كلمة (مسح) في المربع أدناه ثم اضغط موافق:");
+      if (confirmWord !== 'مسح') {
+        if (confirmWord !== null) alert("تم إلغاء العملية بأمان. لم يتم حذف أي بيانات!");
+        return;
       }
+      // Save emergency snapshot in localStorage before resetting
+      try {
+        localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', JSON.stringify(APP_DATA));
+      } catch(e) {}
+
+      localStorage.removeItem(STORAGE_KEY);
+      APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
+      recalculateAllBalances();
+      initMonthSelector();
+      initReportMonthSelector();
+      setAptViewMode(currentAptViewMode);
+      switchMobileSubTab(currentMobileSubTab);
+      renderSelectedMonth();
+      renderArrearsTable();
+      renderAllExpensesTable();
+      renderTreasuryFlow();
+      showSyncToast("تمت إعادة الضبط للإكسيل. يمكنك التراجع بالضغط على زر استعادة النسخة السابقة ↩️");
     }
 
     // Recalculate All Months Balances with Mathematical Precision
@@ -6044,13 +6081,22 @@ end $$;</pre>
           <span class="text-muted text-sm">‹</span>
         </button>
 
-        <!-- Reset Initial Data -->
-        <button onclick="closeMobileMenu(); resetToInitialData();" class="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 font-semibold hover:bg-rose-500/20 transition-all text-right">
+        <!-- Undo / Restore -->
+        <button onclick="closeMobileMenu(); undoLastReset();" class="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all text-right">
           <span class="flex items-center gap-2.5">
-            <span class="text-base">🔄</span>
-            <span>إعادة ضبط البيانات الأصلية من الإكسيل</span>
+            <span class="text-base">↩️</span>
+            <span>استعادة البيانات السابقة / تراجع</span>
           </span>
-          <span class="text-rose-400 text-sm">‹</span>
+          <span class="text-emerald-400 text-sm">‹</span>
+        </button>
+
+        <!-- Restore Cloud -->
+        <button onclick="closeMobileMenu(); restoreFromCloud();" class="flex items-center justify-between p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold hover:bg-blue-500/20 transition-all text-right">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">☁️</span>
+            <span>سحب واستعادة البيانات من السحابة</span>
+          </span>
+          <span class="text-blue-400 text-sm">‹</span>
         </button>
       </div>
 
