@@ -105,33 +105,66 @@
     }
 
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 10mm 12mm 10mm;
+      }
       .no-print { display: none !important; }
-      body { background: white !important; color: black !important; }
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+      }
       .bg-card, .bg-subcard { background: white !important; border: 1px solid #ccc !important; }
       .text-main, .text-muted { color: black !important; }
 
-      /* Isolated month PDF print mode */
+      /* Isolated month PDF print mode (allows multi-page pagination without clipping) */
+      body.printing-month-pdf {
+        background: #ffffff !important;
+        color: #000000 !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
       body.printing-month-pdf > *:not(#monthPdfModal) {
         display: none !important;
       }
-      body.printing-month-pdf #monthPdfModal {
+      body.printing-month-pdf #monthPdfModal,
+      body.printing-month-pdf #monthPdfModal > div,
+      body.printing-month-pdf #monthPdfModal .overflow-y-auto,
+      body.printing-month-pdf #monthPdfPrintableContent {
         position: static !important;
         display: block !important;
-        background: white !important;
+        background: transparent !important;
         padding: 0 !important;
         margin: 0 !important;
         max-width: 100% !important;
         width: 100% !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
       }
       body.printing-month-pdf #monthPdfModal .no-print {
         display: none !important;
       }
-      body.printing-month-pdf #monthPdfPrintableContent {
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
+      table {
+        page-break-inside: auto !important;
+      }
+      tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      thead {
+        display: table-header-group !important;
+      }
+      tfoot {
+        display: table-footer-group !important;
       }
     }
   
@@ -5510,38 +5543,102 @@ end $$;</pre>
       return `حسابات شهر ${monthNum}-${year}`;
     }
 
+    function printCleanHtmlContent(htmlContent, fileName) {
+      const originalTitle = document.title;
+      document.title = fileName;
+
+      let iframe = document.getElementById('appPrintIframe');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'appPrintIframe';
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-9999px';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '1000px';
+        iframe.style.height = '1000px';
+        iframe.style.border = '0';
+        iframe.style.opacity = '0';
+        document.body.appendChild(iframe);
+      }
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>${fileName}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; }
+    html, body {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      direction: rtl;
+      font-size: 11px;
+      line-height: 1.4;
+      overflow: visible !important;
+      height: auto !important;
+      width: 100% !important;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 10mm 10mm 15mm 10mm;
+    }
+    @media print {
+      body { padding: 0 !important; }
+      table { page-break-inside: auto; break-inside: auto; width: 100%; border-collapse: collapse; }
+      tr { page-break-inside: avoid; break-inside: avoid; }
+      thead { display: table-header-group; }
+      tfoot { display: table-footer-group; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div style="padding: 10px; width: 100%; max-width: 820px; margin: 0 auto;">
+    ${htmlContent}
+  </div>
+</body>
+</html>`);
+      doc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        } catch(e) {
+          window.print();
+        }
+        setTimeout(() => {
+          document.title = originalTitle;
+        }, 2000);
+      }, 400);
+    }
+
     function printMonthPdfDirect() {
       const mSelect = document.getElementById('monthSelect');
       const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9');
       const fileName = getMonthFileName(mKey);
 
-      // Force document.title to exact filename before printing
-      document.title = fileName;
-
-      // Ensure printable element is visible
-      const modal = document.getElementById('monthPdfModal');
-      if (modal) modal.classList.remove('hidden');
-
-      document.body.classList.add('printing-month-pdf');
-      window.print();
-
-      setTimeout(() => {
-        document.body.classList.remove('printing-month-pdf');
+      renderMonthPdfPreview(mKey);
+      const printableEl = document.getElementById('monthPdfPrintableContent');
+      if (printableEl) {
+        printCleanHtmlContent(printableEl.innerHTML, fileName);
+      } else {
         document.title = fileName;
-      }, 1500);
+        document.body.classList.add('printing-month-pdf');
+        window.print();
+        setTimeout(() => {
+          document.body.classList.remove('printing-month-pdf');
+        }, 1500);
+      }
     }
 
     function fallbackWindowPrint(mKey) {
       const key = mKey || (document.getElementById('monthSelect')?.value || '');
       const fileName = getMonthFileName(key);
-      const originalTitle = document.title;
-      document.title = fileName;
-      document.body.classList.add('printing-month-pdf');
-      window.print();
-      setTimeout(() => {
-        document.body.classList.remove('printing-month-pdf');
-        document.title = originalTitle;
-      }, 2000);
+      printMonthPdfDirect();
     }
 
     function downloadMonthHtmlFile() {
@@ -5591,15 +5688,15 @@ end $$;</pre>
       const select = document.getElementById('reportMonthSelect');
       const mKey = select ? select.value : '8';
       const fileName = getMonthFileName(mKey);
-      const originalTitle = document.title;
-      document.title = fileName;
 
       renderMonthlyReport();
-      window.print();
-
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 3000);
+      const reportEl = document.getElementById('printableReportCard');
+      if (reportEl) {
+        printCleanHtmlContent(reportEl.innerHTML, fileName);
+      } else {
+        document.title = fileName;
+        window.print();
+      }
     }
 
     function exportStandaloneHtmlReport() {
