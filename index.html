@@ -205,6 +205,100 @@
 
 
   <!-- TOP HEADER -->
+      <!-- ============================================================== -->
+  <!-- RESIDENT & PUBLIC PORTAL: DEDICATED PDF-STYLE FINANCIAL REPORT -->
+  <!-- (الواجهة المعتمدة الخاصة بالسكان - مطابقة لكشف حساب PDF رسمي)   -->
+  <!-- ============================================================== -->
+  <div id="residentPortalView" class="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans transition-all">
+    
+    <!-- Admin Preview Notification Banner (Visible ONLY when admin previews resident portal) -->
+    <div id="residentAdminPreviewBanner" class="hidden bg-amber-500 text-slate-900 px-3 py-2 text-xs font-bold text-center flex-wrap items-center justify-center gap-2.5 shadow-sm no-print">
+      <span>👑 وضع معاينة واجهة السكان — هكذا يرى السكان والزوار كشف الحساب المالي بدون صلاحيات تعديل.</span>
+      <button onclick="exitResidentPreview()" class="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm active:scale-95">العودة للوحة الإدارة الرئيسية ↩️</button>
+    </div>
+
+    <!-- Resident Portal Top Bar (No Print) -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+      <div class="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-3">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white flex items-center justify-center text-lg sm:text-xl font-black shadow-md shadow-sky-600/20">
+            🏢
+          </div>
+          <div>
+            <h1 class="text-xs sm:text-base font-black text-slate-900 leading-tight">برج العمارة السكني</h1>
+            <p class="text-[10px] sm:text-xs text-slate-500 font-semibold">كشف الحساب والتقرير المالي الرسمي للسكان</p>
+          </div>
+        </div>
+
+        <!-- Controls: Refresh, Print PDF, Manager Login -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Refresh -->
+          <button onclick="forceAppRefresh()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95" title="تحديث البيانات">
+            <span>🔄</span>
+            <span class="hidden md:inline">تحديث</span>
+          </button>
+
+          <!-- Print / Save PDF -->
+          <button onclick="printResidentCurrentMonth()" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-sm shadow-sky-600/30 flex items-center gap-1.5 active:scale-95" title="طباعة أو حفظ بتنسيق PDF">
+            <span>🖨️</span>
+            <span>حفظ PDF</span>
+          </button>
+
+          <!-- Admin Login Trigger -->
+          <button onclick="openAdminLoginModal()" id="btnResidentAdminLogin" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95" title="تسجيل دخول مسؤول البرج">
+            <span>🔐</span>
+            <span class="hidden sm:inline">دخول الإدارة</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Resident Portal Main Content -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+      
+      <!-- Month Selection Control: ONLY Current Month and Previous Month -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
+        <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>اختر كشف الشهر المطلوب للاطلاع:</span>
+        </div>
+
+        <!-- Two Buttons for the 2 Allowed Months -->
+        <div id="residentMonthButtons" class="flex items-center gap-2 w-full sm:w-auto">
+          <!-- Injected dynamically via renderResidentPortal() -->
+        </div>
+      </div>
+
+      <!-- Printable Document Sheet (Exact PDF Look & Feel) -->
+      <div id="residentDocumentSheet" class="bg-white rounded-2xl border border-slate-200/80 shadow-md p-4 sm:p-8 space-y-6 text-right font-sans">
+        <!-- Rendered dynamically via renderResidentDocumentSheet() -->
+      </div>
+
+      <!-- Bottom Print & Share Action Bar (No Print) -->
+      <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
+        <div class="text-xs text-slate-500 font-medium">
+          💡 يمكنك حفظ نسخة رسمية كاملة أو طباعتها بنقرة واحدة بتنسيق PDF ملون ومعتمد.
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="printResidentCurrentMonth()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-md shadow-sky-600/30 flex items-center gap-2 active:scale-95">
+            <span>🖨️ طباعة أو حفظ التقرير PDF</span>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Resident Portal Footer (No Print) -->
+    <footer class="py-5 text-center text-xs text-slate-400 border-t border-slate-200 no-print">
+      <span>منظومة إدارة وحسابات برج العمارة • كشف مالي رسمي ومطابق للخزينة 100%</span>
+    </footer>
+
+  </div>
+
+
+  <!-- ADMIN MANAGEMENT DASHBOARD VIEW (Visible only to authenticated manager) -->
+  <div id="adminAppView" class="hidden flex-col min-h-screen">
     <header class="bg-card border-b border-main sticky top-0 z-30 shadow-md">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
       
@@ -313,6 +407,12 @@
           <button onclick="toggleTheme()" class="p-2 rounded-lg text-muted hover:text-main hover:bg-subcard transition-colors" title="تبديل الوضع">
             <svg id="themeIconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
             <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+
+          <!-- Resident PDF View Preview Button for Admin -->
+          <button onclick="previewResidentPortalForAdmin()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:text-sky-300 text-xs font-bold transition-all shadow-sm active:scale-95" title="معاينة كشف الحساب كما يظهر للسكان">
+            <span>👁️</span>
+            <span class="hidden lg:inline">كشف السكان (PDF)</span>
           </button>
 
           <!-- Activity Log Modal Button -->
@@ -5815,6 +5915,290 @@ end $$;</pre>
       }
     }
 
+    
+    // ==============================================================
+    // RESIDENT PORTAL (DEDICATED PDF-STYLE FINANCIAL REPORT ENGINE)
+    // ==============================================================
+    let selectedResidentMonthKey = null;
+    let isResidentAdminPreviewMode = false;
+
+    function renderResidentPortal() {
+      const portalEl = document.getElementById('residentPortalView');
+      if (!portalEl) return;
+
+      const visibleMonths = getVisibleMonths(); // strictly returns the last 2 months for residents
+      if (!visibleMonths || visibleMonths.length === 0) return;
+
+      // Default to latest month if not selected
+      if (!selectedResidentMonthKey || !visibleMonths.includes(selectedResidentMonthKey)) {
+        selectedResidentMonthKey = visibleMonths[visibleMonths.length - 1];
+      }
+
+      // Render Month Switcher Buttons
+      const btnContainer = document.getElementById('residentMonthButtons');
+      if (btnContainer) {
+        let btnHtml = '';
+        visibleMonths.forEach((mKey, idx) => {
+          const m = APP_DATA.months[mKey];
+          if (!m) return;
+          const isLatest = idx === visibleMonths.length - 1;
+          const isSelected = mKey === selectedResidentMonthKey;
+          const label = isLatest ? `${m.title} (الشهر الحالي)` : `${m.title} (الشهر السابق)`;
+
+          btnHtml += `
+            <button onclick="selectResidentMonth('${mKey}')" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${isSelected ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+              <span>📅</span>
+              <span>${label}</span>
+            </button>
+          `;
+        });
+        btnContainer.innerHTML = btnHtml;
+      }
+
+      // Render Document Sheet
+      renderResidentDocumentSheet(selectedResidentMonthKey);
+    }
+
+    function selectResidentMonth(mKey) {
+      selectedResidentMonthKey = mKey;
+      renderResidentPortal();
+    }
+
+    function renderResidentDocumentSheet(mKey) {
+      const container = document.getElementById('residentDocumentSheet');
+      if (!container) return;
+
+      const m = APP_DATA.months[mKey];
+      if (!m) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold">لا تتوفر بيانات لهذا الشهر</div>`;
+        return;
+      }
+
+      const audits = calculateApartmentAudits();
+      const auditsMap = {};
+      audits.forEach(a => auditsMap[a.row] = a);
+
+      let totalCollected = 0;
+      let totalOwed = 0;
+      let totalPastDebt = 0;
+      let paidCount = 0;
+
+      const collRows = (m.collections || []).map((c, idx) => {
+        const apt = APP_DATA.apartments.find(a => a.row === c.row) || {};
+        const audit = auditsMap[c.row] || {};
+        const fee = c.monthly_fee || 0;
+        const paid = c.paid || 0;
+        const pastDebt = audit.totalPastArrears || 0;
+        const isPaid = paid >= fee && fee > 0;
+
+        totalCollected += paid;
+        totalOwed += fee;
+        totalPastDebt += pastDebt;
+        if (isPaid) paidCount++;
+
+        return `
+          <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;white-space:nowrap">
+              الدور ${apt.floor || 1} (${apt.position || ''}) - ش.${apt.apt_num}
+            </td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;font-weight:600">${c.name || apt.owner_name || ''}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center">${fee.toLocaleString()} ج</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;color:${paid > 0 ? '#15803d' : '#64748b'}">${paid.toLocaleString()} ج</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;color:${pastDebt > 0 ? '#b91c1c' : '#10b981'};font-weight:${pastDebt > 0 ? 'bold' : 'normal'}">
+              ${pastDebt > 0 ? pastDebt.toLocaleString() + ' ج' : 'خالص'}
+            </td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center">
+              <span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:bold;background:${isPaid ? '#dcfce7' : '#fee2e2'};color:${isPaid ? '#15803d' : '#b91c1c'}">
+                ${isPaid ? 'تم السداد ✓' : 'لم يسدد ✕'}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      let totalExpenses = 0;
+      const expRows = (m.expenses || []).map((e, idx) => {
+        const cost = e.cost || 0;
+        totalExpenses += cost;
+        return `
+          <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;color:#64748b">${idx + 1}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;font-weight:bold">${e.item || ''}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;color:#475569">${e.category || 'عام'}</td>
+            <td style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;font-weight:bold;color:#b91c1c">${cost.toLocaleString()} ج.م</td>
+          </tr>
+        `;
+      }).join('');
+
+      const opening = m.opening_balance || 0;
+      const closing = m.closing_balance !== undefined ? m.closing_balance : (opening + totalCollected - totalExpenses);
+      const unpaidCount = 24 - paidCount;
+      const collectionRate = Math.round((paidCount / 24) * 100);
+      const dateNow = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      container.innerHTML = `
+        <!-- REPORT HEADER -->
+        <div style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h2 style="font-size: 21px; font-weight: 900; color: #0369a1; margin: 0; line-height: 1.2;">🏢 برج العمارة السكني</h2>
+            <p style="font-size: 13px; font-weight: 700; color: #334155; margin: 3px 0 0 0;">كشف الحساب والتقرير المالي الرسمي المعتمد</p>
+          </div>
+          <div style="text-align: left;">
+            <div style="display: inline-block; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+              الفترة: ${m.title}
+            </div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 3px;">تاريخ الاستخراج: ${dateNow}</div>
+          </div>
+        </div>
+
+        <!-- 4 EXECUTIVE KPI SUMMARY CARDS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px;">
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-top: 4px solid #0284c7; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; font-weight: bold;">رصيد أول الشهر (L2)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #0369a1; margin-top: 3px;">${opening.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">الرصيد الافتتاحي</div>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-top: 4px solid #16a34a; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #166534; font-weight: bold;">المحصل من الاشتراكات (L1)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #15803d; margin-top: 3px;">${totalCollected.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #166534; margin-top: 2px;">${paidCount} من 24 سددوا (${collectionRate}%)</div>
+          </div>
+
+          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-top: 4px solid #dc2626; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #991b1b; font-weight: bold;">مصروفات الشهر (L4)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #b91c1c; margin-top: 3px;">${totalExpenses.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #991b1b; margin-top: 2px;">${(m.expenses || []).length} بنود إنفاق فعلية</div>
+          </div>
+
+          <div style="background: #faf5ff; border: 1.5px solid #d8b4fe; border-top: 4px solid #7c3aed; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #581c87; font-weight: bold;">الباقي لأول الشهر الجديد (L5)</div>
+            <div style="font-size: 16px; font-weight: 900; color: #6d28d9; margin-top: 3px;">${closing.toLocaleString()} ج.م</div>
+            <div style="font-size: 9px; color: #6d28d9; margin-top: 2px;">رصيد الخزينة النهائي</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: EXPENSES TABLE -->
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>💸 أولاً: بيان المصروفات والمدفوعات المنفذة (${(m.expenses || []).length} بند)</span>
+            <span style="font-size: 11px; color: #b91c1c; font-weight: 800;">إجمالي المنصرف: ${totalExpenses.toLocaleString()} ج.م</span>
+          </div>
+          ${(m.expenses || []).length > 0 ? `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr style="background: #f1f5f9; color: #334155;">
+                  <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 35px; text-align: center;">م</th>
+                  <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">بند المصروف</th>
+                  <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 130px; text-align: center;">التصنيف</th>
+                  <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 110px; text-align: center;">المبلغ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${expRows}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f8fafc; font-weight: 800;">
+                  <td colspan="3" style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">إجمالي مصروفات الشهر الفعلية</td>
+                  <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #b91c1c; font-weight: 900;">${totalExpenses.toLocaleString()} ج.م</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          ` : `
+            <div style="padding: 12px; text-align: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; color: #64748b; font-size: 11px;">
+              لا توجد مصروفات مسجلة لهذا الشهر حتى الآن.
+            </div>
+          `}
+        </div>
+
+        <!-- SECTION 2: COLLECTIONS & APARTMENTS STATUS TABLE -->
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 ثانياً: بيان تحصيلات اشتراكات السكان (${paidCount} سددوا / ${unpaidCount} متبقي)</span>
+            <span style="font-size: 11px; color: #15803d; font-weight: 800;">إجمالي المحصل: ${totalCollected.toLocaleString()} ج.م</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
+              <thead>
+                <tr style="background: #f1f5f9; color: #334155;">
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 110px;">الدور / الشقة</th>
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: right;">اسم الساكن / المالك</th>
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 70px;">الاشتراك</th>
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 70px;">المسدد</th>
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 80px;">متأخر سابق</th>
+                  <th style="padding: 5px 6px; border: 1px solid #cbd5e1; text-align: center; width: 75px;">الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${collRows}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f8fafc; font-weight: 800;">
+                  <td colspan="2" style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: right;">إجمالي اشتراكات الشهر</td>
+                  <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center;">${totalOwed.toLocaleString()} ج</td>
+                  <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #15803d; font-weight: 900;">${totalCollected.toLocaleString()} ج</td>
+                  <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; color: #b91c1c;">${totalPastDebt.toLocaleString()} ج</td>
+                  <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center;">${paidCount} سددوا</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 3: TREASURY RECONCILIATION SUMMARY -->
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">📊 ثالثاً: معادلة مطابقة حركة الخزينة للشهر</div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>رصيد بداية الشهر المعتمد (L2):</span>
+            <span style="font-weight: bold; color: #0369a1;">${opening.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>(+) إجمالي الإيرادات والتحصيلات الفعلية (L1):</span>
+            <span style="font-weight: bold; color: #15803d;">+ ${totalCollected.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            <span>(-) إجمالي المصروفات المنفقة فعلياً (L4):</span>
+            <span style="font-weight: bold; color: #b91c1c;">- ${totalExpenses.toLocaleString()} ج.م</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0 0 0; font-size: 12px; font-weight: 900;">
+            <span style="color: #6d28d9;">(=) الرصيد المتبقي المرحل لأول الشهر الجديد (L5):</span>
+            <span style="color: #6d28d9; font-size: 14px;">${closing.toLocaleString()} ج.م</span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8;">
+          تم استخراج هذا الكشف آلياً من منظومة إدارة وحسابات برج العمارة • مطابق 100% لسجلات الخزينة والتحصيلات المعتمدة
+        </div>
+      `;
+    }
+
+    function printResidentCurrentMonth() {
+      const mKey = selectedResidentMonthKey || (getVisibleMonths().slice(-1)[0]);
+      const fileName = getMonthFileName(mKey);
+      const sheet = document.getElementById('residentDocumentSheet');
+      if (sheet) {
+        printCleanHtmlContent(sheet.innerHTML, fileName);
+      }
+    }
+
+    function previewResidentPortalForAdmin() {
+      isResidentAdminPreviewMode = true;
+      const previewBanner = document.getElementById('residentAdminPreviewBanner');
+      if (previewBanner) previewBanner.classList.remove('hidden');
+      updateAdminUI();
+    }
+
+    function exitResidentPreview() {
+      isResidentAdminPreviewMode = false;
+      const previewBanner = document.getElementById('residentAdminPreviewBanner');
+      if (previewBanner) previewBanner.classList.add('hidden');
+      updateAdminUI();
+    }
+
+
     function updateAdminUI() {
       const banner = document.getElementById('viewerBanner');
       const btnLogin = document.getElementById('btnHeaderAdminLogin');
@@ -5822,7 +6206,16 @@ end $$;</pre>
       const emailDisplay = document.getElementById('adminActiveEmailDisplay');
       const mobBadge = document.getElementById('mobDrawerAdminBadge');
 
-      if (IS_ADMIN) {
+      const residentView = document.getElementById('residentPortalView');
+      const adminView = document.getElementById('adminAppView');
+
+      if (IS_ADMIN && !isResidentAdminPreviewMode) {
+        // MANAGER LOGGED IN -> Show Full Admin Dashboard
+        if (residentView) residentView.style.display = 'none';
+        if (adminView) {
+          adminView.style.display = 'flex';
+          adminView.classList.remove('hidden');
+        }
         if (banner) banner.classList.add('hidden');
         if (btnLogin) btnLogin.classList.add('hidden');
         if (badgeActive) badgeActive.classList.remove('hidden');
@@ -5833,7 +6226,8 @@ end $$;</pre>
         }
         document.body.classList.add('is-admin');
         document.body.classList.remove('is-viewer');
-        // Refresh selectors & views to unlock all months for Admin
+
+        // Unlock all historical months for admin
         if (typeof initMonthSelector === 'function') {
           initMonthSelector();
           initReportMonthSelector();
@@ -5851,24 +6245,24 @@ end $$;</pre>
           `;
         }
       } else {
-        if (banner) banner.classList.remove('hidden');
+        // RESIDENT / VIEWER MODE (Or Admin Previewing Resident Portal)
+        if (adminView) {
+          adminView.style.display = 'none';
+          adminView.classList.add('hidden');
+        }
+        if (residentView) {
+          residentView.style.display = 'flex';
+          residentView.classList.remove('hidden');
+        }
+        if (banner) banner.classList.add('hidden'); // Resident portal has its own elegant design
         if (btnLogin) btnLogin.classList.remove('hidden');
         if (badgeActive) badgeActive.classList.add('hidden');
         document.body.classList.add('is-viewer');
-        // Refresh selectors & views to restrict to latest 2 months for Residents
-        if (typeof initMonthSelector === 'function') {
-          initMonthSelector();
-          initReportMonthSelector();
-          renderSelectedMonth();
-          renderMonthlyReport();
-          renderAllExpensesTable();
-          renderTreasuryFlow();
-        }
         document.body.classList.remove('is-admin');
-      }
 
-      // Re-render current month to show/hide admin actions
-      renderSelectedMonth();
+        // Render the dedicated PDF-style Resident Portal
+        renderResidentPortal();
+      }
     }
 
     function openAdminLoginModal() {
@@ -6235,6 +6629,8 @@ end $$;</pre>
     </button>
   </div>
 
+
+  </div><!-- END adminAppView -->
 
   <!-- IMAGE LIGHTBOX MODAL -->
   <div id="imageLightboxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4" onclick="closeLightboxModal()">
