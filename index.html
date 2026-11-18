@@ -1510,15 +1510,21 @@
       <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
         
         <!-- Live Status Card -->
-        <div class="p-3.5 rounded-xl border border-main bg-subcard flex items-center justify-between">
+        <div class="p-3.5 rounded-xl border border-main bg-subcard flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <span class="text-muted block text-[11px]">حالة المزامنة السحابية:</span>
             <span id="modalCloudStatusText" class="font-bold text-sm text-amber-400">غير متصل (الحفظ محلي في هذا المتصفح)</span>
           </div>
-          <button onclick="syncWithSupabaseNow()" id="btnSyncNow" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            مزامنة الآن
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="restoreFromCloud()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm flex items-center gap-1.5 active:scale-95 transition-all" title="سحب واستعادة بياناتك المسجلة على السحابة">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>استعادة من السحابة ☁️</span>
+            </button>
+            <button onclick="syncWithSupabaseNow()" id="btnSyncNow" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>مزامنة وحفظ ⚡</span>
+            </button>
+          </div>
         </div>
 
         <!-- Credentials Form -->
@@ -1760,19 +1766,24 @@ end $$;</pre>
 
     function resetToInitialData() {
       if (!requireAdmin('إعادة ضبط البيانات')) return;
-      if (confirm("هل أنت متأكد من إعادة ضبط جميع البيانات إلى النسخة الأصلية الدقيقة من الإكسيل؟")) {
+      if (confirm("تحذير: هل أنت متأكد من إعادة ضبط البيانات إلى نسخة الإكسيل الأولية؟\n\n(يمكنك التراجع أو استعادة بياناتك من السحابة في أي وقت).")) {
+        // Save emergency snapshot in localStorage before resetting
+        try {
+          localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', JSON.stringify(APP_DATA));
+        } catch(e) {}
+
         localStorage.removeItem(STORAGE_KEY);
         APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
         recalculateAllBalances();
         initMonthSelector();
-      initReportMonthSelector();
+        initReportMonthSelector();
         setAptViewMode(currentAptViewMode);
-      switchMobileSubTab(currentMobileSubTab);
-      renderSelectedMonth();
+        switchMobileSubTab(currentMobileSubTab);
+        renderSelectedMonth();
         renderArrearsTable();
         renderAllExpensesTable();
         renderTreasuryFlow();
-        alert("تمت استعادة البيانات المطابقة للإكسيل بنجاح!");
+        showSyncToast("تمت إعادة الضبط للإكسيل. لاستعادة بياناتك: اضغط 'تحديث 🔄' أو ادخل على 'ربط أونلاين' واضغط 'استعادة من السحابة ☁️'");
       }
     }
 
@@ -4034,9 +4045,13 @@ end $$;</pre>
               localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
             } catch(e) {}
             recalculateAllBalances();
+            if (typeof initMonthSelector === 'function') initMonthSelector();
+            if (typeof initReportMonthSelector === 'function') initReportMonthSelector();
             renderSelectedMonth();
             renderArrearsTable();
-            if (!isInitial) showSyncToast("تم تحديث البيانات من السحابة بنجاح ⚡");
+            renderAllExpensesTable();
+            renderTreasuryFlow();
+            if (!isInitial) showSyncToast("تم تحديث واستعادة البيانات من السحابة بنجاح ⚡");
           } else {
             console.log("Local data has newer unsynced changes. Pushing local data to Supabase...");
             pushToSupabase();
@@ -4124,8 +4139,12 @@ end $$;</pre>
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
               } catch(e) {}
               recalculateAllBalances();
+              if (typeof initMonthSelector === 'function') initMonthSelector();
+              if (typeof initReportMonthSelector === 'function') initReportMonthSelector();
               renderSelectedMonth();
               renderArrearsTable();
+              renderAllExpensesTable();
+              renderTreasuryFlow();
               showSyncToast("⚡ تم استلام تحديث لحظي من جهاز آخر!");
             }
           })
@@ -4390,6 +4409,51 @@ end $$;</pre>
       setTimeout(() => {
         window.location.reload(true);
       }, 350);
+    }
+
+    
+    // ==========================================
+    // EXPLICIT CLOUD RESTORE (EMERGENCY ROLLBACK TO CLOUD DATA)
+    // ==========================================
+    async function restoreFromCloud() {
+      if (!supabaseClient) {
+        alert("تنبيه: الربط السحابي غير متصل، يرجى تفعيل الاتصال بـ Supabase أولاً.");
+        return;
+      }
+      showSyncToast("جاري سحب واستعادة البيانات من السحابة... ☁️");
+      try {
+        const { data, error } = await supabaseClient
+          .from('building_finance')
+          .select('data, updated_at')
+          .eq('id', 'main')
+          .maybeSingle();
+
+        if (error) {
+          alert("خطأ أثناء استعادة البيانات: " + error.message);
+          return;
+        }
+
+        if (data && data.data) {
+          APP_DATA = data.data;
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+          } catch(e) {}
+          recalculateAllBalances();
+          if (typeof initMonthSelector === 'function') initMonthSelector();
+          if (typeof initReportMonthSelector === 'function') initReportMonthSelector();
+          renderSelectedMonth();
+          renderArrearsTable();
+          renderAllExpensesTable();
+          renderTreasuryFlow();
+          showSyncToast("تمت استعادة كافة البيانات السحابية بنجاح! ☁️✓");
+          alert("تمت استعادة كافة شهور وحسابات ومصروفات البرج المسجلة في السحابة بنجاح!");
+          closeCloudModal();
+        } else {
+          alert("لا توجد بيانات محفوظة في السحابة حالياً.");
+        }
+      } catch (err) {
+        alert("تعذر الاتصال بالسحابة: " + err.message);
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
