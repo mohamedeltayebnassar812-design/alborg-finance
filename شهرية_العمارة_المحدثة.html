@@ -18,6 +18,8 @@
   <title>حسابات شهر 9-2026</title>
   <!-- Supabase Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- html2pdf.js CDN for 1-Click Direct PDF Download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -123,7 +125,59 @@
       .bg-card, .bg-subcard { background: white !important; border: 1px solid #ccc !important; }
       .text-main, .text-muted { color: black !important; }
 
-      /* Isolated month PDF print mode (allows multi-page pagination without clipping) */
+      /* Dedicated Multi-Page Print Mode via root #appDirectPrintArea */
+      body.is-direct-printing > *:not(#appDirectPrintArea) {
+        display: none !important;
+      }
+      body.is-direct-printing,
+      body.is-direct-printing html {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+      }
+      body.is-direct-printing #appDirectPrintArea {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        overflow: visible !important;
+        height: auto !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      body.is-direct-printing #appDirectPrintArea * {
+        overflow: visible !important;
+        max-height: none !important;
+      }
+      body.is-direct-printing #appDirectPrintArea table {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+      body.is-direct-printing #appDirectPrintArea tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      body.is-direct-printing #appDirectPrintArea thead {
+        display: table-header-group !important;
+      }
+      body.is-direct-printing #appDirectPrintArea tfoot {
+        display: table-footer-group !important;
+      }
+      .avoid-break,
+      .page-break-avoid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* Fallback for modal print */
       body.printing-month-pdf {
         background: #ffffff !important;
         color: #000000 !important;
@@ -231,7 +285,7 @@
           </div>
         </div>
 
-        <!-- Controls: Refresh, Print PDF, Manager Login -->
+        <!-- Controls: Refresh, Direct PDF Download, Print PDF, Manager Login -->
         <div class="flex items-center gap-1.5 sm:gap-2">
           <!-- Refresh -->
           <button onclick="forceAppRefresh()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95" title="تحديث البيانات">
@@ -239,10 +293,16 @@
             <span class="hidden md:inline">تحديث</span>
           </button>
 
+          <!-- Direct 1-Click PDF Download -->
+          <button onclick="downloadResidentPdfCurrentMonth()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-600/30 flex items-center gap-1.5 active:scale-95" title="تنزيل ملف كشف الحساب PDF مباشرة لجهازك">
+            <span>📥</span>
+            <span>تنزيل PDF</span>
+          </button>
+
           <!-- Print / Save PDF -->
-          <button onclick="printResidentCurrentMonth()" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-sm shadow-sky-600/30 flex items-center gap-1.5 active:scale-95" title="طباعة أو حفظ بتنسيق PDF">
+          <button onclick="printResidentCurrentMonth()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-sm shadow-sky-600/30 flex items-center gap-1.5 active:scale-95" title="طباعة كشف الحساب كاملاً">
             <span>🖨️</span>
-            <span>حفظ PDF</span>
+            <span class="hidden sm:inline">طباعة</span>
           </button>
 
           <!-- Admin Login Trigger -->
@@ -278,11 +338,14 @@
       <!-- Bottom Print & Share Action Bar (No Print) -->
       <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
         <div class="text-xs text-slate-500 font-medium">
-          💡 يمكنك حفظ نسخة رسمية كاملة أو طباعتها بنقرة واحدة بتنسيق PDF ملون ومعتمد.
+          💡 يمكنك تنزيل نسخة رسمية كاملة أو طباعتها بنقرة واحدة بتنسيق PDF ملون ومعتمد.
         </div>
         <div class="flex items-center gap-2">
+          <button onclick="downloadResidentPdfCurrentMonth()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30 flex items-center gap-2 active:scale-95">
+            <span>📥 تنزيل كشف الحساب PDF مباشر</span>
+          </button>
           <button onclick="printResidentCurrentMonth()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-md shadow-sky-600/30 flex items-center gap-2 active:scale-95">
-            <span>🖨️ طباعة أو حفظ التقرير PDF</span>
+            <span>🖨️ طباعة كشف الحساب</span>
           </button>
         </div>
       </div>
@@ -573,9 +636,13 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>+ شهر جديد</span>
           </button>
-          <button onclick="downloadMonthPDF()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="معاينة وطباعة كشف الحساب وتنزيل PDF">
+          <button onclick="downloadMonthPdfDirect()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="تنزيل ملف كشف الحساب PDF مباشرة فوراً">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>📄 كشف PDF للشهر</span>
+            <span>📥 تنزيل PDF للشهر</span>
+          </button>
+          <button onclick="openMonthPdfModal()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 whitespace-nowrap no-print" title="معاينة وطباعة كشف الحساب">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span>📄 معاينة وطباعة</span>
           </button>
         </div>
 
@@ -1662,11 +1729,11 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="printMonthPdfDirect()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95" title="طباعة أو حفظ بتنسيق PDF">
-            <span>🖨️ طباعة / حفظ PDF</span>
+          <button onclick="downloadMonthPdfDirect()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95" title="تنزيل ملف كشف الحساب بصيغة PDF كامل مباشرة لجهازك">
+            <span>📥 تنزيل PDF كامل مباشر</span>
           </button>
-          <button onclick="downloadMonthHtmlFile()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-subcard text-main hover:bg-card border border-main flex items-center gap-1.5 transition-colors" title="تحميل التقرير كملف مستقل">
-            <span>📥 تحميل ملف</span>
+          <button onclick="printMonthPdfDirect()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95" title="طباعة الكشف كاملاً عبر الطابعة">
+            <span>🖨️ طباعة كشف الحساب</span>
           </button>
           <button onclick="closeMonthPdfModal()" class="text-muted hover:text-main text-lg font-bold p-1 px-2 hover:bg-subcard rounded-lg transition-colors">&times;</button>
         </div>
@@ -5376,25 +5443,24 @@ end $$;</pre>
     // ==========================================
     // MONTH PDF REPORT PREVIEW, PRINT & DOWNLOAD
     // ==========================================
-    function downloadMonthPDF() {
+    function openMonthPdfModal(mKey) {
       const mSelect = document.getElementById('monthSelect');
-      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : Object.keys(APP_DATA.months || {})[0]);
-      if (!mKey || !APP_DATA.months || !APP_DATA.months[mKey]) {
+      const key = mKey || (mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : Object.keys(APP_DATA.months || {})[0]));
+      if (!key || !APP_DATA.months || !APP_DATA.months[key]) {
         alert('يرجى اختيار شهر أولاً');
         return;
       }
 
-      renderMonthPdfPreview(mKey);
+      renderMonthPdfPreview(key);
 
       const modal = document.getElementById('monthPdfModal');
       if (modal) {
         modal.classList.remove('hidden');
       }
+    }
 
-      // Automatically trigger print dialog after preview loads
-      setTimeout(() => {
-        printMonthPdfDirect();
-      }, 350);
+    function downloadMonthPDF() {
+      openMonthPdfModal();
     }
 
     function closeMonthPdfModal() {
@@ -5473,7 +5539,7 @@ end $$;</pre>
 
       const printableHtml = `
         <!-- REPORT HEADER -->
-        <div style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div class="avoid-break" style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; break-inside: avoid; page-break-inside: avoid;">
           <div>
             <h2 style="font-size: 21px; font-weight: 900; color: #0369a1; margin: 0; line-height: 1.2;">🏢 برج العمارة السكني</h2>
             <p style="font-size: 13px; font-weight: 700; color: #334155; margin: 3px 0 0 0;">كشف الحساب والتقرير المالي الرسمي المعتمد</p>
@@ -5487,7 +5553,7 @@ end $$;</pre>
         </div>
 
         <!-- 4 EXECUTIVE KPI SUMMARY CARDS -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+        <div class="avoid-break" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
           <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-top: 4px solid #0284c7; border-radius: 8px; padding: 10px; text-align: center;">
             <div style="font-size: 10px; color: #64748b; font-weight: bold;">رصيد أول الشهر (L2)</div>
             <div style="font-size: 16px; font-weight: 900; color: #0369a1; margin-top: 3px;">${opening.toLocaleString()} ج.م</div>
@@ -5514,7 +5580,7 @@ end $$;</pre>
         </div>
 
         <!-- SECTION 1: EXPENSES TABLE -->
-        <div style="margin-bottom: 18px;">
+        <div class="avoid-break" style="margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
           <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
             <span>💸 أولاً: بيان المصروفات والمدفوعات المنفقة (${(m.expenses || []).length} بند)</span>
             <span style="font-size: 11px; color: #b91c1c; font-weight: 800;">إجمالي المنصرف: ${totalExpenses.toLocaleString()} ج.م</span>
@@ -5579,7 +5645,7 @@ end $$;</pre>
         </div>
 
         <!-- SECTION 3: TREASURY RECONCILIATION SUMMARY -->
-        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+        <div class="avoid-break" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
           <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">📊 ثالثاً: معادلة مطابقة حركة الخزينة للشهر</div>
           <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
             <span>رصيد بداية الشهر المعتمد (L2):</span>
@@ -5600,7 +5666,7 @@ end $$;</pre>
         </div>
 
         <!-- FOOTER -->
-        <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8;">
+        <div class="avoid-break" style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8; break-inside: avoid; page-break-inside: avoid;">
           تم استخراج هذا الكشف آلياً من منظومة إدارة وحسابات برج العمارة • مطابق 100% لسجلات الخزينة والتحصيلات المصرفية
         </div>
       `;
@@ -5647,141 +5713,110 @@ end $$;</pre>
       const originalTitle = document.title;
       document.title = fileName;
 
-      let iframe = document.getElementById('appPrintIframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'appPrintIframe';
-        iframe.style.position = 'fixed';
-        iframe.style.top = '-9999px';
-        iframe.style.left = '-9999px';
-        iframe.style.width = '1000px';
-        iframe.style.height = '1000px';
-        iframe.style.border = '0';
-        iframe.style.opacity = '0';
-        document.body.appendChild(iframe);
+      let printArea = document.getElementById('appDirectPrintArea');
+      if (!printArea) {
+        printArea = document.createElement('div');
+        printArea.id = 'appDirectPrintArea';
+        printArea.className = 'hidden';
+        document.body.appendChild(printArea);
       }
 
-      const doc = iframe.contentWindow.document;
-      doc.open();
-      doc.write(`<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>${fileName}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; }
-    html, body {
-      background: #ffffff !important;
-      color: #0f172a !important;
-      direction: rtl;
-      font-size: 11px;
-      line-height: 1.4;
-      overflow: visible !important;
-      height: auto !important;
-      width: 100% !important;
-    }
-    @page {
-      size: A4 portrait;
-      margin: 10mm 10mm 15mm 10mm;
-    }
-    @media print {
-      body { padding: 0 !important; }
-      table { page-break-inside: auto; break-inside: auto; width: 100%; border-collapse: collapse; }
-      tr { page-break-inside: avoid; break-inside: avoid; }
-      thead { display: table-header-group; }
-      tfoot { display: table-footer-group; }
-      .no-print { display: none !important; }
-    }
-  </style>
-</head>
-<body>
-  <div style="padding: 10px; width: 100%; max-width: 820px; margin: 0 auto;">
-    ${htmlContent}
-  </div>
-</body>
-</html>`);
-      doc.close();
+      printArea.innerHTML = `
+        <div style="padding: 10px; width: 100%; max-width: 820px; margin: 0 auto; direction: rtl; font-family: 'Cairo', sans-serif;">
+          ${htmlContent}
+        </div>
+      `;
+
+      document.body.classList.add('is-direct-printing');
 
       setTimeout(() => {
-        try {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-        } catch(e) {
-          window.print();
-        }
+        window.print();
         setTimeout(() => {
+          document.body.classList.remove('is-direct-printing');
+          if (printArea) printArea.innerHTML = '';
           document.title = originalTitle;
-        }, 2000);
-      }, 400);
+        }, 1200);
+      }, 150);
     }
 
-    function printMonthPdfDirect() {
+    function printMonthPdfDirect(mKey) {
       const mSelect = document.getElementById('monthSelect');
-      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9');
-      const fileName = getMonthFileName(mKey);
+      const key = mKey || (mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9'));
+      const fileName = getMonthFileName(key);
 
-      renderMonthPdfPreview(mKey);
+      renderMonthPdfPreview(key);
       const printableEl = document.getElementById('monthPdfPrintableContent');
       if (printableEl) {
         printCleanHtmlContent(printableEl.innerHTML, fileName);
+      }
+    }
+
+    function downloadMonthPdfDirect(mKey) {
+      const mSelect = document.getElementById('monthSelect');
+      const key = mKey || (mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9'));
+      const fileName = getMonthFileName(key);
+
+      renderMonthPdfPreview(key);
+      const printableEl = document.getElementById('monthPdfPrintableContent');
+      if (!printableEl) {
+        alert('تعذر العثور على محتوى الكشف');
+        return;
+      }
+
+      showSyncToast("جاري تجهيز وتنزيل ملف PDF كامل... ⏳");
+
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-9999px';
+      wrapper.style.top = '0';
+      wrapper.style.width = '820px';
+      wrapper.style.padding = '15px';
+      wrapper.style.background = '#ffffff';
+      wrapper.style.color = '#0f172a';
+      wrapper.style.direction = 'rtl';
+      wrapper.style.fontFamily = "'Cairo', sans-serif";
+      wrapper.innerHTML = printableEl.innerHTML;
+      document.body.appendChild(wrapper);
+
+      const opt = {
+        margin: [8, 8, 10, 8],
+        filename: `${fileName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollY: 0,
+          windowWidth: 820
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          avoid: ['tr', '.avoid-break']
+        }
+      };
+
+      if (typeof html2pdf !== 'undefined') {
+        html2pdf().set(opt).from(wrapper).save().then(() => {
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          showSyncToast("تم تنزيل كشف الحساب بصيغة PDF بنجاح! 📥✓");
+        }).catch(err => {
+          console.warn('html2pdf download error, opening print dialog:', err);
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          printMonthPdfDirect(key);
+        });
       } else {
-        document.title = fileName;
-        document.body.classList.add('printing-month-pdf');
-        window.print();
-        setTimeout(() => {
-          document.body.classList.remove('printing-month-pdf');
-        }, 1500);
+        if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+        printMonthPdfDirect(key);
       }
     }
 
     function fallbackWindowPrint(mKey) {
-      const key = mKey || (document.getElementById('monthSelect')?.value || '');
-      const fileName = getMonthFileName(key);
-      printMonthPdfDirect();
+      printMonthPdfDirect(mKey);
     }
 
     function downloadMonthHtmlFile() {
-      const mSelect = document.getElementById('monthSelect');
-      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : Object.keys(APP_DATA.months || {})[0]);
-      const fileName = getMonthFileName(mKey);
-      const printableEl = document.getElementById('monthPdfPrintableContent');
-      if (!printableEl) return;
-
-      const fullHtml = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>${fileName}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', Tahoma, Arial, sans-serif; }
-    body { padding: 25px; background: #f8fafc; color: #1e293b; max-width: 900px; margin: 0 auto; }
-    @media print {
-      body { padding: 10px; background: #fff; }
-      @page { margin: 0.8cm; }
-    }
-  </style>
-</head>
-<body>
-  ${printableEl.innerHTML}
-  <script>
-    window.onload = function() {
-      setTimeout(function() { window.print(); }, 400);
-    };
-  <\/script>
-</body>
-</html>`;
-
-      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${fileName}.html`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 500);
-      showSuccessToast("تم تحميل كشف الحساب بنجاح! 📥");
+      downloadMonthPdfDirect();
     }
 
     function printMonthlyReport() {
@@ -6038,7 +6073,7 @@ end $$;</pre>
 
       container.innerHTML = `
         <!-- REPORT HEADER -->
-        <div style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div class="avoid-break" style="border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; break-inside: avoid; page-break-inside: avoid;">
           <div>
             <h2 style="font-size: 21px; font-weight: 900; color: #0369a1; margin: 0; line-height: 1.2;">🏢 برج العمارة السكني</h2>
             <p style="font-size: 13px; font-weight: 700; color: #334155; margin: 3px 0 0 0;">كشف الحساب والتقرير المالي الرسمي المعتمد</p>
@@ -6052,7 +6087,7 @@ end $$;</pre>
         </div>
 
         <!-- 4 EXECUTIVE KPI SUMMARY CARDS -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px;">
+        <div class="avoid-break" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
           <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-top: 4px solid #0284c7; border-radius: 8px; padding: 10px; text-align: center;">
             <div style="font-size: 10px; color: #64748b; font-weight: bold;">رصيد أول الشهر (L2)</div>
             <div style="font-size: 16px; font-weight: 900; color: #0369a1; margin-top: 3px;">${opening.toLocaleString()} ج.م</div>
@@ -6079,7 +6114,7 @@ end $$;</pre>
         </div>
 
         <!-- SECTION 1: EXPENSES TABLE -->
-        <div style="margin-bottom: 18px;">
+        <div class="avoid-break" style="margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
           <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
             <span>💸 أولاً: بيان المصروفات والمدفوعات المنفذة (${(m.expenses || []).length} بند)</span>
             <span style="font-size: 11px; color: #b91c1c; font-weight: 800;">إجمالي المنصرف: ${totalExpenses.toLocaleString()} ج.م</span>
@@ -6148,7 +6183,7 @@ end $$;</pre>
         </div>
 
         <!-- SECTION 3: TREASURY RECONCILIATION SUMMARY -->
-        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+        <div class="avoid-break" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
           <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">📊 ثالثاً: معادلة مطابقة حركة الخزينة للشهر</div>
           <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
             <span>رصيد بداية الشهر المعتمد (L2):</span>
@@ -6169,7 +6204,7 @@ end $$;</pre>
         </div>
 
         <!-- FOOTER -->
-        <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8;">
+        <div class="avoid-break" style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9.5px; color: #94a3b8; break-inside: avoid; page-break-inside: avoid;">
           تم استخراج هذا الكشف آلياً من منظومة إدارة وحسابات برج العمارة • مطابق 100% لسجلات الخزينة والتحصيلات المعتمدة
         </div>
       `;
@@ -6181,6 +6216,60 @@ end $$;</pre>
       const sheet = document.getElementById('residentDocumentSheet');
       if (sheet) {
         printCleanHtmlContent(sheet.innerHTML, fileName);
+      }
+    }
+
+    function downloadResidentPdfCurrentMonth() {
+      const mKey = selectedResidentMonthKey || (getVisibleMonths().slice(-1)[0]);
+      const fileName = getMonthFileName(mKey);
+      const sheet = document.getElementById('residentDocumentSheet');
+      if (!sheet) return;
+
+      showSyncToast("جاري تجهيز وتنزيل كشف الحساب بصيغة PDF... ⏳");
+
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-9999px';
+      wrapper.style.top = '0';
+      wrapper.style.width = '820px';
+      wrapper.style.padding = '15px';
+      wrapper.style.background = '#ffffff';
+      wrapper.style.color = '#0f172a';
+      wrapper.style.direction = 'rtl';
+      wrapper.style.fontFamily = "'Cairo', sans-serif";
+      wrapper.innerHTML = sheet.innerHTML;
+      document.body.appendChild(wrapper);
+
+      const opt = {
+        margin: [8, 8, 10, 8],
+        filename: `${fileName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollY: 0,
+          windowWidth: 820
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          avoid: ['tr', '.avoid-break']
+        }
+      };
+
+      if (typeof html2pdf !== 'undefined') {
+        html2pdf().set(opt).from(wrapper).save().then(() => {
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          showSyncToast("تم تنزيل كشف الحساب بصيغة PDF بنجاح! 📥✓");
+        }).catch(err => {
+          console.warn('html2pdf download error, falling back to print:', err);
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          printResidentCurrentMonth();
+        });
+      } else {
+        if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+        printResidentCurrentMonth();
       }
     }
 
@@ -6872,11 +6961,20 @@ end $$;</pre>
           <span class="text-muted text-sm">‹</span>
         </button>
 
-        <!-- Download Month PDF -->
-        <button onclick="closeMobileMenu(); downloadMonthPDF();" class="flex items-center justify-between p-3 rounded-xl bg-subcard border border-main text-main font-semibold hover:bg-subcard/80 transition-all text-right">
+        <!-- Direct PDF Download -->
+        <button onclick="closeMobileMenu(); downloadMonthPdfDirect();" class="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all text-right">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">📥</span>
+            <span>تنزيل كشف الشهر PDF مباشر</span>
+          </span>
+          <span class="text-emerald-400 text-sm">‹</span>
+        </button>
+
+        <!-- Preview Month PDF -->
+        <button onclick="closeMobileMenu(); openMonthPdfModal();" class="flex items-center justify-between p-3 rounded-xl bg-subcard border border-main text-main font-semibold hover:bg-subcard/80 transition-all text-right">
           <span class="flex items-center gap-2.5">
             <span class="text-base">📄</span>
-            <span>معاينة وتحميل PDF كشف الشهر</span>
+            <span>معاينة وطباعة كشف الشهر</span>
           </span>
           <span class="text-muted text-sm">‹</span>
         </button>
@@ -6926,6 +7024,9 @@ end $$;</pre>
 
     </div>
   </div>
+
+  <!-- DEDICATED DIRECT PRINT CONTAINER (Full Multi-Page A4 Printable Area) -->
+  <div id="appDirectPrintArea" class="hidden"></div>
 
 </body>
 </html>
