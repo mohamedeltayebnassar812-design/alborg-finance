@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="icon" type="image/png" href="favicon.png">
-  <title>منظومة إدارة وحسابات برج العمارة - النسخة المحدثة الدقيقة</title>
+  <title>حسابات شهر 9-2026</title>
   <!-- Supabase Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Tailwind CSS CDN -->
@@ -2108,6 +2108,8 @@ end $$;</pre>
 
     function renderSelectedMonth() {
       const mKey = document.getElementById('monthSelect').value;
+      // Keep document title strictly synchronized to month name for PDF and tab
+      document.title = getMonthFileName(mKey);
       const m = APP_DATA.months[mKey];
       if (!m) return;
 
@@ -4340,6 +4342,20 @@ end $$;</pre>
     }
 
     // Auto-check on mobile after 2.5 seconds to surface banner if suitable
+    
+    // Listen for any print invocation (Ctrl+P, buttons, browser menu) to guarantee filename
+    window.addEventListener('beforeprint', () => {
+      const repTab = document.getElementById('tabContentReport');
+      let mKey = '';
+      if (repTab && !repTab.classList.contains('hidden')) {
+        mKey = document.getElementById('reportMonthSelect')?.value;
+      }
+      if (!mKey) {
+        mKey = document.getElementById('monthSelect')?.value || (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9');
+      }
+      document.title = getMonthFileName(mKey);
+    });
+
     window.addEventListener('DOMContentLoaded', () => {
       if (!isPwaStandalone() && !pwaBannerDismissed) {
         setTimeout(() => {
@@ -4486,6 +4502,7 @@ end $$;</pre>
       const select = document.getElementById('reportMonthSelect');
       if (!select) return;
       const mKey = select.value;
+      document.title = getMonthFileName(mKey);
       const m = APP_DATA.months[mKey];
       if (!m) return;
 
@@ -5016,12 +5033,13 @@ end $$;</pre>
       let year = '';
 
       if (mKey) {
-        if (String(mKey).includes('_')) {
-          const parts = String(mKey).split('_');
+        const strKey = String(mKey).trim();
+        if (strKey.includes('_')) {
+          const parts = strKey.split('_');
           monthNum = parts[0];
           year = parts[1];
         } else {
-          monthNum = String(mKey);
+          monthNum = strKey;
           year = ['11', '12'].includes(monthNum) ? '2025' : '2026';
         }
       }
@@ -5033,81 +5051,31 @@ end $$;</pre>
         if (mMatch) monthNum = mMatch[1];
       }
 
-      if (monthNum && year) {
-        return `حسابات شهر ${monthNum}-${year}`;
-      } else if (m && m.title) {
-        return `حسابات ${m.title}`;
-      }
-      return 'حسابات شهر البرج';
+      if (!monthNum) monthNum = '9';
+      if (!year) year = '2026';
+
+      return `حسابات شهر ${monthNum}-${year}`;
     }
 
     function printMonthPdfDirect() {
-      const printableEl = document.getElementById('monthPdfPrintableContent');
-      if (!printableEl) return;
-
       const mSelect = document.getElementById('monthSelect');
-      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '');
+      const mKey = mSelect ? mSelect.value : (APP_DATA.chronological_order ? APP_DATA.chronological_order[APP_DATA.chronological_order.length - 1] : '9');
       const fileName = getMonthFileName(mKey);
-      const originalTitle = document.title;
 
-      // Temporarily set document.title so browser's "Save as PDF" suggests exact requested name
+      // Force document.title to exact filename before printing
       document.title = fileName;
 
-      // Method 1: Iframe print (no popups blocked)
-      let iframe = document.getElementById('monthPdfPrintIframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'monthPdfPrintIframe';
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '10px';
-        iframe.style.height = '10px';
-        iframe.style.border = '0';
-        iframe.style.opacity = '0.01';
-        iframe.style.pointerEvents = 'none';
-        document.body.appendChild(iframe);
-      }
+      // Ensure printable element is visible
+      const modal = document.getElementById('monthPdfModal');
+      if (modal) modal.classList.remove('hidden');
 
-      const printHtml = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>${fileName}</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
-    body { padding: 15px; background: #fff; color: #1e293b; font-size: 11px; }
-    @media print {
-      body { padding: 5px; }
-      @page { margin: 0.8cm; size: auto; }
-    }
-  </style>
-</head>
-<body>
-  ${printableEl.innerHTML}
-</body>
-</html>`;
+      document.body.classList.add('printing-month-pdf');
+      window.print();
 
-      try {
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(printHtml);
-        doc.close();
-
-        setTimeout(() => {
-          try {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(() => { document.title = originalTitle; }, 3000);
-          } catch (err) {
-            console.warn('Iframe print error, falling back to window.print', err);
-            fallbackWindowPrint(mKey);
-          }
-        }, 300);
-      } catch (err) {
-        console.warn('Iframe doc write error, falling back to window.print', err);
-        fallbackWindowPrint(mKey);
-      }
+      setTimeout(() => {
+        document.body.classList.remove('printing-month-pdf');
+        document.title = fileName;
+      }, 1500);
     }
 
     function fallbackWindowPrint(mKey) {

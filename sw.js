@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alborg-finance-v2';
+const CACHE_NAME = 'alborg-finance-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
