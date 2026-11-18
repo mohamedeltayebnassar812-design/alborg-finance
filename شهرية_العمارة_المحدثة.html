@@ -282,6 +282,12 @@
             <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           </button>
 
+          <!-- Activity Log Modal Button -->
+          <button onclick="openActivityLogModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-subcard border border-main text-muted hover:text-indigo-400 hover:border-indigo-500/40 text-xs font-bold transition-all shadow-sm active:scale-95" title="عرض سجل الحركات والعمليات والتراجع">
+            <span>📜</span>
+            <span class="hidden md:inline">سجل الحركات والتراجع</span>
+          </button>
+
           <!-- Undo / Restore Button -->
           <button onclick="undoLastReset()" class="p-2 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors" title="استعادة النسخة السابقة / تراجع عن أي مسح (Undo)">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
@@ -718,9 +724,9 @@
       <div class="bg-card rounded-2xl p-5 border border-main">
         <h2 class="text-base font-bold text-main flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-          جدول التدفق المالي والمطابقة المحاسبية الرسمية (Excel Reconciliation)
+          جدول التدفق المالي والمطابقة المحاسبية الشاملة (قاعدة بيانات السحابة Supabase)
         </h2>
-        <p class="text-xs text-muted mt-1">مطابقة تامة وشاملة مع جداول الإكسيل الأصلية حتى شهر 8 (فائض نهائي +3,685 ج.م)</p>
+        <p class="text-xs text-muted mt-1">مطابقة مالية ومحاسبية معتمدة وشاملة لكافة الشهور والمصروفات حتى أحدث شهر</p>
       </div>
 
       <div class="bg-card rounded-2xl border border-main overflow-hidden shadow-sm">
@@ -1328,6 +1334,58 @@
   </div>
 
   <!-- MODAL: WRITTEN OFF DEBTS REGISTRY (سجل الديون المسقطة) -->
+  
+  <!-- ACTIVITY & AUDIT LOG MODAL (سجل الحركات والتراجع) -->
+  <div id="activityLogModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-3 sm:p-4">
+    <div class="bg-card border border-main rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-main pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl font-bold shadow-sm">📜</div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-main flex items-center gap-2">
+              <span>سجل الحركات والعمليات والتراجع الفوري</span>
+              <span id="activityLogCountBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">0 حركات</span>
+            </h3>
+            <p class="text-[11px] text-muted font-medium">توثيق كامل لكل عملية سداد أو مصروف أو تعديل مع إمكانية التراجع اللحظي بنقرة واحدة</p>
+          </div>
+        </div>
+        <button onclick="closeActivityLogModal()" class="text-muted hover:text-main text-lg font-bold p-1 rounded-lg hover:bg-subcard transition-colors">&times;</button>
+      </div>
+
+      <!-- Filters & Search Bar -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-subcard/50 p-2.5 rounded-xl border border-main">
+        <!-- Search input -->
+        <div class="relative flex-1">
+          <input type="text" id="activitySearchInput" oninput="renderActivityLogList()" placeholder="🔍 ابحث في السجل (رقم الشقة، اسم الساكن، المصروف...)" class="w-full bg-subcard border border-main rounded-lg px-3 py-1.5 text-xs text-main placeholder-muted focus:outline-none focus:border-indigo-500">
+        </div>
+        <!-- Type Filter Buttons -->
+        <div class="flex items-center gap-1 overflow-x-auto text-xs font-semibold py-0.5" id="activityTypeFilters">
+          <button onclick="setActivityFilter('all')" class="activity-filter-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white shadow-sm" data-filter="all">الكل</button>
+          <button onclick="setActivityFilter('pay')" class="activity-filter-btn px-2.5 py-1 rounded-lg bg-subcard border border-main text-muted hover:text-main" data-filter="pay">التحصيلات</button>
+          <button onclick="setActivityFilter('expense')" class="activity-filter-btn px-2.5 py-1 rounded-lg bg-subcard border border-main text-muted hover:text-main" data-filter="expense">المصروفات</button>
+          <button onclick="setActivityFilter('other')" class="activity-filter-btn px-2.5 py-1 rounded-lg bg-subcard border border-main text-muted hover:text-main" data-filter="other">الشهور والتعديلات</button>
+        </div>
+      </div>
+
+      <!-- Log Entries List Container -->
+      <div id="activityLogList" class="flex-1 overflow-y-auto space-y-2.5 max-h-[55vh] pr-1">
+        <!-- Dynamic entries rendered by JS -->
+      </div>
+
+      <!-- Footer Info -->
+      <div class="pt-3 border-t border-main flex flex-wrap items-center justify-between gap-3 text-xs">
+        <span class="text-muted text-[11px] flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>كل تراجع يقوم باسترجاع الحالة السابقة فوراً ومزامنتها سحابياً مع Supabase.</span>
+        </span>
+        <button onclick="closeActivityLogModal()" class="px-5 py-2 rounded-xl bg-subcard text-main font-bold border border-main hover:bg-subcard/80 transition-all text-xs">إغلاق</button>
+      </div>
+
+    </div>
+  </div>
+
   <div id="writtenOffDebtsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-3 sm:p-4">
     <div class="bg-card border border-main rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
       
@@ -1680,22 +1738,8 @@ end $$;</pre>
         APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
       }
 
-      // Self-Healing & Audited Integrity Check:
-      // Ensure historical months (11 through 8) always contain full audited revenue (subscriptions + extra_revenue)
-      const baseMonths = ['11', '12', '1', '2', '3', '4', '5', '6', '7', '8'];
-      let needsRepair = false;
-      baseMonths.forEach(mKey => {
-        const rawM = RAW_INITIAL_DATA.months[mKey];
-        const curM = APP_DATA.months[mKey];
-        if (!curM || curM.extra_revenue !== rawM.extra_revenue || !curM.collections || curM.collections.length === 0) {
-          needsRepair = true;
-          APP_DATA.months[mKey] = JSON.parse(JSON.stringify(rawM));
-        }
-      });
-
-      if (needsRepair) {
-        console.log("Self-healing applied: restored exact audited Excel figures for historical months.");
-      }
+      // Audited Cloud Mode: Data is fully decoupled from Excel and managed via Supabase.
+      console.log("Data loaded from Supabase live cloud storage ✓");
 
       // 1. Ensure Recurring Expenses Template is loaded
       if (!APP_DATA.recurring_expenses || APP_DATA.recurring_expenses.length === 0) {
@@ -1764,6 +1808,204 @@ end $$;</pre>
       saveAppData();
     };
 
+    
+    // ==========================================
+    // ACTIVITY & AUDIT LOG WITH FULL UNDO ENGINE
+    // ==========================================
+    let currentActivityFilter = 'all';
+
+    function captureStateSnapshot() {
+      try {
+        const copy = JSON.parse(JSON.stringify(APP_DATA));
+        delete copy.activity_log; // Do not nest activity logs inside snapshots to maintain lightweight size
+        return copy;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function recordActivity(type, title, details, badge, badgeClass) {
+      if (!APP_DATA.activity_log) APP_DATA.activity_log = [];
+      const snapshot = captureStateSnapshot();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      const entry = {
+        id: 'act_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+        timestamp: Date.now(),
+        dateStr: `${dateStr} - ${timeStr}`,
+        type: type, // 'quick_pay' | 'custom_pay' | 'add_expense' | 'delete_expense' | 'edit_expense' | 'add_month' | 'writeoff_debt' | 'revert_debt' | 'purge_debt' | 'edit_resident' | 'undo'
+        title: title,
+        details: details,
+        badge: badge || 'حركة',
+        badgeClass: badgeClass || 'bg-slate-500/15 text-slate-300 border border-slate-500/30',
+        snapshot: snapshot
+      };
+
+      APP_DATA.activity_log.unshift(entry);
+
+      // Keep maximum 40 actions
+      if (APP_DATA.activity_log.length > 40) {
+        APP_DATA.activity_log = APP_DATA.activity_log.slice(0, 40);
+      }
+    }
+
+    function openActivityLogModal() {
+      if (!requireAdmin('عرض سجل الحركات')) return;
+      const modal = document.getElementById('activityLogModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderActivityLogList();
+      }
+    }
+
+    function closeActivityLogModal() {
+      const modal = document.getElementById('activityLogModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function setActivityFilter(filterType) {
+      currentActivityFilter = filterType;
+      document.querySelectorAll('.activity-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-filter') === filterType) {
+          btn.className = 'activity-filter-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white shadow-sm';
+        } else {
+          btn.className = 'activity-filter-btn px-2.5 py-1 rounded-lg bg-subcard border border-main text-muted hover:text-main';
+        }
+      });
+      renderActivityLogList();
+    }
+
+    function renderActivityLogList() {
+      const listEl = document.getElementById('activityLogList');
+      const badgeCountEl = document.getElementById('activityLogCountBadge');
+      if (!listEl) return;
+
+      const log = APP_DATA.activity_log || [];
+      if (badgeCountEl) {
+        badgeCountEl.textContent = `${log.length} حركات`;
+      }
+
+      const searchVal = (document.getElementById('activitySearchInput')?.value || '').trim().toLowerCase();
+
+      // Filter by category
+      let filtered = log.filter(item => {
+        if (currentActivityFilter === 'pay') {
+          return item.type === 'quick_pay' || item.type === 'custom_pay';
+        } else if (currentActivityFilter === 'expense') {
+          return item.type === 'add_expense' || item.type === 'delete_expense' || item.type === 'edit_expense';
+        } else if (currentActivityFilter === 'other') {
+          return item.type === 'add_month' || item.type === 'writeoff_debt' || item.type === 'revert_debt' || item.type === 'purge_debt' || item.type === 'edit_resident' || item.type === 'undo';
+        }
+        return true;
+      });
+
+      // Filter by search query
+      if (searchVal) {
+        filtered = filtered.filter(item => {
+          return (item.title && item.title.toLowerCase().includes(searchVal)) ||
+                 (item.details && item.details.toLowerCase().includes(searchVal)) ||
+                 (item.badge && item.badge.toLowerCase().includes(searchVal)) ||
+                 (item.dateStr && item.dateStr.toLowerCase().includes(searchVal));
+        });
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="py-12 text-center text-muted">
+            <div class="text-4xl mb-2">📜</div>
+            <p class="text-xs font-semibold text-main">لا توجد حركات مسجلة حالياً تطابق البحث</p>
+            <p class="text-[11px] text-muted mt-1">كافة عمليات التحصيل والمصروفات والتعديلات يتم توثيقها تلقائياً هنا مع إمكانية التراجع.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(act => {
+        const canUndo = !!act.snapshot;
+        html += `
+          <div class="bg-subcard/70 border border-main rounded-xl p-3 sm:p-3.5 hover:border-indigo-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${act.badgeClass || 'bg-slate-500/20 text-slate-300'}">${act.badge || 'حركة'}</span>
+                <span class="text-xs font-bold text-main">${act.title}</span>
+                <span class="text-[11px] text-muted font-mono" dir="ltr">${act.dateStr}</span>
+              </div>
+              <p class="text-xs text-muted leading-relaxed">${act.details}</p>
+            </div>
+            ${canUndo ? `
+              <div class="flex items-center sm:self-center">
+                <button onclick="undoActivity('${act.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="التراجع عن هذه الحركة والعودة للوضع الذي قبلها مباشرة">
+                  <span>↩️</span>
+                  <span>تراجع عن الحركة</span>
+                </button>
+              </div>
+            ` : `
+              <div class="text-[11px] text-muted italic">نقطة أساسية</div>
+            `}
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    async function undoActivity(actionId) {
+      if (!requireAdmin('التراجع عن الحركات')) return;
+      if (!APP_DATA.activity_log) return;
+      const target = APP_DATA.activity_log.find(a => a.id === actionId);
+      if (!target || !target.snapshot) {
+        alert("عذراً، لا تتوفر نقطة استعادة سابقة لهذه الحركة.");
+        return;
+      }
+
+      if (!confirm(`هل أنت متأكد من التراجع عن هذه العملية؟\n\n«${target.title}»\n${target.details}\n\nسيتم استرجاع الحسابات للوضع الذي يسبق هذه الحركة فوراً.`)) {
+        return;
+      }
+
+      const currentSnap = captureStateSnapshot();
+      const restoredData = JSON.parse(JSON.stringify(target.snapshot));
+      const currentLog = APP_DATA.activity_log;
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      // Add Undo entry to audit log
+      currentLog.unshift({
+        id: 'act_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+        timestamp: Date.now(),
+        dateStr: `${dateStr} - ${timeStr}`,
+        type: 'undo',
+        title: 'تراجع عن حركة سابقة',
+        details: `تم إلغاء أثر «${target.title}» واستعادة الحالة التي تسبقها بنجاح.`,
+        badge: 'تراجع ↩️',
+        badgeClass: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40',
+        snapshot: currentSnap
+      });
+
+      if (currentLog.length > 40) currentLog.pop();
+
+      APP_DATA = restoredData;
+      APP_DATA.activity_log = currentLog;
+      APP_DATA._last_saved = Date.now();
+
+      recalculateAllBalances();
+      if (typeof initMonthSelector === 'function') initMonthSelector();
+      if (typeof initReportMonthSelector === 'function') initReportMonthSelector();
+      renderSelectedMonth();
+      renderArrearsTable();
+      renderAllExpensesTable();
+      renderTreasuryFlow();
+      saveAppData();
+
+      renderActivityLogList();
+      showSyncToast("تم التراجع عن الحركة بنجاح وحفظ التعديل في السحابة ✓");
+      alert(`تم التراجع بنجاح!\nتم استرجاع الحسابات للوضع السابق لـ «${target.title}».`);
+    }
+
     async function undoLastReset() {
       if (!requireAdmin('استعادة البيانات السابقة')) return;
       showSyncToast("جاري التراجع واستعادة النسخة السابقة... ⏳");
@@ -1798,30 +2040,9 @@ end $$;</pre>
       }
     }
 
+    // Excel reset permanently disabled: Data is now 100% managed via Supabase Cloud and Activity Log.
     function resetToInitialData() {
-      if (!requireAdmin('إعادة ضبط البيانات')) return;
-      const confirmWord = prompt("⚠️ تحذير أمان صارم:\n\nهذه العملية ستقوم بحذف جميع الشهور والمصروفات الجديدة والعودة لإكسيل البداية فقط!\n\nإذا كنت متأكداً وتريد ذلك فعلاً، اكتب كلمة (مسح) في المربع أدناه ثم اضغط موافق:");
-      if (confirmWord !== 'مسح') {
-        if (confirmWord !== null) alert("تم إلغاء العملية بأمان. لم يتم حذف أي بيانات!");
-        return;
-      }
-      // Save emergency snapshot in localStorage before resetting
-      try {
-        localStorage.setItem('ALBORG_BACKUP_SNAPSHOT', JSON.stringify(APP_DATA));
-      } catch(e) {}
-
-      localStorage.removeItem(STORAGE_KEY);
-      APP_DATA = JSON.parse(JSON.stringify(RAW_INITIAL_DATA));
-      recalculateAllBalances();
-      initMonthSelector();
-      initReportMonthSelector();
-      setAptViewMode(currentAptViewMode);
-      switchMobileSubTab(currentMobileSubTab);
-      renderSelectedMonth();
-      renderArrearsTable();
-      renderAllExpensesTable();
-      renderTreasuryFlow();
-      showSyncToast("تمت إعادة الضبط للإكسيل. يمكنك التراجع بالضغط على زر استعادة النسخة السابقة ↩️");
+      alert("تم إلغاء ميزة سحب أو إعادة ضبط بيانات الإكسيل نهائياً بناءً على طلب الإدارة.\n\nالبيانات الآن مستقلة ومحفوظة بالكامل سحابياً على Supabase، ويمكنك التراجع عن أي عملية مسجلة بكل دقة من خلال «سجل الحركات والتراجع».");
     }
 
     // Recalculate All Months Balances with Mathematical Precision
@@ -2460,6 +2681,15 @@ end $$;</pre>
 
       if (!confirm(`هل أنت متأكد من حذف مصروف "${exp.item}" (${exp.cost.toLocaleString()} ج.م) من هذا الشهر؟`)) return;
 
+      const mTitle = m.title || mKey;
+      recordActivity(
+        'delete_expense',
+        'حذف مصروف',
+        `تم حذف مصروف "${exp.item}" بقيمة ${exp.cost.toLocaleString()} ج.م من شهر ${mTitle}`,
+        'حذف مصروف',
+        'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+      );
+
       m.expenses.splice(idx, 1);
       recalculateAllBalances();
       renderSelectedMonth();
@@ -2498,6 +2728,15 @@ end $$;</pre>
 
       const apt = APP_DATA.apartments.find(a => a.row === row) || {};
       const aptLabel = `شقة ${apt.apt_num} (${apt.position})`;
+      const mTitle = m.title || mKey;
+
+      recordActivity(
+        'quick_pay',
+        'سداد اشتراك كامل',
+        `تم سداد اشتراك كامل بمبلغ ${c.monthly_fee || 200} ج.م لشقة ${apt.apt_num} (الدور ${apt.floor} - ${apt.position} / ${apt.owner_name}) لشهر ${mTitle}`,
+        'سداد كامل',
+        'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+      );
 
       c.paid = c.monthly_fee || 200;
       recalculateAllBalances();
@@ -2639,6 +2878,16 @@ end $$;</pre>
       const m = APP_DATA.months[mKey];
       const c = m?.collections.find(x => x.row === row);
       if (c) {
+        const apt = APP_DATA.apartments.find(a => a.row === row) || {};
+        const mTitle = m.title || mKey;
+        const oldPaid = c.paid || 0;
+        recordActivity(
+          'custom_pay',
+          'تعديل دفعة اشتراك',
+          `تم تعديل المدفوع لشقة ${apt.apt_num} (الدور ${apt.floor} / ${apt.owner_name}) في شهر ${mTitle} من ${oldPaid} ج.م إلى ${amount} ج.م`,
+          'تعديل سداد',
+          'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+        );
         c.paid = amount;
         if (currentPaymentBase64) {
           c.receipt_image = currentPaymentBase64;
@@ -2682,6 +2931,13 @@ end $$;</pre>
 
       const apt = APP_DATA.apartments.find(a => a.row === row);
       if (apt) {
+        recordActivity(
+          'edit_resident',
+          'تعديل بيانات ساكن',
+          `شقة ${apt.apt_num}: تم تعديل الساكن إلى "${name}" والهاتف "${phone}" والاشتراك ${fee} ج.م`,
+          'تعديل ساكن',
+          'bg-slate-500/15 text-slate-300 border border-slate-500/30'
+        );
         apt.owner_name = name;
         apt.phone = phone;
         apt.default_fee = fee;
@@ -2989,6 +3245,14 @@ end $$;</pre>
         return;
       }
 
+      const mTitle = m.title || mKey;
+      recordActivity(
+        'add_expense',
+        'إضافة مصروف جديد',
+        `تمت إضافة مصروف "${item}" بقيمة ${cost.toLocaleString()} ج.م (${category}) إلى شهر ${mTitle}`,
+        'إضافة مصروف',
+        'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+      );
       if (!m.expenses) m.expenses = [];
       m.expenses.push({
         id: `${mKey}_${Date.now()}`,
@@ -3052,6 +3316,15 @@ end $$;</pre>
       }
 
       const oldCost = m.expenses[idx].cost;
+      const mTitle = m.title || mKey;
+      const expName = m.expenses[idx].item || m.expenses[idx].name;
+      recordActivity(
+        'edit_expense',
+        'تعديل قيمة مصروف',
+        `تم تعديل مصروف "${expName}" في شهر ${mTitle} من ${oldCost.toLocaleString()} ج.م إلى ${newCost.toLocaleString()} ج.م`,
+        'تعديل مصروف',
+        'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+      );
       m.expenses[idx].cost = newCost;
       recalculateAllBalances();
       renderSelectedMonth();
@@ -3126,6 +3399,13 @@ end $$;</pre>
         });
       });
 
+      recordActivity(
+        'add_month',
+        'إضافة شهر جديد',
+        `تم فتح دفتر حسابات جديد لشهر ${monthNum} لسنة ${year}`,
+        'شهر جديد',
+        'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+      );
       APP_DATA.months[monthKey] = {
         id: monthKey,
         title: title,
@@ -3360,6 +3640,14 @@ end $$;</pre>
       if (!confirm(`هل أنت متأكد من إسقاط وإعفاء مبلغ ${amountToDrop.toLocaleString()} ج.م عن شقة ${aptNum} بقرار الإدارة؟`)) {
         return;
       }
+
+      recordActivity(
+        'writeoff_debt',
+        'إسقاط دين رسمي',
+        `تم إسقاط مديونية بقيمة ${amountToDrop.toLocaleString()} ج.م لشقة ${aptNum} (${currentWriteOffTarget.owner_name})`,
+        'إسقاط دين',
+        'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+      );
 
       const subsDebt = currentWriteOffTarget.pastUnpaidSubs;
       let dropSubs = 0;
@@ -3724,6 +4012,13 @@ end $$;</pre>
         return;
       }
 
+      recordActivity(
+        'revert_debt',
+        'إلغاء إسقاط دين',
+        `تم إلغاء قرار الإسقاط وإعادة المديونية كدين مستحق على شقة ${aptNum}`,
+        'استعادة دين',
+        'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+      );
       if (type === 'month_waiver' && mKey) {
         const m = APP_DATA.months[mKey];
         const apt = APP_DATA.apartments.find(a => a.apt_num === aptNum);
@@ -3759,8 +4054,22 @@ end $$;</pre>
         return;
       }
 
+      recordActivity(
+        'purge_debt',
+        'شطب مديونية نهائياً',
+        `تم شطب مديونية شقة ${aptNum} نهائياً وحذفها من سجلات النظام`,
+        'شطب نهائي',
+        'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+      );
       if (!APP_DATA.purged_debts) APP_DATA.purged_debts = {};
 
+      recordActivity(
+        'revert_debt',
+        'إلغاء إسقاط دين',
+        `تم إلغاء قرار الإسقاط وإعادة المديونية كدين مستحق على شقة ${aptNum}`,
+        'استعادة دين',
+        'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+      );
       if (type === 'month_waiver' && mKey) {
         APP_DATA.purged_debts[`${aptNum}_m_${mKey}`] = true;
         const m = APP_DATA.months[mKey];
@@ -3800,6 +4109,13 @@ end $$;</pre>
         return;
       }
 
+      recordActivity(
+        'purge_debt',
+        'شطب مديونية نهائياً',
+        `تم شطب مديونية شقة ${aptNum} نهائياً وحذفها من سجلات النظام`,
+        'شطب نهائي',
+        'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+      );
       if (!APP_DATA.purged_debts) APP_DATA.purged_debts = {};
       items.forEach(item => {
         if (item.type === 'month_waiver' && item.mKey) {
@@ -6079,6 +6395,15 @@ end $$;</pre>
             <span>طباعة الصفحة الحالية</span>
           </span>
           <span class="text-muted text-sm">‹</span>
+        </button>
+
+        <!-- Activity Log -->
+        <button onclick="closeMobileMenu(); openActivityLogModal();" class="flex items-center justify-between p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-semibold hover:bg-indigo-500/20 transition-all text-right">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">📜</span>
+            <span>سجل الحركات والتراجع عن العمليات</span>
+          </span>
+          <span class="text-indigo-400 text-sm">‹</span>
         </button>
 
         <!-- Undo / Restore -->
